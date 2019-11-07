@@ -4,7 +4,7 @@
 
 ## 总体架构
 
-<div align=center>![架构图](https://github.com/ShangfengDing/IaaS/blob/master/frame.jpg)
+![架构图](https://github.com/ShangfengDing/IaaS/blob/master/frame.jpg)
 
 在上图中，使用了三种不同颜色的连线，代表了模块间通信的不同方式。为了使上图更加简洁，忽略了Resource-Scheduler、Vm-Scheduler、Volume-Scheduler、Network-Provider、Image-Server模块与DB-Proxy模块的连线，实际上，这五个模块都涉及数据库读写。同样出于简洁的考虑，简略了LOL（日志）模块与其他模块的连线，在IaaS系统中，所有的模块都需要将日志通过RPC接口写到LOL。
 
