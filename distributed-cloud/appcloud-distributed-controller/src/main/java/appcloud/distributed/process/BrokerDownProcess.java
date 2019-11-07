@@ -1,0 +1,81 @@
+package appcloud.distributed.process;
+
+import appcloud.distributed.CloudController;
+import appcloud.distributed.CloudControllerClientWapper;
+import appcloud.distributed.common.Constants;
+import appcloud.distributed.configmanager.RouteInfo;
+import appcloud.distributed.header.BrokerDownHeader;
+import appcloud.distributed.process.operate.BrokeDownOperate;
+import appcloud.distributed.process.operate.BrokeDownOperateImpl;
+import appcloud.netty.remoting.common.RequestCode;
+import appcloud.netty.remoting.common.ResponseCode;
+import appcloud.netty.remoting.protocol.RemoteCommand;
+import appcloud.netty.remoting.remote.NettyRequestProcessor;
+import io.netty.channel.ChannelHandlerContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Created by Idan on 2017/12/7.
+
+ *  宕机的快照在本地
+ *  1. 查找本地的是否存在备份
+ *  2. 查询到基础信息
+ *  3. 调用接口启动相应的vm
+ *  4. 删除本地注册表中的信息
+
+ * 备份的数据在宕机上，更新数据库信息
+ * 1. 更新数据库信息已死机
+
+ * 更新自己的注册信息
+ * 1. 去除已消失的注册主机
+ */
+public class BrokerDownProcess implements NettyRequestProcessor {
+
+    private Logger logger = LoggerFactory.getLogger(BrokerDownProcess.class);
+    private CloudController cloudController;
+    private BrokeDownOperate deadOperate;
+    private CloudControllerClientWapper clientWapper = CloudControllerClientWapper.getInstance();
+    /**
+     * TODO 这个regionId指定了client访问的服务器地址,不用这个，存在镜像备份里
+     */
+
+    public BrokerDownProcess(CloudController cloudController) {
+        this.cloudController = cloudController;
+        this.deadOperate = new BrokeDownOperateImpl();
+    }
+
+    public RemoteCommand processRequest(ChannelHandlerContext ctx, RemoteCommand request) throws Exception {
+        RemoteCommand response = null;
+        int requestCode = request.getCode();
+        if (requestCode != RequestCode.BROKER_DOWN) {
+            logger.error("this process is not the broker process, the requestId: "+request.getRequestId());
+        }
+        BrokerDownHeader brokerDownHeader = null;
+        try {
+            request.decodeConsumerHeader(BrokerDownHeader.class);
+            brokerDownHeader = (BrokerDownHeader) request.getConsumHeader();
+            if (brokerDownHeader == null) {
+                response = RemoteCommand.createReponseRemoteCommand(RequestCode.SYSTEM_ERROR, ResponseCode.ERROR);
+                return response;
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            response = RemoteCommand.createReponseRemoteCommand(RequestCode.SYSTEM_ERROR, ResponseCode.ERROR);
+            return response;
+        }
+        RouteInfo downBrokerInfo = brokerDownHeader.getDownBrokerInfo();
+        Boolean masterAlive = brokerDownHeader.isMasterAlive();
+        RouteInfo newMasterInfo = brokerDownHeader.getMasterInfo();
+        logger.info("get the brokerDown request: "+brokerDownHeader);
+        Boolean dealRs = deadOperate.dealImageBack(Constants.REGION_ID, downBrokerInfo.getDataCenter());
+        //Boolean updateRs = deadOperate.updateImgBack(downBrokerInfo.getDataCenter(), null);
+        Boolean registerRs = deadOperate.updateRegister(downBrokerInfo,newMasterInfo,masterAlive);
+        clientWapper.refreshVersionRequest(); //更新版本
+        return response = RemoteCommand.createReponseRemoteCommand(RequestCode.BROKER_DOWN, ResponseCode.SUCCESSED);
+    }
+
+    public boolean rejectRequest() {
+        return false;
+    }
+}

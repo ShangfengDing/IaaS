@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+          "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"       
+          "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+    <package name="price" namespace="/price" extends="default">
+		<!-- 计费设置 -->
+		<action name="getrule" class="appcloud.admin.action.price.GetRuleAction">
+            <result name="success">/price/rulelist.jsp</result>
+			<result name="error">/error/500.jsp</result>
+        </action>
+		
+		<action name="addrule" class="appcloud.admin.action.price.AddRuleAction">
+            <result name="success" type="json"></result>
+        </action>
+		
+		<action name="updaterule" class="appcloud.admin.action.price.UpdateRuleAction">
+            <result name="success" type="json"></result>
+        </action>
+        
+        <action name="preaddrule" class="appcloud.admin.action.price.GetClusterAction">
+            <result name="success">/price/addrule.jsp</result>
+            <result name="error">/error/500.jsp</result>
+        </action>
+        
+        <action name="preupdaterule" class="appcloud.admin.action.price.GetClusterAction">
+            <result name="success">/price/updaterule.jsp</result>
+            <result name="error">/error/500.jsp</result>
+        </action>
+		
+		<action name="delrule" class="appcloud.admin.action.price.DelRuleAction">
+            <result name="success" type="json"></result>
+        </action>
+        
+        <!-- 交易记录 -->
+		<action name="billinghistory" class="appcloud.admin.action.price.BillingHistoriesAction">
+            <result type="json"></result>
+        </action>
+		
+        <action name="recharge" class="appcloud.admin.action.price.RechargeAction">
+            <result type="json"></result>
+        </action>
+        
+        <action name="cleanbalance" class="appcloud.admin.action.price.CleanBalanceAction">
+        	<result type="json"></result>
+        </action>
+		
+    </package>
+</struts>

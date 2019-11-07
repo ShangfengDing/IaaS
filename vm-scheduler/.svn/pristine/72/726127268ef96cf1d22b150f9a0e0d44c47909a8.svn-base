@@ -1,0 +1,463 @@
+/**
+ * File: VMSchedulerServiceImpl.java
+ * Author: weed
+ * Create Time: 2013-4-15
+ */
+package appcloud.vmscheduler.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.log4j.Logger;
+
+import appcloud.common.constant.RoutingKeys;
+import appcloud.common.errorcode.VMSEC;
+import appcloud.common.exception.IllegalRpcArgumentException;
+import appcloud.common.model.Host;
+import appcloud.common.model.MessageLog;
+import appcloud.common.model.ResourceStrategy;
+import appcloud.common.model.ResourceStrategy.StrategyTypeEnum;
+import appcloud.common.model.RpcExtra;
+import appcloud.common.model.VmInstance;
+import appcloud.common.model.VmInstance.VmStatusEnum;
+import appcloud.common.model.VmInstanceMetadata;
+import appcloud.common.model.VmSecurityGroup;
+import appcloud.common.model.VmSecurityGroupRule;
+import appcloud.common.model.VmVirtualInterface;
+import appcloud.common.model.VmVolume;
+import appcloud.common.model.VmVolume.VmVolumeTypeEnum;
+import appcloud.common.service.VMSchedulerService;
+import appcloud.common.util.LolLogUtil;
+import appcloud.common.util.RoutingKeyGenerator;
+import appcloud.rpc.tools.RpcException;
+import appcloud.vmschduler.utils.ClazzUtil;
+import appcloud.vmscheduler.VMSchedulerServer;
+import appcloud.vmscheduler.strategy.HostSelector;
+import appcloud.vmscheduler.strategy.SelectorService;
+import appcloud.vmscheduler.vmservice.AbstractVMService;
+import appcloud.vmscheduler.vmservice.impl.CreateVMService;
+import appcloud.vmscheduler.vmservice.impl.SecurityGroupService;
+import appcloud.vmscheduler.vmservice.impl.VMBasicOperation;
+import appcloud.vmscheduler.vmservice.impl.VolumeService;
+import appcloud.vmscheduler.vmservice.VMControllerAgent;
+
+public class VMSchedulerImpl implements VMSchedulerService {
+	private static Logger logger = Logger.getLogger(VMSchedulerImpl.class);
+	private static final int HOST_NUM = 2;
+	
+	private static LolLogUtil loller = null;
+	static {
+		try {
+//			String ipAddress = VMSchedulerServer.getHost().getIp();
+			loller = new LolLogUtil(MessageLog.ModuleEnum.VM_SCHDULER, VMSchedulerImpl.class, "");
+		} catch (RpcException e) {
+			logger.error(e.getMessage());
+		}
+	}
+	
+	private DBAgent dbAgent = DBAgent.getInstance();
+	
+	/* ======================================================================== */
+	/* ============================ VM Operations =========================== */
+	/* ======================================================================== */
+	
+	@Override
+	public void createVM(String instanceUUID, 
+						  String instanceTypeID, 
+						  List<VmInstanceMetadata> instanceMetadata,
+						  List<VmVolume> volumes, 
+						  VmSecurityGroup securityGroup,	
+						  List<VmVirtualInterface> vifs, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException {
+		logger.info("create VM: " + instanceUUID);
+		logger.info("instanceTypeID: " + instanceTypeID);
+		logger.info("instanceMetadata: " + instanceMetadata);
+		logger.info("volumes: " + volumes);
+		logger.info("securityGroup: " + securityGroup);
+		logger.info("vifs: " + vifs);
+		
+		//param 在子类内部控制，通过构造函数传入必要参数
+		AbstractVMService createService = new CreateVMService(instanceUUID, 
+						  									  instanceTypeID, 
+						  									  instanceMetadata, 
+						  									  volumes, 
+						  									  securityGroup, 
+						  									  vifs);
+		
+		try{
+		//VMOperationProcess 基类操作控制方法，处理流程模板
+		createService.VMOperationProcess(rpcExtra);
+		loller.info(LolLogUtil.CREATE_VM, "create VM: " + instanceUUID, rpcExtra);
+		}catch(RpcException e){
+			String why = "create error: " + instanceUUID;
+			
+			logger.error(why);
+			loller.error(LolLogUtil.CREATE_VM, "create VM error: " + e.getMessage(), rpcExtra);
+			throw new RpcException(e.getMessage(), e);
+		}
+	}
+	
+	private void handleOP(String instanceUUID, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException {
+		//获取当前调用操作的函数名，以该函数名为task type
+		String name = Thread.currentThread().getStackTrace()[2].getMethodName();
+		
+		//构造事务处理框架，基类
+		AbstractVMService service = new VMBasicOperation(instanceUUID, name, rpcExtra);
+		
+		//VMOperationProcess 基类操作控制方法，处理流程模板
+		//之所以封装这一步，是想抛出错误中携带当前被调用的方法
+		try {
+			service.VMOperationProcess(rpcExtra);
+			loller.info(LolLogUtil.HANDLE_OP, "Successfully handleOp:"+name , rpcExtra);
+		} catch (IllegalRpcArgumentException e) {
+			String why = "[" + name + "]: check param wrong, " + e.getMessage();
+			logger.error(why);
+			loller.error(LolLogUtil.HANDLE_OP, why+e.getMessage(), rpcExtra);
+			throw new IllegalRpcArgumentException(why);
+		} catch (RpcException e) {
+			String why = "[" + name + "]: process wrong, " + e.getMessage();
+			logger.error(why);
+			loller.error(LolLogUtil.HANDLE_OP, why+e.getMessage(), rpcExtra);
+			throw new RpcException(why);
+		}
+	}
+
+	@Override
+	public void startVM(VmInstance instance, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException {
+		logger.info("start VM: " + instance.getUuid());
+		handleOP(instance.getUuid(), rpcExtra);
+	}
+	
+	@Override
+	public void deleteVM(String instanceUUID, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException {
+		logger.info("delete VM: " + instanceUUID);
+		handleOP(instanceUUID, rpcExtra);
+	}
+
+	@Override
+	public void stopVM(String instanceUUID, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException {
+		logger.info("stop VM: " + instanceUUID);
+		handleOP(instanceUUID, rpcExtra);
+	}
+	
+	@Override
+	public void forceStopVM(String instanceUUID, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException {
+		logger.info("forcestop VM: " + instanceUUID);
+		handleOP(instanceUUID, rpcExtra);			
+	}
+
+	@Override
+	public void rebootVM(String instanceUUID, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException {
+		logger.info("reboot VM: " + instanceUUID);
+		handleOP(instanceUUID, rpcExtra);
+	}
+
+	@Override
+	public void suspendVM(String instanceUUID, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException {
+		logger.info("suspend VM: " + instanceUUID);
+		handleOP(instanceUUID, rpcExtra);	
+	}
+
+	@Override
+	public void resumeVM(String instanceUUID, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException {
+		logger.info("resume VM: " + instanceUUID);
+		handleOP(instanceUUID, rpcExtra);	
+	}
+
+	@Override
+	public void resizeVM(String instanceUUID, 
+						  String instanceTypeID, 
+						  List<VmInstanceMetadata> instanceMetadata, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException {
+		logger.info("resize VM: " + instanceUUID);
+		logger.info("instanceTypeID: " + instanceTypeID);
+		logger.info("instanceMetadata: " + instanceMetadata);
+		
+		handleOP(instanceUUID, rpcExtra);	
+	}
+	
+	@Override
+	public VmStatusEnum getVMState(String instanceUUID, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException {
+		logger.info("get VM State: " + instanceUUID);
+		
+		VMBasicOperation service = new VMBasicOperation(instanceUUID, "getVMState", rpcExtra);
+		try {
+			service.VMOperationProcess(rpcExtra);
+			loller.info(LolLogUtil.GET_VM_STATE, "get VM State: " + instanceUUID, rpcExtra);
+			return service.getStatusResult();
+		} catch (IllegalRpcArgumentException e) {
+			String why = "[getVMState]: check param wrong, " + e.getMessage();
+			logger.error(why);
+			loller.error(LolLogUtil.GET_VM_STATE, why+e.getMessage(), rpcExtra);
+			throw new IllegalRpcArgumentException(why);
+		} catch (RpcException e) {
+			String why = "[getVMState]: process wrong, " + e.getMessage();
+			logger.error(why);
+			loller.error(LolLogUtil.GET_VM_STATE, why+e.getMessage(), rpcExtra);
+			throw new RpcException(why);
+		}
+	}
+	
+	@Override
+	public void offlineMigrate(String instanceUUID, String anotherHostUUID,
+			RpcExtra rpcExtra) throws RpcException {
+		logger.info("offline migrate: " + instanceUUID);
+		
+		VMBasicOperation service = new VMBasicOperation(instanceUUID, "offlineMigrate", anotherHostUUID, rpcExtra);
+		try {
+			service.VMOperationProcess(rpcExtra);
+			logger.info("offline migrate: " + instanceUUID + "success!!!");
+			loller.info(LolLogUtil.OFFLINE_MIGRATION, "offline migrate: " + instanceUUID + " suceess!!!", rpcExtra);
+		} catch (IllegalRpcArgumentException e) {
+			String why = "[offlineMigrate]: check param wrong, " + e.getMessage();
+			logger.error(why);
+			loller.error(LolLogUtil.OFFLINE_MIGRATION, why+e.getMessage(), rpcExtra);
+			throw new IllegalRpcArgumentException(why);
+		} catch (RpcException e) {
+			String why = "[offlineMigrate]: process wrong, " + e.getMessage();
+			logger.error(why);
+			loller.error(LolLogUtil.OFFLINE_MIGRATION, why+e.getMessage(), rpcExtra);
+			throw new RpcException(why);
+		}
+	}
+	
+	@Override
+	public void onlineMigrate(String instanceUUID, String anotherHostUUID,
+			RpcExtra rpcExtra) throws RpcException {
+		logger.info("online migrate: " + instanceUUID);
+		
+		VMBasicOperation service = new VMBasicOperation(instanceUUID, "onlineMigrate", anotherHostUUID, rpcExtra);
+		try {
+			service.VMOperationProcess(rpcExtra);
+			logger.info("online migrate: " + instanceUUID + " success!!!");
+			loller.info(LolLogUtil.ONLINE_MIGRATION, "online migrate: " + instanceUUID + " suceess!!!", rpcExtra);
+		} catch (IllegalRpcArgumentException e) {
+			String why = "[onlineMigrate]: check param wrong, " + e.getMessage();
+			logger.error(why);
+			loller.error(LolLogUtil.ONLINE_MIGRATION, why+e.getMessage(), rpcExtra);
+			throw new IllegalRpcArgumentException(why);
+		} catch (RpcException e) {
+			String why = "[onlineMigrate]: process wrong, " + e.getMessage();
+			logger.error(why);
+			loller.error(LolLogUtil.ONLINE_MIGRATION, why+e.getMessage(), rpcExtra);
+			throw new RpcException(why);
+		}
+	}
+	
+	
+	/* ======================================================================== */
+	/* ============================ Host Operations =========================== */
+	/* ======================================================================== */
+	
+	@Override
+	public List<Host> selectHost(String instanceUUID, Integer instanceTypeId,
+								 Integer availabilityZoneID, Integer clusterID, RpcExtra rpcExtra) throws RpcException {
+		logger.info("select host: " + instanceUUID);
+		
+		/*
+		 * select host
+		 * 策略模式
+		 * TODO:
+		 * 1.默认。现在只有random实现
+		 * 2.现在留下了判断主机负载要求的接口，还没实现
+		 */
+		int num = HOST_NUM;  //先默认给定2吧 
+//		SelectorService selectorService = new RandomSelector();
+//		List<Host> selectedhost = selectorService.selectNodes(num, 
+//															  dbAgent.getVmInstance(instanceUUID), 
+//															  dbAgent.getVmInstanceType(instanceTypeUUID),
+//															  clusterID);
+		
+		logger.info(dbAgent.getClusterById(clusterID));
+		List<ResourceStrategy> strategys = dbAgent.getClusterById(clusterID).getResrcStrategys();
+		ResourceStrategy cpuMemStrategy = null;
+		for(ResourceStrategy stg : strategys) {
+			if(stg.getType().equals(StrategyTypeEnum.CPU_MEMORY)) {
+				cpuMemStrategy = stg;
+				break;
+			}
+		}
+		
+		logger.info(cpuMemStrategy);
+		
+		SelectorService hostSelector = (SelectorService) ClazzUtil.getInstance(cpuMemStrategy.getClazzs());
+//		SelectorService hostSelector = new HostSelector();
+		List<Host> selectedhost = hostSelector.selectNodes(num,dbAgent.getVmInstance(instanceUUID), 
+															  dbAgent.getVmInstanceTypeByID(instanceTypeId),
+															  clusterID);
+		
+		logger.info("completed select host: " + selectedhost);
+		loller.info(LolLogUtil.SELECT_HOST,"completed select host: " + selectedhost, rpcExtra);
+		return selectedhost;		
+	}
+
+	public List<Host> selectSpecificHost(String hostUuid, RpcExtra rpcExtra) throws RpcException{
+		Host host = dbAgent.getHostByUuid(hostUuid);
+		logger.info("completed select host: " + host);
+		loller.info(LolLogUtil.SELECT_HOST,"completed select host: " + host, rpcExtra);
+		List<Host> selectedhost = new ArrayList<Host>();
+		selectedhost.add(host);
+		return selectedhost;
+	}
+	
+	
+	/* ======================================================================== */
+	/* ============================ Volume Operations =========================== */
+	/* ======================================================================== */
+	
+	private void handleVolume(String instanceUUID, VmVolume volume, RpcExtra rpcExtra) 
+				 throws IllegalRpcArgumentException, RpcException {
+		//获取当前调用操作的函数名，以该函数名为task type
+		String name = Thread.currentThread().getStackTrace()[2].getMethodName();
+		
+		//构造事务处理框架，基类
+		AbstractVMService service = new VolumeService(instanceUUID, volume, name);
+		
+		//VMOperationProcess 基类操作控制方法，处理流程模板
+		try {
+			service.VMOperationProcess(rpcExtra);
+			loller.info(LolLogUtil.HANDLE_VOLUME, "handle_volume " + name, rpcExtra);
+		} catch (IllegalRpcArgumentException e) {
+			String why = "[" + name + "]: check param wrong, " + e.getMessage();
+			logger.error(why);
+			loller.error(LolLogUtil.HANDLE_VOLUME, why+e.getMessage(), rpcExtra);
+			throw new IllegalRpcArgumentException(why);
+		} catch (RpcException e) {
+			String why = "[" + name + "]: process wrong, " + e.getMessage();
+			logger.error(why);
+			loller.error(LolLogUtil.HANDLE_VOLUME, why+e.getMessage(), rpcExtra);
+			throw new RpcException(why);
+		}
+	}
+	
+	@Override
+	public void attachVolume(String instanceUUID, VmVolume volume, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException {
+		logger.info("attach volume: " + volume);
+		logger.info("instanceUUID: " + instanceUUID);
+		
+		//attach volume
+		handleVolume(instanceUUID, volume, rpcExtra);
+
+		//add remain work:
+		if (volume.getVolumeType().equals(VmVolumeTypeEnum.ISO)) {
+			//start vm
+			VmInstance instance = dbAgent.getVmInstance(instanceUUID);
+			startVM(instance, rpcExtra);
+			//vm status: rebuilding
+			dbAgent.setVMStatus(instanceUUID, VmStatusEnum.REBUILDING);
+		}
+	}
+
+	@Override
+	public void detachVolume(String instanceUUID, VmVolume volume, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException {
+		logger.info("detach volume: " + volume);
+		logger.info("instanceUUID: " + instanceUUID);
+		
+		//detach volume
+		handleVolume(instanceUUID, volume,rpcExtra);
+	}
+	
+	/* ======================================================================== */
+	/* ============================ Security Group Operations ================== */
+	/* ======================================================================== */
+	
+	@Override
+    public void defineSecurityGroup(VmSecurityGroup securityGroup, 
+    						   		List<VmSecurityGroupRule> SGRules, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException {
+    	logger.info("define security group: " + securityGroup.getName());
+    	logger.info("security group rules: " + SGRules);
+    	
+    	//调用SecurityGroupService，完成防火墙define
+		SecurityGroupService service = new SecurityGroupService(null, securityGroup, SGRules, "defineSecurityGroup");
+		try {
+			service.VMOperationProcess(rpcExtra);
+			loller.info(LolLogUtil.DEFINE_SECURITY_GROUP, "successfully define security group: " + securityGroup.getName(), rpcExtra);
+		} catch (IllegalRpcArgumentException e) {
+			String why = "[defineSecurityGroup]: check param wrong, " + e.getMessage();
+			logger.error(why);
+			loller.error(LolLogUtil.DEFINE_SECURITY_GROUP, why+e.getMessage(), rpcExtra);
+			throw new IllegalRpcArgumentException(why);
+		} catch (RpcException e) {
+			List<String> errorList = service.getDefineResult();
+			String why = "[defineSecurityGroup]: process wrong, " + e.getMessage() + errorList;
+			loller.error(LolLogUtil.DEFINE_SECURITY_GROUP, why+e.getMessage(), rpcExtra);
+    		throw new RpcException(why);
+		}
+	}
+	
+	
+    @Override
+    public VMSEC delSecurityGroup(VmSecurityGroup securityGroup, RpcExtra rpcExtra) throws RpcException {
+    	logger.info("delSecurityGroup: " + securityGroup);
+    	
+    	List<VmInstance> instanceList = dbAgent.getVmInstanceListForSG(securityGroup);
+    	logger.info("instanceList (use SecurityGroup): " + instanceList);
+    	
+    	VMSEC result;
+    	if (instanceList != null && instanceList.size() > 0) {
+    		result = VMSEC.DELSG_PERMISSION_DENIED;
+    		loller.warn(LolLogUtil.DEL_SECURITY_GROUP, "delete premission denied", rpcExtra);
+    	} else {
+    		result = VMSEC.DELSG_PERMISSION;
+    		loller.info(LolLogUtil.DEL_SECURITY_GROUP, "delete premission successfully", rpcExtra);
+    	}
+    	return result;
+    }
+    
+    /**
+     * 绑定防火墙组策略至给定虚拟机
+     * @param instanceUUID
+     * @param vmSecurityGroup
+     *              需要绑定防火墙组策略
+     * @throws Exception
+     */
+    @Override
+    public void attachSecurityGroup(String instanceUUID, 
+    								VmSecurityGroup securityGroup, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException {
+    	logger.info("attach SG for instance: " + instanceUUID);
+		logger.info("securityGroup: " + securityGroup);
+		
+		//构造事务处理框架，基类
+		AbstractVMService service = new SecurityGroupService(instanceUUID, securityGroup, null, "attachSecurityGroup");
+		
+		//VMOperationProcess 基类操作控制方法，处理流程模板
+		try {
+			service.VMOperationProcess(rpcExtra);
+			loller.info(LolLogUtil.ATTACH_SECURITY_GROUP, "attach SG for instance: " + instanceUUID + "securityGroup: " + securityGroup, rpcExtra);
+		} catch (IllegalRpcArgumentException e) {
+			String why = "check param error";
+			logger.debug(why, e);
+			loller.error(LolLogUtil.ATTACH_SECURITY_GROUP, why+e.getMessage(), rpcExtra);
+			throw new IllegalRpcArgumentException(e.getMessage());
+		} catch (RpcException e) {
+			String why = "process error";
+			logger.error(why, e);
+			loller.error(LolLogUtil.ATTACH_SECURITY_GROUP, why+e.getMessage(), rpcExtra);
+			throw new RpcException(e.getMessage());
+		}
+    }
+
+	@Override
+	public String KeepAlive() throws Exception {
+		
+		logger.info(String.format("---------------------keepalive-------------------"));
+		logger.info(String.format("---------------------"+this.getClass()+":success-------------------"));
+		
+		boolean flag = true;
+		VMControllerAgent vmcService = new VMControllerAgent();
+		List<String> routingkeylist= vmcService.getHostRoutingKeyByType();
+		for(int i=0;i<routingkeylist.size();i++)
+		{
+			String routingKey= RoutingKeyGenerator.getRoutingKey(RoutingKeys.VM_CONTROLLER_PRE,routingkeylist.get(i));
+			try{
+				VMControllerAgent.service.KeepAlive(routingKey);
+			}catch (Exception e)
+			{
+				logger.info(String.format("---------------------keepalive-------------------"));
+				logger.info(String.format("---------------------"+routingKey+":fail-------------------"));
+				flag=false;
+			}
+		}		
+		if(flag)
+			return "success";
+		return "fail";
+	}
+}

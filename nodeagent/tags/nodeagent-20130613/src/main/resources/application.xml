@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans     
+        http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+        http://www.springframework.org/schema/task
+        http://www.springframework.org/schema/task/spring-task-3.0.xsd
+        http://www.springframework.org/schema/util
+        http://www.springframework.org/schema/util/spring-util-3.0.xsd">
+    
+    <!-- DB Proxy -->
+    <bean id="hostProxy" class="appcloud.common.util.ConnectionFactory" factory-method="getHostProxy" scope="singleton" lazy-init="true" />
+    <bean id="hostLoadProxy" class="appcloud.common.util.ConnectionFactory" factory-method="getHostLoadProxy" scope="singleton" lazy-init="true" />
+    <bean id="vmLoadProxy" class="appcloud.common.util.ConnectionFactory" factory-method="getVmLoadProxy" scope="singleton" lazy-init="true" />
+    <bean id="serviceProxy" class="appcloud.common.util.ConnectionFactory" factory-method="getServiceProxy" scope="singleton" lazy-init="true" />
+
+    <bean id="hostLoadSummary" class="appcloud.nodeagent.info.LoadSummary" >
+    	<constructor-arg type="java.lang.String" ref="hostUuid"></constructor-arg>
+    </bean>
+    
+    <bean id="nodeAgent" class="appcloud.nodeagent.info.NodeAgent" factory-method="getInstance" scope="singleton" lazy-init="true" />
+
+    <!-- 服务DAO -->
+    <bean id="serviceDAO" class="appcloud.nodeagent.dao.ServiceDAO" scope="singleton" lazy-init="true">
+    	<property name="serviceProxy" ref="serviceProxy" />
+    	<property name="host" ref="host" />
+    </bean>
+    
+    <!-- 监控Host信息 -->
+    <bean id="hostMonitor" class="appcloud.nodeagent.monitor.HostMonitor" lazy-init="true">
+    	<property name="nodeAgent" ref="nodeAgent" />
+    	<property name="hostProxy" ref="hostProxy" />
+    	<property name="hostLoadProxy" ref="hostLoadProxy" />
+    	<property name="loadSummary" ref="hostLoadSummary" />
+    	<property name="host" ref="host" />
+    	<property name="maxDelay" value="30" />
+    </bean>
+    
+    <!-- 监控VM信息 -->
+    <bean id="vmMonitor" class="appcloud.nodeagent.monitor.VmMonitor" lazy-init="true">
+    	<property name="vmLoadProxy" ref="vmLoadProxy" />
+    	<property name="host" ref="host" />
+    	<property name="serviceMonitor" ref="serviceMonitor" />
+    </bean>
+    
+    <!-- Service监控器，更改Service状态 -->
+    <bean id="serviceMonitor" class="appcloud.nodeagent.monitor.ServiceMonitor" lazy-init="true">
+    	<property name="serviceProxy" ref="serviceProxy" />
+    	<property name="host" ref="host" />
+    </bean>
+    
+	<!-- 调度器 -->
+	<task:scheduler id="scheduler" pool-size="8"/>
+	
+	<!-- 任务列表 注释掉，因为不用默认启动
+	<task:scheduled-tasks scheduler="scheduler">
+	    <task:scheduled ref="hostMonitor" method="run" fixed-rate="10000"/>
+	    <task:scheduled ref="serviceMonitor" method="run" fixed-rate="10000"/>
+	    <task:scheduled ref="vmMonitor" method="run" fixed-rate="310000"/>
+	</task:scheduled-tasks>
+	-->
+	
+	<util:list id="tasks" list-class="java.util.LinkedList">
+		<bean class="org.springframework.scheduling.concurrent.ScheduledExecutorTask">
+			<property name="runnable" ref="hostMonitor" />
+			<property name="period" value="10000"/> <!-- 调度周期为10s -->
+		</bean>
+		
+		<bean class="org.springframework.scheduling.concurrent.ScheduledExecutorTask">
+			<property name="runnable" ref="vmMonitor" />
+			<property name="period" value="300000"/> <!-- 调度周期为300s -->
+		</bean>
+		
+		<bean class="org.springframework.scheduling.concurrent.ScheduledExecutorTask">
+			<property name="runnable" ref="serviceMonitor" />
+			<property name="period" value="10000"/> <!-- 调度周期为10s -->
+		</bean>
+	</util:list>
+
+</beans>

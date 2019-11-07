@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Document   : routernginx-tip.xml
+    Created on : 2011年10月18日, 下午4:30
+    Author     : huahui
+    Description:
+        tip的配置文件，启动时加载.
+-->
+
+<tip adminport="1986">
+    <components>
+        <component id="NginxControlServer" scope="prototype" lib="./routernginx.jar:appcloud.routernginx.NginxControlServer"></component>
+        <component id="RouterControlServer" scope="prototype" lib="./routernginx.jar:appcloud.routernginx.RouterControlServer"></component>
+    </components>
+    <servers>
+        <server port="9001" ipv4="0.0.0.0" socktype="stream">
+            <handler name="NginxControlServer" serviceid="control" />
+            <handler name="RouterControlServer" serviceid="control" />
+        </server>
+    </servers>
+</tip>

@@ -1,0 +1,34 @@
+[
+  {
+    "proxyClass":"com.distributed.common.service.db.VmBackupService",
+    "implClass":"com.distributed.dbproxy.service.VmBackupServiceImpl"
+  },
+  {
+    "proxyClass":"com.distributed.common.service.db.VmInstanceInfoService",
+    "implClass":"com.distributed.dbproxy.service.VmInstanceInfoServiceImpl"
+  },
+  {
+    "proxyClass":"com.distributed.common.service.db.VmImageBackService",
+    "implClass":"com.distributed.dbproxy.service.VmImageBackServiceImpl"
+  },
+  {
+    "proxyClass":"com.distributed.common.service.db.AccountService",
+    "implClass":"com.distributed.dbproxy.service.AccountServiceImpl"
+  },
+  {
+    "proxyClass":"com.distributed.common.service.db.VmGroupService",
+    "implClass":"com.distributed.dbproxy.service.VmGroupServiceImpl"
+  },
+  {
+    "proxyClass":"com.distributed.common.service.db.VmHostService",
+    "implClass":"com.distributed.dbproxy.service.VmHostServiceImpl"
+  },
+  {
+    "proxyClass":"com.distributed.common.service.db.VmZoneService",
+    "implClass":"com.distributed.dbproxy.service.VmZoneServiceImpl"
+  },
+  {
+    "proxyClass":"com.distributed.common.service.db.VmInstanceService",
+    "implClass":"com.distributed.dbproxy.service.VmInstanceServiceImpl"
+  }
+]

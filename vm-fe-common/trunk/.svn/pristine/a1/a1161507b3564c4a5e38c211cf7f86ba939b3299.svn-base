@@ -1,0 +1,207 @@
+package com.appcloud.vm.fe.manager;
+
+import java.io.UnsupportedEncodingException;
+import java.util.List;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.log4j.Logger;
+
+import com.appcloud.vm.fe.model.Appkey;
+import com.appcloud.vm.fe.model.AppkeyDAO;
+import com.appcloud.vm.fe.util.EncryptionUtil;
+
+/**
+ *	@author hgm
+ */
+public class AppkeyManager {
+
+	private static AppkeyDAO dao = new AppkeyDAO();
+	private static Logger logger = Logger.getLogger(AppkeyManager.class);
+	private static boolean isNeedEncryption = false;
+
+	/**
+	 * 通过userId获取该userId对应的所有appkey信息
+	 */
+	public List<Appkey> getAppkeyByUserId(Integer userId) {
+		List<Appkey> appKeys = dao.findByProperty("userId", userId);
+		if (isNeedEncryption) {
+			for (Appkey appkey : appKeys) {
+				try {
+					appkey.setAppkeySecret(EncryptionUtil.decrypt(Base64.decodeBase64(appkey.getAppkeySecret().getBytes("ISO-8859-1")), EncryptionUtil.getKey(appkey.getUserEmail())));
+				} catch (UnsupportedEncodingException e) {
+					e.printStackTrace();
+				}
+			}
+		} 
+		return appKeys;
+	}
+	/**
+	 * 通过userEmail获取该用户在对应云提供商下的appkey信息
+	 */
+	@Deprecated
+	public Appkey getAppkeyByUserEmail(String userEmail) {
+		List<Appkey> appkeys = dao.findByProperty("userEmail", userEmail);
+		return null==appkeys ? null : appkeys.get(0);
+	}
+	/**
+	 * 通过userEmail和provider获取该用户在对应云提供商下的appkey信息
+	 */
+	@Deprecated
+	public Appkey getAppkeyByUserEmailAndProvider(String userEmail,String provider) {
+		List<Appkey> appkeys = dao.findByProperty2("userEmail", userEmail, "provider", provider);
+		return null==appkeys ? null : appkeys.get(0);
+	}
+	/**
+	 * 通过userId和provider获取该userId对应的appkey信息
+	 */
+	@Deprecated
+	public Appkey getAppkeyByUserIdAndProvider(Integer userId, String provider) {
+		List<Appkey> appkeys = dao.findByProperty2("userId", userId, "provider", provider);
+		return null==appkeys ? null : appkeys.get(0);
+	}
+	/**
+	 * 通过userEmail和appname获取该用户在对应云提供商下的appkey信息
+	 */
+	public Appkey getAppkeyByUserEmailAndAppName(String userEmail,String appname) {
+		List<Appkey> appkeys = dao.findByProperty2("userEmail", userEmail, "appname", appname);
+		if (appkeys==null || appkeys.size()==0) {
+			return null;
+		}
+		Appkey appkey = appkeys.get(0);
+		if (isNeedEncryption) {
+			try {
+				appkey.setAppkeySecret(EncryptionUtil.decrypt(Base64.decodeBase64(appkey.getAppkeySecret().getBytes("ISO-8859-1")), EncryptionUtil.getKey(appkey.getUserEmail())));
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} 
+		return appkey;
+	}
+	
+	/**
+	 * 通过userId和appname获取该用户在对应云提供商下的appkey信息
+	 */
+	public Appkey getAppkeyByUserIdAndAppName(Integer userId,String appname) {
+		List<Appkey> appkeys = dao.findByProperty2("userId", userId, "appname", appname);
+		if (appkeys==null || appkeys.size()==0) {
+			return null;
+		}
+		Appkey appkey = appkeys.get(0);
+		if (isNeedEncryption) {
+			try {
+				appkey.setAppkeySecret(EncryptionUtil.decrypt(Base64.decodeBase64(appkey.getAppkeySecret().getBytes("ISO-8859-1")), EncryptionUtil.getKey(appkey.getUserEmail())));
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} 
+		return appkey;
+	}
+	
+	/**
+	 * 通过Id获取该appkey信息
+	 */
+	public Appkey getAppkeyById(Integer id) {
+		Appkey appkey = dao.findById(id);
+		if (isNeedEncryption && appkey!=null) {
+			try {
+				appkey.setAppkeySecret(EncryptionUtil.decrypt(Base64.decodeBase64(appkey.getAppkeySecret().getBytes("ISO-8859-1")), EncryptionUtil.getKey(appkey.getUserEmail())));
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} 
+		return appkey;
+	}
+	
+	public void addAppkey(Integer userId, String userEmail, String appKey, String secertKey, String provider, String appname) {
+		Appkey appkey = new Appkey();
+		appkey.setUserId(userId);
+		appkey.setUserEmail(userEmail);
+		appkey.setAppkeyId(appKey);
+		appkey.setAppkeySecret(secertKey);
+		appkey.setProvider(provider);
+		appkey.setAppname(appname);
+		
+		if (isNeedEncryption) {
+			byte[] encrypt = EncryptionUtil.encrypt(secertKey, EncryptionUtil.getKey(appkey.getUserEmail()));
+			try {
+				appkey.setAppkeySecret(new String(Base64.encodeBase64(encrypt),"ISO-8859-1"));
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		/*List<Appkey> appkeys = dao.findByProperty2("appkeyId", appKey, "provider", provider);
+		for (Appkey appkeyT : appkeys) {
+			if (appkeyT.getUserId() == userId) {
+				logger.info("this appkey has register!");
+				return;
+			}
+		}*/
+		
+		dao.save(appkey);
+	}
+
+	public void addAppkey(Integer userId, String userEmail, String appKey, String secertKey, String provider, String appname, String region, String zone, int state) {
+		Appkey appkey = new Appkey();
+		appkey.setUserId(userId);
+		appkey.setUserEmail(userEmail);
+		appkey.setAppkeyId(appKey);
+		appkey.setAppkeySecret(secertKey);
+		appkey.setProvider(provider);
+		appkey.setAppname(appname);
+		appkey.setRegion(region);
+		appkey.setZone(zone);
+		appkey.setState(state);
+		appkey.setAppcloud_userEmail(userEmail);
+
+		if (isNeedEncryption) {
+			byte[] encrypt = EncryptionUtil.encrypt(secertKey, EncryptionUtil.getKey(appkey.getUserEmail()));
+			try {
+				appkey.setAppkeySecret(new String(Base64.encodeBase64(encrypt),"ISO-8859-1"));
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		/*List<Appkey> appkeys = dao.findByProperty2("appkeyId", appKey, "provider", provider);
+		for (Appkey appkeyT : appkeys) {
+			if (appkeyT.getUserId() == userId) {
+				logger.info("this appkey has register!");
+				return;
+			}
+		}*/
+
+		dao.save(appkey);
+	}
+	
+	public void updateAppkey(Integer accountId, String provider, String appname,String appkeyId,String appkeySecret,  String region, String zone, int state) {
+		Appkey appkey = dao.findById(accountId);
+		appkey.setProvider(provider);
+		appkey.setAppname(appname);
+		appkey.setAppkeyId(appkeyId);
+		appkey.setAppkeySecret(appkeySecret);
+		appkey.setRegion(region);
+		appkey.setZone(zone);
+		appkey.setState(state);
+		
+		dao.update(appkey);
+	}
+
+	public void updateAppkey(Integer accountId, String provider, String appname,String appkeyId,String appkeySecret) {
+		Appkey appkey = dao.findById(accountId);
+		appkey.setProvider(provider);
+		appkey.setAppname(appname);
+		appkey.setAppkeyId(appkeyId);
+		appkey.setAppkeySecret(appkeySecret);
+
+		dao.update(appkey);
+	}
+	
+	public void deleteAppkey(Integer id) {
+		dao.deleteByPrimaryKey(id);
+	}
+	
+}

@@ -1,0 +1,14 @@
+package com.distributed.common.service.controller;
+
+/**
+ * Created by lizhenhao on 2018/1/5.
+ */
+public interface ITransPort {
+    /**
+     * @param dataCenter  增量镜像所在的datacenter
+     * @param filePath    增量镜像所在的datacenter的路径（通过nfs挂载）
+     * @param destAddress 增量镜像将要备份到的位置（可选，若没有则在控制模块智能分配）
+     * @param needToClean 增量镜像是否要重新传输（如果是，则destAddress使用传送的参数，如果否，采用内存的存储的Address）
+     */
+    public boolean transPortImageBack(String dataCenter,String filePath,String destAddress,boolean needToClean);
+}

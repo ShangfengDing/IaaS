@@ -1,0 +1,7 @@
+#lol provider properties
+
+LOL_TOPIC=vm
+
+KAFKA_ZOOKEEPER=192.168.1.22:2181
+
+IS_FAKE_LOL=false

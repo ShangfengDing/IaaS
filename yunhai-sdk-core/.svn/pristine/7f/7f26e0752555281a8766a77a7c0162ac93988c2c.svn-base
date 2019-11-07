@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Endpoints>
+	<Endpoint name="cn-beijing">
+		<RegionIds>
+			<!--<RegionId>beijing</RegionId>-->
+			<RegionId>beijing</RegionId>
+		</RegionIds>
+		<Products>
+			<Product>
+				<ProductName>iaas</ProductName>
+				 <!--<DomainName>localhost:8081/openapi-server</DomainName>-->
+				 <!--<DomainName>cass-demo.free4inno.com</DomainName>-->
+				<!--<DomainName>192.168.1.103:8088/</DomainName>-->
+				<!--<DomainName>openapi.free4inno.com</DomainName>-->
+				<DomainName>192.168.10.6:8081/</DomainName>
+				<!--<DomainName>localhost:8081/openapi-server</DomainName>-->
+			</Product>
+		</Products>
+	</Endpoint>
+
+	<!--<Endpoint name="cn-beijing">-->
+		<!--<RegionIds>-->
+			<!--<RegionId>lab</RegionId>-->
+		<!--</RegionIds>-->
+		<!--<Products>-->
+			<!--<Product>-->
+				<!--<ProductName>iaas</ProductName>-->
+				<!--&lt;!&ndash;<DomainName>localhost:8081/openapi-server</DomainName>&ndash;&gt;-->
+				<!--&lt;!&ndash;<DomainName>cass-demo.free4inno.com</DomainName>&ndash;&gt;-->
+				<!--<DomainName>989892.iok.la:20887</DomainName>-->
+				<!--&lt;!&ndash;<DomainName>openapi.free4inno.com</DomainName>&ndash;&gt;-->
+			<!--</Product>-->
+		<!--</Products>-->
+	<!--</Endpoint>-->
+
+</Endpoints>

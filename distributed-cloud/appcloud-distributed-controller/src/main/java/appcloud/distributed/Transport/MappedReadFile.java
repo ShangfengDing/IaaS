@@ -1,0 +1,138 @@
+package appcloud.distributed.Transport;
+
+import appcloud.distributed.util.FileUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+
+/**
+ * Created by lizhenhao on 2017/12/16.
+ */
+public class MappedReadFile {
+
+    protected final static Logger LOGGER = LoggerFactory.getLogger(MappedReadFile.class);
+
+    public static MappedReadFile createMappedFile(int capacity, String filePath) throws IOException {
+        return createMappedFile(capacity, filePath, 0);
+    }
+
+    public static MappedReadFile createMappedFile(int capacity, String filePath, long position) throws IOException {
+        MappedReadFile mappedFile = new MappedReadFile(capacity, filePath, position);
+        mappedFile.init();
+        return mappedFile;
+    }
+
+    private int capacity;
+    private byte[] bytes;
+    private String filePath;
+
+    private long position;
+    private long prevPosition;
+    private ByteBuffer directByteBuffer;
+    private FileChannel fileChannel;
+
+    private long fileSize;
+
+
+    public MappedReadFile(int capacity, String filePath, long position) {
+        this.capacity = capacity;
+        this.filePath = filePath;
+        this.position = position;
+    }
+
+    public MappedReadFile(int capacity, String filePath) {
+        this(capacity, filePath, 0);
+    }
+
+    private void init() throws IOException {
+        directByteBuffer = ByteBuffer.allocateDirect(this.capacity);
+        fileChannel = new RandomAccessFile(filePath, "r").getChannel();
+        fileChannel.position(this.position);
+        fileSize = fileChannel.size();
+        bytes = new byte[capacity];
+    }
+
+    public boolean isReadable() {
+        // TODO: 2017/12/16 这个判断是否合理
+        if (position < fileSize) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public byte[] read() throws IOException {
+        if (isReadable()) {
+            int readBytes = fileChannel.read(directByteBuffer, position);
+            prevPosition = position;
+            position += readBytes;
+            directByteBuffer.flip();
+            if (readBytes < capacity) {
+                bytes = new byte[readBytes];
+                directByteBuffer.get(bytes);
+                directByteBuffer.clear();
+            } else {
+                directByteBuffer.get(bytes);
+                directByteBuffer.clear();
+            }
+            return bytes;
+        } else {
+            return null;
+        }
+    }
+
+    public void savePostion(String destAddress) {
+        Position postion = new Position(this.prevPosition, destAddress, this.filePath);
+        FileUtil.transportPostion.put(this.filePath, postion);
+    }
+
+    public boolean fileEnd() {
+        // TODO: 2017/12/16 这个判断是否合理
+        return this.position == fileSize;
+    }
+
+    public void destroyMappedFile() throws IOException {
+        bytes = null;
+        if (fileChannel != null) {
+            fileChannel.close();
+        }
+        FileUtil.clean(directByteBuffer);
+        LOGGER.info("destroy file success!");
+    }
+
+    public int getCapacity() {
+        return capacity;
+    }
+
+    public void setCapacity(int capacity) {
+        this.capacity = capacity;
+    }
+
+    public long getPosition() {
+        return position;
+    }
+
+    public void setPosition(long position) {
+        this.position = position;
+    }
+
+    public long getPrevPosition() {
+        return prevPosition;
+    }
+
+    public void setPrevPosition(long prevPosition) {
+        this.prevPosition = prevPosition;
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
+}

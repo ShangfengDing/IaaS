@@ -1,0 +1,73 @@
+package com.distributed.dbproxy.service;
+
+import com.distributed.common.entity.VmImageBack;
+import com.distributed.common.service.db.VmImageBackService;
+import com.distributed.dbproxy.sql.repository.appcloud.VmImageBackDao;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
+
+/**
+ * Created by Idan on 2017/12/21.
+ */
+public class VmImageBackServiceImpl implements VmImageBackService {
+
+    @Autowired
+    private VmImageBackDao vmImageBackDao;
+
+    @Override
+    public List<VmImageBack> findAll() {
+        return null;
+    }
+
+    @Override
+    public VmImageBack getByUuid(String uuid) {
+        return null;
+    }
+
+    @Override
+    public VmImageBack getDetailsByUuid(String uuid, boolean withCluster, boolean withZone, boolean withInstance, boolean withHost) {
+        return null;
+    }
+
+    @Override
+    public VmImageBack getByActiveVolumeUuidAndTop(String activeVolumeUuid, boolean isTop) {
+        return null;
+    }
+
+    @Override
+    public VmImageBack getByInstanceUuidAndTop(String instanceUuid, boolean isTop) {
+        return null;
+    }
+
+    @Override
+    public List<VmImageBack> getByInstanceUuid(String instanceUuid) {
+        return null;
+    }
+
+    @Override
+    public List<VmImageBack> getByActiveVolumeUuid(String activeVolumeUuid) {
+        return null;
+    }
+
+    @Override
+    public Boolean save(VmImageBack vmImageBack) {
+        return null;
+    }
+
+    @Override
+    public Boolean update(VmImageBack vmImageBack) {
+        return null;
+    }
+
+    @Override
+    public Boolean deleteByUuid(String uuid) {
+        return null;
+    }
+
+    @Override
+    public Boolean deleteById(Integer id) {
+        vmImageBackDao.delete(Integer.valueOf(id));
+        return true;
+    }
+}

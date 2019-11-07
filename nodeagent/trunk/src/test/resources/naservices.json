@@ -1,0 +1,23 @@
+{
+	"dbproxy":
+	{
+		"name":"dbproxy",
+		"mainClass":"appcloud.dbproxy.ProxyServer",
+		"classpath":"exec/dbproxy",
+		"monitorPort":"9001"
+	},
+	"volume-scheduler":
+	{
+		"name":"volume-scheduler",
+		"mainClass":"appcloud.vs.VolumeSchedulerServer",
+		"classpath":"exec/volume-scheduler",
+		"monitorPort":"9031"
+	},
+	"test":
+	{
+		"name":"test",
+		"mainClass":"appcloud.nodeagent.bootstrap.DemoService",
+		"classpath":"",
+		"monitorPort":"9037"
+	}
+}

@@ -1,0 +1,30 @@
+package appcloud.core.sdk.common;
+
+import org.apache.log4j.Logger;
+
+import java.util.Properties;
+
+public class Constants {
+	public static String REGION_ID;
+	public static String ZONE_ID;
+	
+    static {
+        final Logger logger = Logger.getLogger("iaas configuration");
+        logger.info("+++++++++++iaas configuration information++++++++++++");
+        try {
+            Properties p = new Properties();
+            p.load(Constants.class.getClassLoader().getResourceAsStream("iaas.properties"));;
+
+            REGION_ID = p.getProperty("REGIONID");
+            logger.info("REGIONID:" + REGION_ID);
+
+            ZONE_ID = p.getProperty("ZONE_ID");
+            logger.info("ZONE_ID:" + ZONE_ID);
+        } catch (Exception e) {
+            logger.fatal("Failed to init app configuration", e);
+            REGION_ID = "beijing";
+            ZONE_ID = "lab";
+        }
+        logger.info("----------App configuration successfully----------");
+    }
+}

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+          "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"       
+          "http://struts.apache.org/dtds/struts-2.0.dtd">
+<!-- 
+  - This file is included by the struts.xml file as an example
+  - of how to break up the configuration file into multiple files.
+-->
+<struts>
+ <!-- 用户相关登录等操作 -->	
+ <package name="accounts" namespace="/accounts" extends="default">  
+  	<action name="login" class="appcloud.admin.action.accounts.LoginAction">
+		<result name="input">/index.jsp</result>
+		<result name="success" type="redirect">
+			${url}
+		</result> 
+    </action>
+
+	<action name="getRolelist" class="appcloud.admin.action.accounts.GetResourceList">
+		<result type="json"></result>
+	</action>
+    <action name="logout" class="appcloud.admin.action.accounts.LogoutAction">
+    	<result name="success" type="redirect">/index.jsp</result>
+    </action> 
+   <!--   
+    <action name="admininfo" class="com.appcloud.admin.web.accounts.AdminInfoAction">
+      <result name="success">/accounts/admininfo.jsp</result>
+    </action>
+     
+    <action name="upadmininfo" class="com.appcloud.admin.web.accounts.UpAdminInfoAction">
+      <result name="success">/accounts/admininfo.jsp</result>
+    </action>
+    
+    <action name="getPassword" class="com.appcloud.admin.web.accounts.GetPasswordAction">
+      <result name="input">/accounts/getpassword.jsp</result>
+      <result name="success" type="redirect">/index.jsp</result>      
+    </action>   -->
+     
+  </package>
+</struts>

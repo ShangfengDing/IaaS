@@ -1,0 +1,81 @@
+package appcloud.distributed.process.operate;
+
+import appcloud.distributed.configmanager.RouteInfo;
+import appcloud.distributed.configmanager.RouteInfoManager;
+import appcloud.distributed.process.thread.RecoveryThread;
+import com.distributed.common.constant.EnumConstants;
+import com.distributed.common.entity.VmBack;
+import com.distributed.common.factory.DbFactory;
+import com.distributed.common.service.db.VmBackupService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+/**
+ * Created by Idan on 2017/12/18.
+ */
+public class BrokeDownOperateImpl implements BrokeDownOperate {
+    private static final Logger logger = LoggerFactory.getLogger(BrokeDownOperateImpl.class);
+
+    private VmBackupService vmBackupService = DbFactory.getVmBackUpService();
+    private ExecutorService executorService = Executors.newFixedThreadPool(10);
+    private RouteInfoManager routeInfoManager = RouteInfoManager.getRouteInfoManager();
+
+    public BrokeDownOperateImpl() {}
+
+    /**
+     * @param regionId
+     * @param dataCenterUuid 源数据中心的地址
+     * @return
+     */
+    public Boolean dealImageBack(String regionId, String dataCenterUuid) {
+        List<VmBack> vmBacks = null;
+        try {
+            vmBacks = vmBackupService.findByParams(null,null, null, dataCenterUuid, null, EnumConstants.SurvivalStatus.ALIVE.toString(), true);
+            if (vmBacks == null || vmBacks.size() == 0) {
+                logger.info("this dataCenter has no backup");
+                return true;
+            }
+            logger.info("备份数据："+vmBacks);
+            for (VmBack vmBack: vmBacks) {
+                new RecoveryThread(vmBack, regionId, routeInfoManager.getOwnDataCenter()).run(); // 没有返回值，这里应该改进
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+        return false;
+    }
+
+    public Boolean updateRegister(RouteInfo downBrokerInfo,RouteInfo newMasterInfo,boolean masterAlive) {
+        try {
+            String dataCenter = downBrokerInfo.getDataCenter();
+            routeInfoManager.removeRouteInfo(dataCenter);
+            logger.info("更新注册表，去掉数据中心："+dataCenter);
+            if (!masterAlive) {
+                logger.info("the master has down, the ip:"+newMasterInfo.getIpAddress()+" and port: "+newMasterInfo.getPort());
+                routeInfoManager.updateMaster(newMasterInfo);
+            }
+            return true;
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return false;
+        }
+    }
+
+    public Boolean updateImgBack(String dataCenterUuid, String hostUuid) {
+        logger.info("update the imageback status in this dataCenter, dataCenter: "+dataCenterUuid+", host:"+hostUuid);
+        try {
+            vmBackupService.updateVmBack(null, hostUuid,null,dataCenterUuid, null,  EnumConstants.SurvivalStatus.DEAD.toString());
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("failed to update the imageback status in this dataCenter, dataCenter: "+dataCenterUuid+", host:"+hostUuid + e.getMessage());
+            return false;
+        }
+    }
+
+}

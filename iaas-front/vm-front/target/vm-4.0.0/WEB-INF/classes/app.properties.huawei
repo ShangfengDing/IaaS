@@ -1,0 +1,46 @@
+#huawei
+
+#used in vm-site
+CLIENT_SECRET_KEY=newiaasSecret
+CLIENT_ID=newiaas
+DEFAULT_GROUP=2
+DEFAULT_CHECKTIMESLOT=1000
+DEFAULT_HD_CHECKTIME=10000
+DEFAULT_CHECKTIME=10000
+URL_ACCOUNT=http://account.testtest.com/
+HTTPS_ACCOUNT=http://account.testtest.com/
+FRONT_URL=http://front.testtest.com
+FREEHELP_URL=http://freehelp.testtest.com/
+VNC_HOST=202.85.221.152
+VNC_PORT=6080
+LOG_COUNT=10
+#webVNC not use any more, to be delete
+WEBVNC_URL=http://webvnc58.free4inno.com/vnc/
+
+#used in admin
+DB_PROXY_ADDRESS=tcp://192.168.1.12:9001
+CSS_JS_SERVER=freefront/
+USERS_SERVER=http://account.testtest.com/users/
+
+
+#common properties
+MAX_ATTEMPTS = 10
+ACCOUNT_SERVER=http://account.testtest.com/api/billing/
+BILLING_SERVER=http://192.168.1.103:8083/billingrate/
+API_SERVER=http://192.168.1.103:8082/api
+
+#charge ID
+ADMIN_TENANT_ID=10
+
+DOMAIN=http://newiaas.testtest.com
+
+COMMON_URI=http://dc.testtest.com
+#URL_NEWFRONT=http://192.168.1.62:8383
+URL_NEWFRONT=http://newfront.testtest.com
+LOL_COMMON_URI=http://dc.free4inno.com/
+
+#newiaas log
+lolAppName=newiaas
+lolAppkey=12911f831e864e40a96f16368893288f
+lolSecretKey=iWc0Pd0ziFZ4LLJY8BTgDcbMBUQ7T2pb
+lolEnable=false

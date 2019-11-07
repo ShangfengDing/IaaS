@@ -1,0 +1,39 @@
+#used in vm-site
+CLIENT_SECRET_KEY=newiaasSecret
+CLIENT_ID=newiaas
+DEFAULT_GROUP=4
+DEFAULT_CHECKTIMESLOT=1000
+DEFAULT_HD_CHECKTIME=10000
+DEFAULT_CHECKTIME=10000
+URL_ACCOUNT=http://account.free4lab.com/
+HTTPS_ACCOUNT=https://account.free4lab.com/
+FRONT_URL=http://front.free4lab.com
+FREEHELP_URL=http://freehelp.free4lab.com/
+VNC_HOST=118.229.254.18
+VNC_PORT=6080
+LOG_COUNT=10
+#webVNC not use any more, to be delete
+WEBVNC_URL=http://webvnc58.free4lab.com/vnc/  
+
+#used in admin
+#DB_PROXY_ADDRESS=tcp://192.168.33.27:9001
+DB_PROXY_ADDRESS=tcp://192.168.1.57:9001
+CSS_JS_SERVER=freefront/
+USERS_SERVER=http://account.free4lab.com/users/
+
+
+#common properties
+MAX_ATTEMPTS = 10
+ACCOUNT_SERVER=http://account.free4lab.com/api/billing/
+BILLING_SERVER=http://192.168.1.61:8084/billingrate/
+API_SERVER=http://192.168.1.61:8081/api
+
+#charge ID
+ADMIN_TENANT_ID=10
+
+DOMAIN=http://newiaas.free4lab.com
+
+COMMON_URI=http://dc.free4lab.com
+#URL_NEWFRONT=http://192.168.1.62:8383
+URL_NEWFRONT=http://newfront.free4lab.com
+LOL_COMMON_URI=http://dc.free4lab.com/

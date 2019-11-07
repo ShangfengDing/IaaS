@@ -1,0 +1,79 @@
+package appcloud.distributed.process;
+
+import appcloud.distributed.CloudController;
+import appcloud.distributed.Transport.MappedWriteFile;
+import appcloud.distributed.common.Constants;
+import appcloud.distributed.header.TransportFileHeader;
+import appcloud.distributed.util.FileUtil;
+import appcloud.netty.remoting.common.RequestCode;
+import appcloud.netty.remoting.common.ResponseCode;
+import appcloud.netty.remoting.protocol.RemoteCommand;
+import appcloud.netty.remoting.remote.NettyRequestProcessor;
+import io.netty.channel.ChannelHandlerContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+
+/**
+ * Created by lizhenhao on 2017/12/17.
+ */
+public class TransportRequestProcess implements NettyRequestProcessor {
+
+    protected final static Logger LOGGER = LoggerFactory.getLogger(TransportRequestProcess.class);
+
+    private CloudController cloudController;
+
+    public RemoteCommand processRequest(ChannelHandlerContext ctx, RemoteCommand request) throws Exception {
+        RemoteCommand  response;
+        int requestCode = request.getCode();
+        switch (requestCode) {
+            case RequestCode.SEND_IMAGE_BACK:
+                request.decodeConsumerHeader(TransportFileHeader.class);
+                TransportFileHeader transportFileHeader = (TransportFileHeader) request.getConsumHeader();
+                MappedWriteFile mappedWriteFile = FileUtil.writeOpenFile.get(transportFileHeader.getFilePath());
+                if (mappedWriteFile == null || transportFileHeader.getPosition() == 0) {
+                    // TODO: 2017/12/17 需要测试这里，因为如果异常发生，服务端是不会关闭filechannel的
+                    if (mappedWriteFile != null) mappedWriteFile.destroyMappedFile();
+                    // TODO: 2017/12/25 这里的filepath是相对路径，需要根据策略来选择应该将备份放在哪台物理机上
+                    File file = new File(transportFileHeader.getFilePath());
+                    if (file.exists()) file.delete();
+                    mappedWriteFile = MappedWriteFile.createMappedFile(Constants.CAPACITY,transportFileHeader.getFilePath());
+                    FileUtil.writeOpenFile.put(transportFileHeader.getFilePath(),mappedWriteFile);
+                }
+                mappedWriteFile.write(request.getBody(),transportFileHeader.getPosition());
+                if (transportFileHeader.isTransportEnd()) {
+                    FileUtil.writeOpenFile.remove(transportFileHeader.getFilePath());
+                    new Thread(new AsyncForce(mappedWriteFile)).start();
+                    // TODO: 2017/12/25 数据库修改
+                }
+                response = RemoteCommand.createReponseRemoteCommand(requestCode, ResponseCode.SUCCESSED);
+                return response;
+            default:
+                return null;
+        }
+    }
+
+    public boolean rejectRequest() {
+        return false;
+    }
+
+
+    class AsyncForce implements Runnable {
+
+        private MappedWriteFile mappedWriteFile;
+
+        public AsyncForce(MappedWriteFile mappedWriteFile) {
+            this.mappedWriteFile = mappedWriteFile;
+        }
+        public void run() {
+            try {
+                mappedWriteFile.force();
+                mappedWriteFile.destroyMappedFile();
+            } catch (IOException e) {
+                LOGGER.error("force mapped file error:filePath is ",mappedWriteFile.getFilePath());
+            }
+        }
+    }
+}

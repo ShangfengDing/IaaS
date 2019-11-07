@@ -1,0 +1,13 @@
+package appcloud.distributed.process.operate;
+
+import appcloud.distributed.Transport.MappedReadFile;
+
+/**
+ * Created by lizhenhao on 2018/1/5.
+ */
+public interface TransPortOperate {
+
+    public void transportImageBack(String filePath,String destAddress,boolean needToClean);
+
+    public boolean handlerTransPortException(MappedReadFile mappedFile, String destAddress, byte[] message);
+}

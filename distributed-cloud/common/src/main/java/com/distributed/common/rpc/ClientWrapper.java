@@ -1,0 +1,70 @@
+package com.distributed.common.rpc;
+
+import appcloud.netty.remoting.common.RequestCode;
+import appcloud.netty.remoting.common.SerializeType;
+import appcloud.netty.remoting.protocol.RemoteCommand;
+import appcloud.netty.remoting.remote.NettyRemotingClient;
+import com.distributed.common.remote.header.DbProxyHeader;
+import com.distributed.common.remote.header.RPCResponseHeader;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+
+/**
+ * Created by zouji on 2018/1/9.
+ */
+public class ClientWrapper implements InvocationHandler {
+
+    private String addr;
+    private Integer requestCode;
+    private Class<?> clazz;
+
+    private NettyRemotingClient remotingClient;
+    
+    public ClientWrapper(String host, Integer port, Integer requestCode) {
+        addr = host+":"+port;
+        this.requestCode = requestCode;
+        this.remotingClient = new NettyRemotingClient();
+        remotingClient.start();
+    }
+
+    public static ClientWrapper getInstance(String host, Integer port, Integer requestCode) {
+        return new ClientWrapper(host, port, requestCode);
+    }
+
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        // 进行动态代理\.
+        Class<?>[] parameterTypes = method.getParameterTypes();
+        DbProxyHeader header = new DbProxyHeader(clazz.getName(), method.getName(),parameterTypes, args);
+        System.out.println("the request header is: "+ header.toString());
+        RemoteCommand remoteCommand = new RemoteCommand();
+        remoteCommand.setCode(requestCode);
+        remoteCommand.setSerializeType(SerializeType.STREAM);
+        remoteCommand.setConsumHeader(header);
+        RemoteCommand response = remotingClient.invokeSync(addr, remoteCommand, 100000);
+        int responseCode = response.getCode();
+        if (responseCode != RequestCode.SUCCESS) {
+            System.out.println("the request failed, the requestId: "+ response.getRequestId());
+            return null;
+        }
+
+        RPCResponseHeader responseHeader = null;
+        Object result = null;
+        try {
+            responseHeader = (RPCResponseHeader) response.decodeConsumerHeader(RPCResponseHeader.class);
+            result = responseHeader.getResult();
+            System.out.println("the request successfully, the the requestId: "+response.getRequestId()+" and the result is: "+result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            result = null;
+            System.out.println("the request failed, the the requestId: "+response.getRequestId());
+        }
+        return result;
+    }
+
+    public Object createProxy(final Class<?> clazz) {
+        this.clazz = clazz;
+        return Proxy.newProxyInstance(clazz.getClassLoader(), new Class[]{clazz},this);
+    }
+}

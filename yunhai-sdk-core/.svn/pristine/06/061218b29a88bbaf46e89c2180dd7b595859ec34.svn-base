@@ -1,0 +1,96 @@
+package appcloud.core.sdk.regions;
+
+import appcloud.core.sdk.common.Constants;
+import com.sun.xml.bind.v2.runtime.reflect.opt.Const;
+
+import java.util.List;
+import java.util.Set;
+/**
+ * Endpoint 保存了api服务器的相关信息，包括api服务器所在的地域以及其对应的域名，所有的endpoint信息保存在endpoints.xml文件中
+ * @author heguimin
+ *
+ */
+public class Endpoint {
+
+	private String name = null;
+	private Set<String> regionIds = null;
+	private List<ProductDomain> productDomains = null;
+
+	public Endpoint(String name, Set<String> regionIds, List<ProductDomain> productDomains) {
+		this.name = name;
+		this.regionIds = regionIds;
+		this.productDomains = productDomains;
+	}
+
+	/**
+	 * 根据产品名称和地域信息删选对应的域名信息
+	 * @param regionId
+	 * @param product
+	 * @param endpoints
+	 * @return
+	 */
+	public static ProductDomain findProductDomain(String regionId,String zoneId, String product, List<Endpoint> endpoints) {
+		// TODO Auto-generated method stub
+		if(null == regionId || null == product || null == endpoints) {
+			return null;
+		}
+		for(Endpoint endpoint : endpoints) {
+			if(endpoint.getRegionIds().contains(regionId)) {
+				ProductDomain domain = findProductDomainByProduct(endpoint.getProductDomains(), product, zoneId);
+				return domain;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * 根据产品名称,区域和多个域名信息删选对应的域名
+	 * @param productDomains
+	 * @param product
+	 * @param zoneId
+	 * @return
+	 */
+	private static ProductDomain findProductDomainByProduct(List<ProductDomain> productDomains, String product,String zoneId) {
+		if(null == productDomains) {
+			return null;
+		}
+		if (null == zoneId) {
+			zoneId= Constants.ZONE_ID;
+		}
+		for(ProductDomain productDomain : productDomains) {
+			if(product.equalsIgnoreCase(productDomain.getProductName())) {
+				if(zoneId.equalsIgnoreCase(productDomain.getZoneId())) {
+					return productDomain;
+				}
+			}
+		}
+		return null;
+	}
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public Set<String> getRegionIds() {
+		return regionIds;
+	}
+	public void setRegionIds(Set<String> regionIds) {
+		this.regionIds = regionIds;
+	}
+	public List<ProductDomain> getProductDomains() {
+		return productDomains;
+	}
+	public void setProductDomains(List<ProductDomain> productDomains) {
+		this.productDomains = productDomains;
+	}
+
+	@Override
+	public String toString() {
+		return "Endpoint{" +
+				"name='" + name + '\'' +
+				", regionIds=" + regionIds +
+				", productDomains=" + productDomains +
+				'}';
+	}
+}

@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <artifactId>api</artifactId>
+    <groupId>appcloud</groupId>
+    <version>3.5.0-SNAPSHOT</version>
+  </parent>
+  <groupId>appcloud</groupId>
+  <artifactId>api-common</artifactId>
+  <version>3.5.0-SNAPSHOT</version>
+  <name>api common</name>
+  <url>http://maven.apache.org</url>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  <dependencies>
+  </dependencies>
+   <distributionManagement>
+       <repository>
+           <id>free4lab</id>
+           <name>Free4lab Repository</name>
+           <url>http://maven.free4lab.com/artifactory/libs-snapshot-local</url>
+       </repository>
+    </distributionManagement>
+</project>

@@ -1,0 +1,5 @@
+
+OPENAPI_VERSION=2015-10-20
+
+URL_ACCOUNT=http://account.free4cloud.com/
+HTTPS_ACCOUNT=http://account.free4cloud.com/

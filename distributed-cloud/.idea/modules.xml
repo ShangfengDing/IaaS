@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/appcloud-distributed-controller/appcloud-distributed-controller.iml" filepath="$PROJECT_DIR$/appcloud-distributed-controller/appcloud-distributed-controller.iml" />
+      <module fileurl="file://$PROJECT_DIR$/distributed-cloud.iml" filepath="$PROJECT_DIR$/distributed-cloud.iml" />
+      <module fileurl="file://$PROJECT_DIR$/netty-remoting/netty-remoting.iml" filepath="$PROJECT_DIR$/netty-remoting/netty-remoting.iml" />
+    </modules>
+  </component>
+</project>

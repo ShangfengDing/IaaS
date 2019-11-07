@@ -1,0 +1,125 @@
+package appcloud.iaas.sdk.model;
+
+import appcloud.core.sdk.common.RpcYhaiRequest;
+import appcloud.iaas.sdk.common.Constants;
+import appcloud.openapi.constant.ActionConstants;
+
+
+public class CreateInstanceRequest extends RpcYhaiRequest{
+
+	public CreateInstanceRequest() {
+		super(Constants.PRODUCT, Constants.VERSION, ActionConstants.CREATE_INSTANCE);
+	}
+
+	private String zoneId;
+	private String imageId; 
+	private String instanceType;
+	private String instanceName;
+	private String description;
+	private String instanceChargeType;
+	private String instanceChargeLength;
+	private String internetChargeType;
+	private String internetMaxBandwidthOut;
+	private String hostName;
+	private String password;
+	private String dataDisk_1_Size;
+	private String securityGroupId;
+
+	public String getZoneId() {
+		return zoneId;
+	}
+	public void setZoneId(String zoneId) {
+		this.zoneId = zoneId;
+		putQueryParameters("ZoneId",zoneId);
+	}
+	public String getImageId() {
+		return imageId;
+	}
+	public void setImageId(String imageId) {
+		this.imageId = imageId;
+		putQueryParameters("ImageId",imageId);
+	}
+	public String getInstanceType() {
+		return instanceType;
+	}
+	public void setInstanceType(String instanceType) {
+		this.instanceType = instanceType;
+		putQueryParameters("InstanceType",instanceType);
+	}
+	public String getInstanceName() {
+		return instanceName;
+	}
+	public void setInstanceName(String instanceName) {
+		this.instanceName = instanceName;
+		putQueryParameters("InstanceName",instanceName);
+	}
+	public String getDescription() {
+		return description;
+	}
+	public void setDescription(String description) {
+		this.description = description;
+		putQueryParameters("Description",description);
+	}
+	public String getInstanceChargeType() {
+		return instanceChargeType;
+	}
+	public void setInstanceChargeType(String instanceChargeType) {
+		this.instanceChargeType = instanceChargeType;
+		putQueryParameters("InstanceChargeType",instanceChargeType);
+	}
+	public String getInstanceChargeLength() {
+		return instanceChargeLength;
+	}
+	public void setInstanceChargeLength(String instanceChargeLength) {
+		this.instanceChargeLength = instanceChargeLength;
+		putQueryParameters("InstanceChargeLength",instanceChargeLength);
+	}
+	public String getInternetChargeType() {
+		return internetChargeType;
+	}
+	public void setInternetChargeType(String internetChargeType) {
+		this.internetChargeType = internetChargeType;
+		putQueryParameters("InternetChargeType",internetChargeType);
+	}
+	public String getInternetMaxBandwidthOut() {
+		return internetMaxBandwidthOut;
+	}
+	public void setInternetMaxBandwidthOut(String maxBandwidthOut) {
+		this.internetMaxBandwidthOut = maxBandwidthOut;
+		putQueryParameters("InternetMaxBandwidthOut",maxBandwidthOut);
+	}
+	public String getHostName() {
+		return hostName;
+	}
+	public void setHostName(String hostName) {
+		this.hostName = hostName;
+		putQueryParameters("HostName",hostName);
+	}
+	public String getPassword() {
+		return password;
+	}
+	public void setPassword(String password) {
+		this.password = password;
+		putQueryParameters("Password",password);
+	}
+	public String getDataDisk_1_Size() {
+		return dataDisk_1_Size;
+	}
+	public void setDataDisk_1_Size(String dataDisk_1_Size) {
+		this.dataDisk_1_Size = dataDisk_1_Size;
+		putQueryParameters("DataDisk.1.Size",dataDisk_1_Size);
+	}
+	public String getSecurityGroupId() {
+		return securityGroupId;
+	}
+	public void setSecurityGroupId(String securityGroupId) {
+		this.securityGroupId = securityGroupId;
+		putQueryParameters("SecurityGroupId",securityGroupId);
+	}
+	
+	@Override
+	public void setRegionId(String regionId) {
+		putQueryParameters("RegionId",regionId);
+		super.setRegionId(regionId);
+	}
+}

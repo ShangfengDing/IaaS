@@ -1,0 +1,87 @@
+<%@ taglib prefix="s" uri="/struts-tags" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="com.appcloud.vm.common.Constants"%>
+<input type="hidden" id="div_totalCount" value="<s:property value="TotalCount"/>" />
+<input type="hidden" id="div_totalPage" value="<s:property value="totalPage"/>" />
+<input type="hidden" id="div_result" value="<s:property value="result"/>" />
+<s:if test="servers.size()!=0"> 
+<!-- 全部 -->
+<div class="panel panel-default front-panel" id="div_table">
+           <div class="panel-body front-no-padding">
+              <table class="table table-striped front-table"
+                        style="margin-bottom: 0px;font-size: 15px" id="serverList">
+                  <thead>
+                      <tr>
+                          <th class="col-sm-2">名称</th>
+                          <th class="col-sm-1">提供商</th>
+                          <th class="col-sm-1" style="padding-left:10px">区域</th>
+                          <th class="col-sm-1">操作系统</th>
+                          <th class="col-sm-1">状态</th>
+                          <th class="col-sm-3" class="vm_configure" style="padding-left:30px">配置</th>
+                          <th class="col-sm-1" style="padding-right: 20px">IP地址</th>
+                          <th class="col-sm-1" style="padding: 8px 0">付费方式</th>
+                          <th class="col-sm-1" style="text-align:right;">操作</th>
+                      </tr>
+                 </thead>
+                 <s:iterator id="server" value="servers">
+				 <tr>
+					<td class="col-sm-2">
+                     	<div>
+                         	<div>
+                             	<label id="<s:property value="#server.instanceId"/>"><s:property value="#server.instanceName"/></label>
+                                 <%--<a data-toggle="front-modal" data-title="修改云主机的名称"
+                                 data-href="vm/preeditvm?yunType=vm&target=<s:property value="#server.instanceId"/>&appname=<s:property value="#server.appname"/>&id=<s:property value="#server.instanceId"/>&name=<s:property value="#server.instanceName"/>&type=name&regionId=<s:property value="#server.regionId"/>">
+                                 <span class="glyphicon glyphicon-edit"></span></a>--%>
+                             </div>
+                         </div>
+                     </td>
+                     <td class="col-sm-1" id="serverProvider"><s:property value="#server.provider"/></td>
+                     <td class="col-sm-1" style="padding-left:10px">
+                             <label id="serverRegion"><s:property value="#server.region"/></label>
+                     </td>
+                     <td class="col-sm-1" id="serverOsType"><s:property value="#server.osType"/></td>
+                     <%--<td class="col-sm-1" id="serverZone"><s:property value="#server.zoneId"/></td>--%>
+                     <td class="col-sm-1">
+                     	<div>
+                     		<img id='<s:property value="#server.instanceId"/>img' src="images/<s:property value='#server.status'/>.png"/>
+                             <label  id='<s:property value="#server.instanceId"/>label'><s:property value='#server.statusCn'/></label>
+                         </div>
+                     </td>
+                     <td class="col-sm-3" class="vm_configure" style="padding-left:30px">
+                            <div style="display: inline-block">
+                                <label>CPU：</label>
+                                <label id="serverVcpus"><s:property value="#server.vcpus"/>核</label>
+                                <label style="width: 10px"></label>
+                                <label>内存：</label>
+                                <label id="serverMem"><s:property value="#server.memory"/>G</label>
+                            </div><br/>
+                            <div style="display: inline-block;">
+                                <label>带宽：</label>
+                                <label id="serverBand"><s:property value="#server.bandwidth"/>Mbps </label>
+                            </div>
+                     </td>
+					 <td class="col-sm-1" style="padding-right: 20px">
+                           <div>
+                               <div style="display: inline-block" id="publicIp">公:<s:property value="#server.publicIpAddress"/></div><br/>
+                               <div style="display: inline-block" id="privateIp">内:<s:property value="#server.privateIpAddress"/></div>
+                           </div>
+                     </td>
+                     <td class="col-sm-1" style="padding: 8px 0">
+                         <label id="serverPayType"><s:property value="#server.payType"/></label><br/>
+                         <label id="serverEndTime"><s:property value="#server.endTime"/>到期</label>
+                     </td>
+                     <td class="col-sm-1" style="text-align: right">
+                         <div class="btn-group">
+                             <a href="javascript:void(0)" onclick='start("<s:property value="#server.status"/>","<s:property value="#server.instanceId"/>","<s:property value="#server.userEmail"/>","<s:property value="#server.regionId"/>","<s:property value="#server.endTime"/>",<%=Constants.DEFAULT_CHECKTIME%>, "vmlist");'>启动</a>
+                         	<a href="javascript:void(0)" onclick='stop("<s:property value="#server.status"/>","<s:property value="#server.instanceId"/>","<s:property value="#server.userEmail"/>","<s:property value="#server.regionId"/>",<%=Constants.DEFAULT_CHECKTIME%>, "vmlist");' class="vmlist_op_dis">关闭</a><br/>
+                         	<a href="javascript:void(0)" onclick='reboot("<s:property value="#server.status"/>","<s:property value="#server.instanceId"/>","<s:property value="#server.userEmail"/>","<s:property value="#server.regionId"/>",<%=Constants.DEFAULT_CHECKTIME%>,"vmlist");'>重启</a>
+                             <a href='vm/vmdetail?provider=<s:property value="#server.providerEn"/>&appname=<s:property value="#server.appname"/>&regionId=<s:property value="#server.regionId"/>&instanceId=<s:property value="#server.instanceId"/>&userEmail=<s:property value="#server.userEmail"/>'
+                              title="管理" class="vmlist_op_dis">管理</a>
+                         </div>
+                    </td>
+		       </tr>
+		       </s:iterator>
+      </table>
+   </div>
+</div>
+</s:if>

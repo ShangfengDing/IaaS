@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.free4lab.openapi.basic</groupId>
+    <artifactId>openapi</artifactId>
+    <version>1.0.20151020-SNAPSHOT</version>
+  </parent>
+  <groupId>com.free4lab.openapi.client</groupId>
+  <artifactId>openapi-client</artifactId>
+  <packaging>jar</packaging>
+  <name>openapi-client Maven Webapp</name>
+  <url>http://maven.apache.org</url>
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+		<groupId>yunhai-sdk-iaas</groupId>
+ 		<artifactId>yunhai-sdk-iaas</artifactId>
+  		<version>0.0.1-SNAPSHOT</version>
+	</dependency>
+	<!-- 引入阿里云SDK -->
+	<dependency>
+		<groupId>com.aliyun</groupId>
+  		<artifactId>aliyun-java-sdk-core</artifactId>
+  		<version>2.3.7</version>
+	</dependency>
+	<dependency>
+		<groupId>com.aliyun</groupId>
+  		<artifactId>aliyun-java-sdk-ecs</artifactId>
+  		<version>2.1.0</version>
+	</dependency>
+      <dependency>
+          <groupId>com.free4lab.distributed-cloud</groupId>
+          <artifactId>common</artifactId>
+          <version>1.0-SNAPSHOT</version>
+      </dependency>
+  </dependencies>
+  <build>
+    <finalName>openapi-client</finalName>
+  </build>
+  <distributionManagement>
+       <snapshotRepository>
+           <id>free4lab</id>
+           <name>Free4lab Repository</name>
+           <url>http://maven.free4inno.com/artifactory/libs-snapshot-local</url>
+       </snapshotRepository>
+       <repository>
+            <id>free4lab-release</id>
+            <name>Free4lab Repository Release</name>
+            <url>http://maven.free4inno.com/artifactory/repo</url>
+        </repository>
+  </distributionManagement>
+</project>

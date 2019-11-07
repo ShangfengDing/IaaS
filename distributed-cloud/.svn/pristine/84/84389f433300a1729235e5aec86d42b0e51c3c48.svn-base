@@ -1,0 +1,39 @@
+package com.distributed.dbproxy.sql.basic.appcloud;
+
+import lombok.Data;
+
+import javax.persistence.*;
+
+/**
+ * Created by Idan on 2018/1/15.
+ */
+@Entity
+@Table(name = "vm_user")
+@Data
+public class VmUserEntity {
+    @Basic
+    @Column(name = "pre_id")
+    private Integer preId;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
+    private Integer userId;
+    @Basic
+    @Column(name = "user_email")
+    private String userEmail;
+    @Basic
+    @Column(name = "is_active")
+    private Boolean active;
+    @Basic
+    @Column(name = "group_id")
+    private Integer groupId;
+    @Basic
+    @Column(name = "appkey_id")
+    private String appkeyId;
+    @Basic
+    @Column(name = "appkey_secret")
+    private String appkeySecret;
+    @Basic
+    @Column(name = "enterprise_id")
+    private Integer enterpriseId;
+}

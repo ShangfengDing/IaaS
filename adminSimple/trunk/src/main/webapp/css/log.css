@@ -1,0 +1,186 @@
+
+label.col-md-2 {
+    position: relative;
+    min-height: 1px;
+    padding-left: 15px;
+    padding-right: 60px;
+}
+label.col-md-1 {
+    padding-left: 0px;
+}
+.divpage {
+    height: 15px;
+    line-height: 15px;
+    word-spacing: 3px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #337ab7;
+    text-align: center;
+}
+.redletter, .redletter:visited {
+    color: red!important;
+    text-align: center;
+ }
+td.col-md-1
+{
+    word-wrap:break-word;
+    word-break:break-all;
+}
+td.col-md-2
+{
+    word-wrap:break-word;
+    word-break:break-all;
+}
+td.col-md-3
+{
+    word-wrap:break-word;
+    word-break:break-all;
+}
+td.col-md-4
+{
+    word-wrap:break-word;
+    word-break:break-all;
+}
+td.col-md-5
+{
+    word-wrap:break-word;
+    word-break:break-all;
+}
+td.col-md-6
+{
+    word-wrap:break-word;
+    word-break:break-all;
+}
+td.col-md-7
+{
+    word-wrap:break-word;
+    word-break:break-all;
+}
+td.col-md-8
+{
+    word-wrap:break-word;
+    word-break:break-all;
+}
+td.col-md-9
+{
+    word-wrap:break-word;
+    word-break:break-all;
+}
+td.col-md-10
+{
+    word-wrap:break-word;
+    word-break:break-all;
+}
+td.col-md-11
+{
+    word-wrap:break-word;
+    word-break:break-all;
+}
+td.col-md-12
+{
+    word-wrap:break-word;
+    word-break:break-all;
+}
+a.pagenum, .divpage .item {
+    text-decoration: none;
+    font-size: 12px;
+    border: 1px solid #f2f2f2;
+    padding: 5px 10px;
+    color: #337ab7;
+}
+#backbottom {
+    position: fixed;
+    bottom: 50px;
+    right: 10px;
+    margin: 0;
+    -webkit-margin-before: 1em;
+    -webkit-margin-after: 1em;
+    -webkit-margin-start: 0px;
+    -webkit-margin-end: 0px;
+    line-height: 160%;
+    white-space: normal;
+    word-wrap: break-word;
+    word-break: break-all;
+}
+#backbottom a {
+     width: 50px;
+     display: block;
+     text-align: center;
+     text-decoration: none;
+     color: #aaaaaa;
+     -webkit-transition: 1s;
+     -moz-transition: 1s;
+     transition: 1s;
+    cursor: pointer;
+ }
+#backbottom span {
+      width: 50px;
+      height: 50px;
+      display: block;
+      margin-bottom: 7px;
+      background: #aaaaaa url(http://front.free4lab.com/css/images/down-arrow.png) no-repeat center center;
+      -webkit-border-radius: 4px;
+      -moz-border-radius: 4px;
+      border-radius: 4px;
+      -webkit-transition: 1s;
+      -moz-transition: 1s;
+      transition: 1s;
+    margin: 0;
+    padding: 0;
+    font: 12px Arial,Helvetica,"sans-serif normal";
+    line-height: 160%;
+    white-space: normal;
+    word-wrap: break-word;
+    word-break: break-all;
+  }
+#backtop {
+    position: fixed;
+    bottom: 130px;
+    right: 10px;
+    margin: 0;
+    -webkit-margin-before: 1em;
+    -webkit-margin-after: 1em;
+    -webkit-margin-start: 0px;
+    -webkit-margin-end: 0px;
+    line-height: 160%;
+    white-space: normal;
+    word-wrap: break-word;
+    word-break: break-all;
+}
+#backtop a {
+    width: 50px;
+    display: block;
+    text-align: center;
+    text-decoration: none;
+    color: #aaaaaa;
+    -webkit-transition: 1s;
+    -moz-transition: 1s;
+    transition: 1s;
+    cursor: pointer;
+}
+#backtop span {
+    width: 50px;
+    height: 50px;
+    display: block;
+    margin-bottom: 7px;
+    background: #aaaaaa url(http://front.free4lab.com/css/images/up-arrow.png) no-repeat center center;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    -webkit-transition: 1s;
+    -moz-transition: 1s;
+    transition: 1s;
+    margin: 0;
+    padding: 0;
+    font: 12px Arial,Helvetica,"sans-serif normal";
+    line-height: 160%;
+    white-space: normal;
+    word-wrap: break-word;
+    word-break: break-all;
+}
+#backbottom a:hover span {
+     background-color: #555;
+ }
+#backtop a:hover span {
+      background-color: #555;
+  }

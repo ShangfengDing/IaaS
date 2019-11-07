@@ -1,0 +1,192 @@
+package appcloud.core.sdk.utils;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.List;
+
+import appcloud.core.sdk.common.*;
+import org.apache.log4j.Logger;
+import appcloud.core.sdk.auth.Credential;
+import appcloud.core.sdk.exceptions.ClientException;
+import appcloud.core.sdk.exceptions.ServerException;
+import appcloud.core.sdk.http.FormatType;
+import appcloud.core.sdk.http.HttpRequest;
+import appcloud.core.sdk.http.HttpResponse;
+import appcloud.core.sdk.profile.DefaultProfile;
+import appcloud.core.sdk.profile.YhaiClientProfile;
+import appcloud.core.sdk.reader.Reader;
+import appcloud.core.sdk.reader.ReaderFactory;
+import appcloud.core.sdk.regions.Endpoint;
+import appcloud.core.sdk.regions.ProductDomain;
+import appcloud.core.sdk.serialization.Serialization;
+import appcloud.core.sdk.serialization.SerializationFactory;
+
+public class DefaultYhaiClient implements YhaiClient{
+
+	public static Logger logger = Logger.getLogger(DefaultYhaiClient.class);
+	// 自动重试次数，默认为3次
+	private int maxRetryNumber = 3;
+	//自动重试
+	private boolean autoRetry = true;  
+	private YhaiClientProfile clientProfile = null;
+
+	public DefaultYhaiClient() {
+		this.clientProfile = DefaultProfile.getProfile();
+	}
+
+	public DefaultYhaiClient(YhaiClientProfile profile) {
+		this.clientProfile = profile;
+	}
+
+	@Override
+	public <T extends YhaiResponse> HttpResponse doAction(YhaiRequest request)
+			throws ClientException {
+		// TODO Auto-generated method stub
+		return this.doAction(request, autoRetry, maxRetryNumber, this.clientProfile);
+	}
+
+	public <T extends YhaiResponse> HttpResponse doAction(YhaiRequest request, boolean autoRetry, int maxRetryNumber)
+			throws ClientException {
+		// TODO Auto-generated method stub
+		return this.doAction(request, autoRetry, maxRetryNumber, this.clientProfile);
+	}
+
+	public <T extends YhaiResponse> HttpResponse doAction(YhaiRequest request, YhaiClientProfile profile)
+			throws ClientException {
+		// TODO Auto-generated method stub
+		return this.doAction(request, this.autoRetry, maxRetryNumber, profile);
+	}
+	
+	public <T extends YhaiResponse> HttpResponse doAction(YhaiRequest request, boolean autoRetry, 
+			int maxRetryNumber, YhaiClientProfile profile) throws ClientException {
+		// TODO Auto-generated method stub
+		logger.info("profile = " + profile);
+		if(null == profile) {
+			throw new ClientException("SDK.InvalidProfile", "No active profile found."); 
+		}
+		String region = profile.getRegionId();
+		String zone = profile.getZoneId();
+		Credential credential = profile.getCredential();
+		FormatType format = profile.getFormat();
+		List<Endpoint> endpoints = profile.getEndpoints();
+		if(zone==null){
+			zone = endpoints.get(0).getProductDomains().get(0).getZoneId();
+		}
+		return this.doAction(request, autoRetry, maxRetryNumber, region, zone, credential, format, endpoints);
+	}
+
+	public <T extends YhaiResponse> HttpResponse doAction(YhaiRequest request, 
+			boolean autoRetry, int maxRetryNumber,
+			String regionId, String zoneId, Credential credential,
+			FormatType format, List<Endpoint> endpoints) throws ClientException {
+		try {
+			FormatType requestFormatType = request.getAcceptFormat();
+			logger.info("request FormatType = " + requestFormatType);
+			if (null != requestFormatType){
+				format = requestFormatType;
+			}
+			if(null == request.getRegionId()){
+				request.setRegionId(regionId);
+			}
+			/*if(null == request.getZoneId()){
+				request.setZoneId(zoneId);
+			}*/
+            regionId = regionId.toUpperCase();
+			ProductDomain domain = Endpoint.findProductDomain(regionId,zoneId, request.getProduct(), endpoints);
+			logger.info("domain = " + domain);
+			if (null == domain){
+				throw new ClientException("SDK.InvalidRegionId", "Can not find endpoint to access.");
+			}
+			HttpRequest httpRequest = request.signRequest(credential, format, domain);
+			int retryTimes = 1;
+			HttpResponse response = HttpResponse.getResponse(httpRequest);
+			logger.info("response status = " + response.getStatus());
+			while (500 <= response.getStatus() && autoRetry && retryTimes < maxRetryNumber) {
+				httpRequest = request.signRequest(credential, format, domain);
+				response = HttpResponse.getResponse(httpRequest);
+				retryTimes ++;
+			}
+			return response;
+		} catch (InvalidKeyException exp) {
+			throw new ClientException("SDK.InvalidAccessSecret","Speicified access secret is not valid.");
+		}catch (IOException exp) {
+			throw new ClientException("SDK.ServerUnreachable", "Speicified endpoint or uri is not valid.");
+		} catch (NoSuchAlgorithmException exp) {
+			throw new ClientException("SDK.InvalidMD5Algorithm", "MD5 hash is not supported by client side.");
+		}
+	}
+
+	@Override
+	public <T> T getYhaiResponse(YhaiRequest request, Class<T> type) throws ServerException, ClientException {
+		HttpResponse baseResponse = this.doAction(request);
+		return parseYhaiResponse(type, baseResponse);
+	}
+	
+
+	private <T> T parseYhaiResponse(Class<T> clasz, HttpResponse baseResponse)
+			 throws ServerException, ClientException {
+
+		FormatType format = baseResponse.getContentType();
+		if(baseResponse.isSuccess()) {
+			return readResponse(clasz, baseResponse, format);
+		}else {
+			YhaiError error = readError(baseResponse, format);
+			if(500 <= baseResponse.getStatus()) {
+				throw new ServerException(error.getErrorCode(), error.getErrorMessage(), error.getRequestId());
+			}else {
+				throw new ClientException(error.getErrorCode(), error.getErrorMessage(), error.getRequestId());
+			}
+		}
+	}
+
+	private <T> T readResponse(Class<T> clasz, HttpResponse httpResponse, FormatType format) throws ClientException {
+		Serialization serialization = SerializationFactory.createInstance(format);
+		String stringContent = getResponseContent(httpResponse);
+		return serialization.read(stringContent, clasz);
+	}
+	
+	private String getResponseContent(HttpResponse httpResponse) throws ClientException{
+		// TODO Auto-generated method stub
+		String stringContent = null;
+		try {
+			if(null == httpResponse.getEncoding()) {
+				stringContent = new String(httpResponse.getContent());
+			}else {
+				stringContent = new String(httpResponse.getContent(), httpResponse.getEncoding());
+			}
+		}catch(UnsupportedEncodingException exp) {
+			throw new ClientException("SDK.UnspportedEncoding", "Can not parse response due to un supported encoding.");
+		}
+		return stringContent;
+	}
+
+	private YhaiError readError(HttpResponse httpResponse, FormatType format) throws ClientException{
+		YhaiError error = new YhaiError();
+		String responseEndpoint = "Error";
+		Reader reader = ReaderFactory.createInstance(format);
+		UnmarshallerContext context = new UnmarshallerContext();
+		String stringContent = getResponseContent(httpResponse);
+		logger.info(stringContent);
+		context.setResponseMap(reader.read(stringContent, responseEndpoint));
+		return error.getInstance(context);
+	}
+
+	public int getMaxRetryNumber() {
+		return maxRetryNumber;
+	}
+
+	public void setMaxRetryNumber(int maxRetryNumber) {
+		this.maxRetryNumber = maxRetryNumber;
+	}
+
+	public boolean isAutoRetry() {
+		return autoRetry;
+	}
+
+	public void setAutoRetry(boolean autoRetry) {
+		this.autoRetry = autoRetry;
+	}
+
+}

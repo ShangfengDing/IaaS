@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Properties>
+
+    <MasterInfo>
+        <Ip>192.168.31.91</Ip>
+        <Port>8118</Port>
+        <DataCenter>discloud1</DataCenter>
+        <Domain>192.168.10.6:8081</Domain>
+    </MasterInfo>
+
+    <LocalInfo>
+        <Ip>192.168.31.91</Ip>
+        <Port>8338</Port>
+        <DataCenter>discloud3</DataCenter>
+        <Domain>192.168.30.6:8081</Domain>
+    </LocalInfo>
+
+</Properties>

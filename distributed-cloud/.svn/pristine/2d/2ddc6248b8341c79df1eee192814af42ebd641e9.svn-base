@@ -1,0 +1,62 @@
+package appcloud.distributed.process;
+
+import appcloud.distributed.configmanager.VersionInfo;
+import appcloud.distributed.header.AccountHeader;
+import appcloud.distributed.process.operate.AccountOperate;
+import appcloud.distributed.process.operate.AccountOperateImpl;
+import appcloud.netty.remoting.common.RequestCode;
+import appcloud.netty.remoting.common.ResponseCode;
+import appcloud.netty.remoting.protocol.RemoteCommand;
+import appcloud.netty.remoting.remote.NettyRequestProcessor;
+import appcloud.openapi.datatype.AppkeyItem;
+import appcloud.openapi.response.UserCreateForDisResponse;
+import com.distributed.common.entity.Appkey;
+import com.distributed.common.utils.ModelUtil;
+import io.netty.channel.ChannelHandlerContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Created by Idan on 2018/1/14.
+ */
+public class AccountRequestProcess implements NettyRequestProcessor {
+
+    private AccountOperate accountOperate = AccountOperateImpl.getInstance();
+    private static final Logger logger = LoggerFactory.getLogger(AccountRequestProcess.class);
+
+    @Override
+    public RemoteCommand processRequest(ChannelHandlerContext ctx, RemoteCommand request) throws Exception {
+        RemoteCommand response = null;
+        int requestCode = request.getCode();
+        switch (requestCode) {
+            case RequestCode.USER_CREATE:
+                AccountHeader header = (AccountHeader) request.decodeConsumerHeader(AccountHeader.class);
+                if (ModelUtil.isNotEmpty(header)) {
+                    logger.error("添加用户的请求出错， header 为null");
+                    response = RemoteCommand.createReponseRemoteCommand(RequestCode.SYSTEM_ERROR, ResponseCode.ERROR);
+                    return response;
+                }
+                String requestId = header.getRequestId();
+                UserCreateForDisResponse userCreateForDisResponse = accountOperate.createUser(requestId, header.getRegionId(),header.getZoneId(), header.getNewUserEmail(), header.getGroupSecretKey(),
+                        header.getAppkeyId(), header.getAppkeySecret(),header.getAccountName());
+                if (userCreateForDisResponse.getMessage() != null) {
+                    response = RemoteCommand.createReponseRemoteCommand(RequestCode.SYSTEM_ERROR, ResponseCode.ERROR);
+                    return response;
+                }
+                AppkeyItem appkeyItem = userCreateForDisResponse.getAppkeyItem();
+                VersionInfo versionInfo = accountOperate.addUserVersion(requestId, appkeyItem);
+                if (ModelUtil.isNotEmpty(versionInfo)) {
+                    // 开始分发
+                    Boolean rs = accountOperate.dispatchAccount(requestId, versionInfo);
+                    response = RemoteCommand.createReponseRemoteCommand(RequestCode.SUCCESS, ResponseCode.SUCCESSED);
+                }
+                break;
+        }
+        return response;
+    }
+
+    @Override
+    public boolean rejectRequest() {
+        return false;
+    }
+}

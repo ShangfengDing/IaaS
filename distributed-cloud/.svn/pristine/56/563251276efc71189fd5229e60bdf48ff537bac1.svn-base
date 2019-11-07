@@ -1,0 +1,61 @@
+package appcloud.distributed.util;
+
+import appcloud.distributed.configmanager.VersionInfo;
+import com.sun.org.apache.xpath.internal.operations.Bool;
+
+import java.sql.Timestamp;
+import java.text.ParseException;
+import java.util.Date;
+import java.util.Queue;
+
+/**
+ * Created by Idan on 2018/1/13.
+ * 版本号由两部分组成，前8位是递增数字，后8位是时间
+ */
+public class VersionUtil {
+
+
+    //1. 获得最新的
+    public static Long getNewVersion(Long oldVersion) {
+        return oldVersion==null?0:oldVersion+1;
+    }
+
+    //2. 比较版本号是否相同， 注意此处未考虑不同版本号之间的
+    public static Integer compare(Long version1, Long version2) {
+        Boolean rs = isEqual(version1, version2);
+        if (rs) {
+            return 0;
+        } else {
+            Long result = version2-version1;
+            return result<0?0:result.intValue();
+        }
+    }
+    // 是否相等
+    public static Boolean isEqual(Long version1, Long version2) {
+        if (NumUtil.isEmpty(version1) || NumUtil.isEmpty(version2)) {
+            return false;
+        }
+        return version1.equals(version2);
+    }
+
+    //3. 得到版本号
+    public static Integer getNum(String version) {
+        String temp = StringUtil.sub8b(version);
+        return temp == null?0:Integer.valueOf(temp);
+    }
+
+    //4. 得到时间
+    public static Date getDate(String version) {
+        String temp = StringUtil.sub8a(version);
+        if (temp ==null) {
+            return null;
+        }
+        try {
+            return TimeUtil.ConvertToDate(temp, null);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+}

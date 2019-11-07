@@ -1,0 +1,174 @@
+package com.appcloud.vm.action.vm;/**
+ * Created by dell on 2016/7/22.
+ */
+
+import aliyun.openapi.client.AliInstanceClient;
+import appcloud.openapi.client.InstanceClient;
+import appcloud.openapi.response.BaseResponse;
+import com.aliyuncs.ecs.model.v20140526.JoinSecurityGroupResponse;
+import com.aliyuncs.exceptions.ClientException;
+import com.appcloud.vm.action.BaseAction;
+import com.appcloud.vm.common.Log;
+import com.appcloud.vm.fe.common.Constants;
+import com.appcloud.vm.fe.manager.AppkeyManager;
+import com.appcloud.vm.fe.model.Appkey;
+import com.appcloud.vm.fe.util.OpenClientFactory;
+import com.appcloud.vm.util.ResultUtils;
+import org.apache.log4j.Logger;
+import org.apache.struts2.ServletActionContext;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * 修改云主机的安全组
+ *
+ * @author 包鑫彤
+ * @create 2016-07-22-11:04
+ * @since 1.0.0
+ */
+public class ModifySecurityGroup extends BaseAction {
+
+    private Logger LOGGER = Logger.getLogger(ModifySecurityGroup.class);
+    private Integer userId = this.getSessionUserID();
+    private Appkey appkey;
+    //公共参数
+    private String provider;
+    private String instanceId;
+    private String regionId;
+    private String zoneId;
+    private String securityGroupId;
+    private String result;
+    private String appname;
+
+
+    //阿里云参数
+    private String originSecurityGroupId;
+
+    @Override
+    public String execute() throws Exception {
+        appkey = new AppkeyManager().getAppkeyByUserIdAndAppName(userId, appname);
+        switch (appkey.getProvider()) {
+            case Constants.YUN_HAI:
+                result = modifyYunHaiSecurityGroup(appkey);
+                break;
+            case Constants.ALI_YUN:
+                modifyAliYunSecurityGroup(appkey);
+                break;
+        }
+        return null;
+    }
+
+    private String modifyYunHaiSecurityGroup(Appkey appkey) {
+        InstanceClient instanceClient = OpenClientFactory.getInstanceClient();
+        BaseResponse baseResponse = instanceClient.ModifyInstanceSecurityGroup(regionId, zoneId, instanceId, securityGroupId, appkey.getAppkeyId(), appkey.getAppkeySecret(), appkey.getUserEmail());
+        if (null != baseResponse.getErrorCode()) {
+            modifySecurityGroup("success", "info");
+        } else {
+            modifySecurityGroup(baseResponse.getMessage(), "error");
+        }
+        return baseResponse.getMessage();
+    }
+
+    /**
+     * 如果originSecurityGroupId为null则只是新增一个安全组而不替换，因为阿里云支持一个主机使用五个安全组！
+     * @param appkey
+     * @return
+     */
+    private String modifyAliYunSecurityGroup(Appkey appkey) {
+        AliInstanceClient aliInstanceClient = OpenClientFactory.getAliInstanceClient();
+        JoinSecurityGroupResponse joinSecurityGroupResponse;
+        try {
+            joinSecurityGroupResponse = aliInstanceClient.ModifyInstanceSecurityGroup(regionId, instanceId,
+                    securityGroupId, originSecurityGroupId, appkey.getAppkeyId(), appkey.getAppkeySecret(), appkey.getUserEmail());
+            ResultUtils.toAliYunJson(ServletActionContext.getResponse(), joinSecurityGroupResponse);
+            modifySecurityGroup("success", "info");
+        } catch (ClientException e) {
+            ResultUtils.toAliYunJson(ServletActionContext.getResponse(), e);
+            modifySecurityGroup(e.getErrMsg(), "error");
+        }
+        return null;
+    }
+
+    public void modifySecurityGroup(String message, String logType) {
+        Map<String, String> mapLog = new HashMap<>();
+        mapLog.put("userId", userId.toString());
+        mapLog.put("device", "vm");
+        mapLog.put("deviceId", instanceId);
+        mapLog.put("appkeyId", appkey.getAppkeyId());
+        mapLog.put("provider", appkey.getProvider());
+        mapLog.put("opratetionType", "modify securityGroup");
+        mapLog.put("result", message);
+        if (logType.equals("info")) {
+            Log.INFO(mapLog, appkey, regionId,zoneId);
+        } else if (logType.equals("error")) {
+            Log.ERROR(mapLog, appkey, regionId,zoneId);
+        }
+    }
+
+    public String getProvider() {
+        return provider;
+    }
+
+    public void setProvider(String provider) {
+        this.provider = provider;
+    }
+
+    public String getInstanceId() {
+        return instanceId;
+    }
+
+    public void setInstanceId(String instanceId) {
+        this.instanceId = instanceId;
+    }
+
+    public String getRegionId() {
+        return regionId;
+    }
+
+    public void setRegionId(String regionId) {
+        this.regionId = regionId;
+    }
+
+    public String getZoneId() {
+        return zoneId;
+    }
+
+    public void setZoneId(String zoneId) {
+        this.zoneId = zoneId;
+    }
+
+    public String getSecurityGroupId() {
+        return securityGroupId;
+    }
+
+    public void setSecurityGroupId(String securityGroupId) {
+        this.securityGroupId = securityGroupId;
+    }
+
+    public String getOriginSecurityGroupId() {
+        return originSecurityGroupId;
+    }
+
+    public void setOriginSecurityGroupId(String originSecurityGroupId) {
+        this.originSecurityGroupId = originSecurityGroupId;
+    }
+
+    public String getAppname() {
+        return appname;
+    }
+
+    public void setAppname(String appname) {
+        this.appname = appname;
+    }
+
+    @Override
+    public String toString() {
+        return "ModifySecurityGroup{" +
+                "securityGroupId='" + securityGroupId + '\'' +
+                ", regionId='" + regionId + '\'' +
+                ", instanceId='" + instanceId + '\'' +
+                ", provider='" + provider + '\'' +
+                '}';
+    }
+}

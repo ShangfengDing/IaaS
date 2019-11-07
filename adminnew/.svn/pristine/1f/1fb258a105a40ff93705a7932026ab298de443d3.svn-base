@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Struts2Diagram version="2.0">
+  <package name="accounts" location="179,165" size="525,350">
+    <action name="login" location="310,47" size="150,62">
+      <result name="input">
+        <resourceEdge source="input" routing="0" target="login.jsp" />
+      </result>
+      <result name="success" />
+    </action>
+    <action name="logout" location="310,162" size="150,41">
+      <result name="success">
+        <resourceEdge source="success" routing="0" target="index.jsp" />
+      </result>
+    </action>
+    <action name="register" location="65,152" size="150,62">
+      <result name="success">
+        <resourceEdge source="success" routing="0" target="dashboard.jsp" />
+      </result>
+      <result name="input">
+        <resourceEdge source="input" routing="0" target="register.jsp" />
+      </result>
+    </action>
+    <action name="regvercode" location="65,267" size="150,41">
+      <result name="success" />
+    </action>
+    <action name="checkusername" location="310,267" size="150,41">
+      <result name="success" />
+    </action>
+  </package>
+  <webResource name="login.jsp" path="/accounts/login.jsp" location="501,10" size="150,55" />
+  <webResource name="index.jsp" path="/index.jsp" location="759,290" size="150,55" />
+  <webResource name="dashboard.jsp" path="/user/dashboard.jsp" location="10,290" size="150,55" />
+  <webResource name="register.jsp" path="/accounts/register.jsp" location="250,10" size="150,55" />
+</Struts2Diagram>
+

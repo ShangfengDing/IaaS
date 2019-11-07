@@ -1,0 +1,96 @@
+package appcloud.distributed.process;
+
+
+import appcloud.distributed.CloudController;
+import appcloud.distributed.configmanager.RouteInfo;
+import appcloud.distributed.configmanager.RouteInfoManager;
+import appcloud.distributed.header.DispatchRegisterHeader;
+import appcloud.distributed.header.RegisterConsumerHeader;
+import appcloud.distributed.nativeConfig.DnsContentConfig;
+import appcloud.netty.remoting.common.RequestCode;
+import appcloud.netty.remoting.common.ResponseCode;
+import appcloud.netty.remoting.protocol.RemoteCommand;
+import appcloud.netty.remoting.remote.NettyRequestProcessor;
+import io.netty.channel.ChannelHandlerContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
+
+/**
+ * Created by lizhenhao on 2017/11/22.
+ */
+public class RegisterRequestProcess implements NettyRequestProcessor {
+
+    protected final static Logger LOGGER = LoggerFactory.getLogger(RegisterRequestProcess.class);
+
+    private CloudController cloudController;
+
+    private RouteInfoManager routeInfoManager;
+
+    private DnsContentConfig dnsContentConfig;
+
+    public RegisterRequestProcess(CloudController cloudController) {
+        this.cloudController = cloudController;
+        this.routeInfoManager = cloudController.routeInfoManager;
+        this.dnsContentConfig = cloudController.dnsContentConfig;
+    }
+
+    public RemoteCommand processRequest(ChannelHandlerContext channelHandlerContext, RemoteCommand remoteCommand) throws Exception {
+        RemoteCommand response;
+        int requestCode = remoteCommand.getCode();
+        switch (requestCode) {
+            case RequestCode.REGISTER_BROKER:
+                LOGGER.info("start:master收到slave的注册信息，更新信息开始" + Thread.currentThread().getName());
+                remoteCommand.decodeConsumerHeader(RegisterConsumerHeader.class);
+                RegisterConsumerHeader registerHeader = (RegisterConsumerHeader) remoteCommand.getConsumHeader();
+                RouteInfo routeInfo = registerHeader.getRouteInfo();
+                //更新注册表
+                routeInfoManager.putRouteInfo(routeInfo);
+                //更新DNS信息
+                dnsContentConfig.setIpDomain(routeInfo.getDomainName(),routeInfo.getIpAddress());
+                response = RemoteCommand.createReponseRemoteCommand(RequestCode.SUCCESS, ResponseCode.SUCCESSED);
+                LOGGER.info("end:master收到slave的注册信息，更新信息结束" + Thread.currentThread().getName());
+                break;
+
+            case RequestCode.DISPATCH_REGISTER_MESSAGE:
+                LOGGER.info("start:slave收到master的分发注册信息请求，更新注册表信息开始" + Thread.currentThread().getName());
+                remoteCommand.decodeConsumerHeader(DispatchRegisterHeader.class);
+                DispatchRegisterHeader dispatchHeader = (DispatchRegisterHeader) remoteCommand.getConsumHeader();
+                routeInfoManager.updateMaster(dispatchHeader.getMasterInfo());
+                List<RouteInfo> registerMessage = dispatchHeader.getRouteInfoConfigList();
+
+                //每次遍历表判断是否包含新的list的数据 或者 域名是否变更，如果是，那么重新设置DNS
+                for (RouteInfo tmp : registerMessage) {
+                    if (!routeInfoManager.containRouteInfo(tmp.getDataCenter())) {
+                        dnsContentConfig.setIpDomain(tmp.getDomainName(),tmp.getIpAddress());
+                    }
+                    else if (!routeInfoManager.getRouteInfo(tmp.getDataCenter()).getDomainName().equals(tmp.getDomainName())) {
+                        dnsContentConfig.setIpDomain(tmp.getDomainName(),tmp.getIpAddress());
+                    }
+                }
+
+                routeInfoManager.updateRouteInfo(registerMessage);
+                response = RemoteCommand.createReponseRemoteCommand(RequestCode.SUCCESS, ResponseCode.SUCCESSED);
+                LOGGER.info("end:slave收到master的分发注册信息请求，更新注册表信息结束" + Thread.currentThread().getName());
+                break;
+
+            default:
+                response = RemoteCommand.createReponseRemoteCommand(RequestCode.DEFAULT, ResponseCode.DEFAULT);
+                break;
+        }
+
+        //test部分：打印注册表,上线请删除
+//        List<RouteInfo> list = cloudController.routeInfoManager.getAllRouteInfo();
+//        LOGGER.info("开始打印注册表======================================");
+//        for (RouteInfo routeInfo : list) {
+//            LOGGER.info(routeInfo.getAddr());
+//        }
+//        LOGGER.info("打印注册表结束======================================");
+        return response;
+    }
+
+    public boolean rejectRequest() {
+        return false;
+    }
+}

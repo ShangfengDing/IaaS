@@ -1,0 +1,35 @@
+package appcloud.distributed.service;
+
+import appcloud.common.util.UuidUtil;
+import appcloud.distributed.CloudControllerClientWapper;
+import appcloud.distributed.service.check.AccountChecker;
+import appcloud.netty.remoting.common.RequestCode;
+import appcloud.netty.remoting.protocol.RemoteCommand;
+import com.distributed.common.response.BaseResponse;
+import com.distributed.common.response.util.HttpConstants;
+import com.distributed.common.service.controller.AccountClient;
+import com.distributed.common.utils.ModelUtil;
+
+/**
+ * Created by Idan on 2018/1/15.
+ */
+public class AccountClientImpl implements AccountClient {
+
+    private CloudControllerClientWapper clientWapper = CloudControllerClientWapper.getInstance();
+
+    public AccountClientImpl() {}
+
+    @Override
+    public BaseResponse userCreate(String regionId, String zoneId, String newUserEmail, String groupSecretKey, String appkeyId, String appkeySecret, String userEmail,String accountName) {
+        if (!AccountChecker.createUserCheck(newUserEmail, groupSecretKey, appkeyId)) {
+            return new BaseResponse(null, HttpConstants.STATUS_FORBIDDEN, "传入参数不对");
+        }
+        String requestId = UuidUtil.getRandomUuid();
+        RemoteCommand remoteCommand = clientWapper.sendCreateUserRequest(requestId, regionId, zoneId, newUserEmail, groupSecretKey, appkeyId, appkeySecret,accountName);
+        if (ModelUtil.isNotEmpty(remoteCommand) && remoteCommand.getCode()== RequestCode.SUCCESS) {
+            return new BaseResponse(null, HttpConstants.STATUS_OK, null);
+        } else {
+            return new BaseResponse(null, HttpConstants.STATUS_INTERNAL_SERVER_ERROR, "服务器内部出错");
+        }
+    }
+}

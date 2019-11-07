@@ -1,0 +1,18 @@
+package appcloud.core.sdk.serialization;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
+import javax.xml.bind.JAXB;
+
+import appcloud.core.sdk.exceptions.ClientException;
+
+public class XmlSerialization implements Serialization {
+
+	@Override
+	public <T> T read(String content, Class<T> type) throws ClientException {
+		InputStream inputStream = new ByteArrayInputStream(content.getBytes());
+		return JAXB.unmarshal(inputStream,type);
+	}
+
+}

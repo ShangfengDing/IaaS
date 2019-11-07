@@ -1,0 +1,419 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" readonly="true" id="22337b75-6ab1-47a9-921f-acc33b027f1d" name="Default" comment="">
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/account/LoginAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/fw/FwListAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/fw/FwOperateAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/fw/FwRuleOperateAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/fw/RuleListAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/hd/HdDetailAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/hd/HdOperateAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/hd/NewHdAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/hd/PreNewHdAction$getHardDiskType.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/hd/PreNewHdAction$getZone.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/hd/PreNewHdAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/image/DeleteImageAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/image/EditImageAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/image/RelativeInstanceAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/image/imagesListAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/shot/NewShotAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/shot/ShotListAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/shot/ShotOperateAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/sum/SumAction$AddAliDisk.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/sum/SumAction$AddAliImage.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/sum/SumAction$AddAliInstance.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/sum/SumAction$AddAliSecurity.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/sum/SumAction$AddAliShot.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/sum/SumAction$AddYunhaiDisk.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/sum/SumAction$AddYunhaiImage.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/sum/SumAction$AddYunhaiInstance.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/sum/SumAction$AddYunhaiSecurity.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/sum/SumAction$AddYunhaiShot.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/sum/SumAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/vm/EditVmAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/vm/ModifyChargeTypeAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/vm/ModifyResourceAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/vm/ModifySecurityGroup.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/vm/NewImgAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/vm/NewVmAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/vm/PreVmInstallAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/vm/VmDetailAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/vm/VmInstallAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/vm/VmListAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/vm/VmMonitorAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/vm/VmOperateAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/vm/newvm/PreNewYunHaiVmAction$getBandWidth.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/vm/newvm/PreNewYunHaiVmAction$getGroupImage.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/vm/newvm/PreNewYunHaiVmAction$getHardDiskType.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/vm/newvm/PreNewYunHaiVmAction$getInstanceType.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/vm/newvm/PreNewYunHaiVmAction$getPrivateImage.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/vm/newvm/PreNewYunHaiVmAction$getPublicImage.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/vm/newvm/PreNewYunHaiVmAction$getSecurityGroupId.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/vm/newvm/PreNewYunHaiVmAction$getZone.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/vm/newvm/PreNewYunHaiVmAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/common/Constants.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/common/Log.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/account/LoginAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/fw/FwListAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/fw/FwOperateAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/fw/FwRuleOperateAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/fw/RuleListAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/hd/HdDetailAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/hd/HdOperateAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/hd/NewHdAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/hd/PreNewHdAction$getHardDiskType.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/hd/PreNewHdAction$getZone.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/hd/PreNewHdAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/image/DeleteImageAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/image/EditImageAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/image/RelativeInstanceAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/image/imagesListAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/shot/NewShotAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/shot/ShotListAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/shot/ShotOperateAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/sum/SumAction$AddAliDisk.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/sum/SumAction$AddAliImage.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/sum/SumAction$AddAliInstance.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/sum/SumAction$AddAliSecurity.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/sum/SumAction$AddAliShot.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/sum/SumAction$AddYunhaiDisk.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/sum/SumAction$AddYunhaiImage.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/sum/SumAction$AddYunhaiInstance.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/sum/SumAction$AddYunhaiSecurity.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/sum/SumAction$AddYunhaiShot.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/sum/SumAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/vm/EditVmAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/vm/ModifyChargeTypeAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/vm/ModifyResourceAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/vm/ModifySecurityGroup.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/vm/NewImgAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/vm/NewVmAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/vm/PreVmInstallAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/vm/VmDetailAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/vm/VmInstallAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/vm/VmListAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/vm/VmMonitorAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/vm/VmOperateAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/vm/newvm/PreNewYunHaiVmAction$getBandWidth.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/vm/newvm/PreNewYunHaiVmAction$getGroupImage.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/vm/newvm/PreNewYunHaiVmAction$getHardDiskType.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/vm/newvm/PreNewYunHaiVmAction$getInstanceType.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/vm/newvm/PreNewYunHaiVmAction$getPrivateImage.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/vm/newvm/PreNewYunHaiVmAction$getPublicImage.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/vm/newvm/PreNewYunHaiVmAction$getSecurityGroupId.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/vm/newvm/PreNewYunHaiVmAction$getZone.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/vm/newvm/PreNewYunHaiVmAction.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/common/Constants.class" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/common/Log.class" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/commom/QueryLogAction.class" afterPath="$PROJECT_DIR$/target/classes/com/appcloud/vm/action/commom/QueryLogAction.class" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0-sources.jar" afterPath="$PROJECT_DIR$/target/vm-4.0.0-sources.jar" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0.war" afterPath="$PROJECT_DIR$/target/vm-4.0.0.war" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/commom/QueryLogAction.class" afterPath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/com/appcloud/vm/action/commom/QueryLogAction.class" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/lib/appcloud-common-3.5.0-SNAPSHOT.jar" afterPath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/lib/appcloud-common-3.5.0-SNAPSHOT.jar" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/lib/appcloud.vm.fe-common-3.5.0-SNAPSHOT.jar" afterPath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/lib/appcloud.vm.fe-common-3.5.0-SNAPSHOT.jar" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/lib/common-1.0-SNAPSHOT.jar" afterPath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/lib/common-1.0-SNAPSHOT.jar" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/lib/netty-remoting-1.0-SNAPSHOT.jar" afterPath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/lib/netty-remoting-1.0-SNAPSHOT.jar" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/lib/openapi-client-1.0.20151020-SNAPSHOT.jar" afterPath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/lib/openapi-client-1.0.20151020-SNAPSHOT.jar" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/lib/openapi-common-1.0.20151020-SNAPSHOT.jar" afterPath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/lib/openapi-common-1.0.20151020-SNAPSHOT.jar" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/lib/yunhai-sdk-core-0.0.1-SNAPSHOT.jar" afterPath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/lib/yunhai-sdk-core-0.0.1-SNAPSHOT.jar" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/lib/yunhai-sdk-iaas-0.0.1-SNAPSHOT.jar" afterPath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/lib/yunhai-sdk-iaas-0.0.1-SNAPSHOT.jar" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/resources/app.properties" afterPath="$PROJECT_DIR$/src/main/resources/app.properties" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/sum/sum.jsp" afterPath="$PROJECT_DIR$/src/main/webapp/sum/sum.jsp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/app.properties" afterPath="$PROJECT_DIR$/target/classes/app.properties" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/common.xml" afterPath="$PROJECT_DIR$/target/classes/common.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/log.xml" afterPath="$PROJECT_DIR$/target/classes/log.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/maven-archiver/pom.properties" afterPath="$PROJECT_DIR$/target/maven-archiver/pom.properties" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/app.properties" afterPath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/app.properties" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/common.xml" afterPath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/common.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/log.xml" afterPath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/classes/log.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/web.xml" afterPath="$PROJECT_DIR$/target/vm-4.0.0/WEB-INF/web.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/hd/divpage.jsp" afterPath="$PROJECT_DIR$/target/vm-4.0.0/hd/divpage.jsp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/hd/hd_list.jsp" afterPath="$PROJECT_DIR$/target/vm-4.0.0/hd/hd_list.jsp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/hd/hddetail.jsp" afterPath="$PROJECT_DIR$/target/vm-4.0.0/hd/hddetail.jsp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/hd/newhd.jsp" afterPath="$PROJECT_DIR$/target/vm-4.0.0/hd/newhd.jsp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/hd/yunhai/yunhai_hd_list.jsp" afterPath="$PROJECT_DIR$/target/vm-4.0.0/hd/yunhai/yunhai_hd_list.jsp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/image/imagesList.jsp" afterPath="$PROJECT_DIR$/target/vm-4.0.0/image/imagesList.jsp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/image/yunhai/yunhai_image_list.jsp" afterPath="$PROJECT_DIR$/target/vm-4.0.0/image/yunhai/yunhai_image_list.jsp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/js/hd/newhd.js" afterPath="$PROJECT_DIR$/target/vm-4.0.0/js/hd/newhd.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/js/image/imagesList.js" afterPath="$PROJECT_DIR$/target/vm-4.0.0/js/image/imagesList.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/js/sum/updatesum.js" afterPath="$PROJECT_DIR$/target/vm-4.0.0/js/sum/updatesum.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/js/vm/divpage.js" afterPath="$PROJECT_DIR$/target/vm-4.0.0/js/vm/divpage.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/js/vm/newvm/newyunhaivm.js" afterPath="$PROJECT_DIR$/target/vm-4.0.0/js/vm/newvm/newyunhaivm.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/js/vm/vmdetail.js" afterPath="$PROJECT_DIR$/target/vm-4.0.0/js/vm/vmdetail.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/shot/shotsList.jsp" afterPath="$PROJECT_DIR$/target/vm-4.0.0/shot/shotsList.jsp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/sum/addNewAccount.jsp" afterPath="$PROJECT_DIR$/target/vm-4.0.0/sum/addNewAccount.jsp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/sum/appnamefornew.jsp" afterPath="$PROJECT_DIR$/target/vm-4.0.0/sum/appnamefornew.jsp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/sum/sum.jsp" afterPath="$PROJECT_DIR$/target/vm-4.0.0/sum/sum.jsp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/template/_banner.jsp" afterPath="$PROJECT_DIR$/target/vm-4.0.0/template/_banner.jsp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/template/_footer.jsp" afterPath="$PROJECT_DIR$/target/vm-4.0.0/template/_footer.jsp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/vm/newvm/_imagemarket.jsp" afterPath="$PROJECT_DIR$/target/vm-4.0.0/vm/newvm/_imagemarket.jsp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/vm/newvm/newyunhaivm.jsp" afterPath="$PROJECT_DIR$/target/vm-4.0.0/vm/newvm/newyunhaivm.jsp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/vm/term_of_service.jsp" afterPath="$PROJECT_DIR$/target/vm-4.0.0/vm/term_of_service.jsp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/vm/vmDivPage.jsp" afterPath="$PROJECT_DIR$/target/vm-4.0.0/vm/vmDivPage.jsp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/vm/vmdetail.jsp" afterPath="$PROJECT_DIR$/target/vm-4.0.0/vm/vmdetail.jsp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/vm-4.0.0/vm/vmlist.jsp" afterPath="$PROJECT_DIR$/target/vm-4.0.0/vm/vmlist.jsp" />
+    </list>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="TRACKING_ENABLED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="GradleLocalSettings">
+    <option name="externalProjectsViewState">
+      <projects_view />
+    </option>
+  </component>
+  <component name="JsBuildToolGruntFileManager" detection-done="true" sorting="DEFINITION_ORDER" />
+  <component name="JsBuildToolPackageJson" detection-done="true" sorting="DEFINITION_ORDER" />
+  <component name="JsGulpfileManager">
+    <detection-done>true</detection-done>
+    <sorting>DEFINITION_ORDER</sorting>
+  </component>
+  <component name="ProjectFrameBounds" extendedState="7">
+    <option name="x" value="-256" />
+    <option name="y" value="182" />
+    <option name="width" value="1936" />
+    <option name="height" value="1056" />
+  </component>
+  <component name="ProjectView">
+    <navigator currentView="ProjectPane" proportions="" version="1">
+      <flattenPackages />
+      <showMembers />
+      <showModules />
+      <showLibraryContents />
+      <hideEmptyPackages />
+      <abbreviatePackageNames />
+      <autoscrollToSource />
+      <autoscrollFromSource />
+      <sortByType />
+      <manualOrder />
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="PackagesPane" />
+      <pane id="AndroidView" />
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="vm-front" type="b2602c69:ProjectViewProjectNode" />
+              <item name="vm-front" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+      <pane id="Scope" />
+      <pane id="Scratches" />
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="aspect.path.notification.shown" value="true" />
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager">
+    <configuration default="true" type="Applet" factoryName="Applet">
+      <option name="HTML_USED" value="false" />
+      <option name="WIDTH" value="400" />
+      <option name="HEIGHT" value="300" />
+      <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
+      <module />
+    </configuration>
+    <configuration default="true" type="Application" factoryName="Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" />
+      <option name="VM_PARAMETERS" />
+      <option name="PROGRAM_PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="" />
+      <envs />
+    </configuration>
+    <configuration default="true" type="JUnit" factoryName="JUnit">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <module name="" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="PACKAGE_NAME" />
+      <option name="MAIN_CLASS_NAME" />
+      <option name="METHOD_NAME" />
+      <option name="TEST_OBJECT" value="class" />
+      <option name="VM_PARAMETERS" value="-ea" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="singleModule" />
+      </option>
+      <envs />
+      <patterns />
+    </configuration>
+    <configuration default="true" type="#org.jetbrains.idea.devkit.run.PluginConfigurationType" factoryName="Plugin">
+      <module name="" />
+      <option name="VM_PARAMETERS" value="-Xmx512m -Xms256m -XX:MaxPermSize=250m -ea" />
+      <option name="PROGRAM_PARAMETERS" />
+      <predefined_log_file id="idea.log" enabled="true" />
+    </configuration>
+    <configuration default="true" type="Remote" factoryName="Remote">
+      <option name="USE_SOCKET_TRANSPORT" value="true" />
+      <option name="SERVER_MODE" value="false" />
+      <option name="SHMEM_ADDRESS" value="javadebug" />
+      <option name="HOST" value="localhost" />
+      <option name="PORT" value="5005" />
+    </configuration>
+    <configuration default="true" type="TestNG" factoryName="TestNG">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <module name="" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="SUITE_NAME" />
+      <option name="PACKAGE_NAME" />
+      <option name="MAIN_CLASS_NAME" />
+      <option name="METHOD_NAME" />
+      <option name="GROUP_NAME" />
+      <option name="TEST_OBJECT" value="CLASS" />
+      <option name="VM_PARAMETERS" value="-ea" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <option name="OUTPUT_DIRECTORY" />
+      <option name="ANNOTATION_TYPE" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="singleModule" />
+      </option>
+      <option name="USE_DEFAULT_REPORTERS" value="false" />
+      <option name="PROPERTIES_FILE" />
+      <envs />
+      <properties />
+      <listeners />
+    </configuration>
+  </component>
+  <component name="ShelveChangesManager" show_recycled="false">
+    <option name="remove_strategy" value="false" />
+  </component>
+  <component name="SvnConfiguration" cleanupOnStartRun="true">
+    <configuration>C:\Users\Administrator\AppData\Roaming\Subversion</configuration>
+    <supportedVersion>125</supportedVersion>
+  </component>
+  <component name="SvnFileUrlMappingImpl">
+    <option name="myMappingRoots">
+      <list>
+        <SvnCopyRootSimple>
+          <option name="myVcsRoot" value="H:\code\Intellij Idea\openapi\iaas-front\vm-front" />
+          <option name="myCopyRoot" value="H:\code\Intellij Idea\openapi\iaas-front\vm-front" />
+        </SvnCopyRootSimple>
+        <SvnCopyRootSimple>
+          <option name="myVcsRoot" value="H:\code\Intellij Idea\openapi\iaas-front\vm-front\.idea" />
+          <option name="myCopyRoot" value="H:\code\Intellij Idea\openapi\iaas-front\vm-front\.idea" />
+        </SvnCopyRootSimple>
+      </list>
+    </option>
+    <option name="myMoreRealMappingRoots">
+      <list>
+        <SvnCopyRootSimple>
+          <option name="myVcsRoot" value="H:\code\Intellij Idea\openapi\iaas-front\vm-front" />
+          <option name="myCopyRoot" value="H:\code\Intellij Idea\openapi\iaas-front\vm-front" />
+        </SvnCopyRootSimple>
+      </list>
+    </option>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="22337b75-6ab1-47a9-921f-acc33b027f1d" name="Default" comment="" />
+      <created>1524464492527</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1524464492527</updated>
+      <workItem from="1524464494065" duration="31000" />
+      <workItem from="1524465433052" duration="97000" />
+      <workItem from="1524472753184" duration="474000" />
+      <workItem from="1524482739413" duration="91000" />
+      <workItem from="1569310739385" duration="649000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TimeTrackingManager">
+    <option name="totallyTimeSpent" value="1342000" />
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="-8" y="-8" width="1936" height="1056" extended-state="7" />
+    <editor active="true" />
+    <layout>
+      <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Palette&#9;" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Image Layers" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="Java Enterprise" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Capture Analysis" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32924107" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.21108742" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Web" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Theme Preview" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+    </layout>
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="VcsContentAnnotationSettings">
+    <option name="myLimit" value="2678400000" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager />
+    <watches-manager />
+  </component>
+  <component name="masterDetails">
+    <states>
+      <state key="ProjectJDKs.UI">
+        <settings>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+    </states>
+  </component>
+</project>

@@ -1,0 +1,251 @@
+package com.appcloud.vm.action.account;
+
+import appcloud.api.beans.AcMessageLog;
+import appcloud.api.beans.AcUser;
+import appcloud.api.beans.SecurityGroup;
+import appcloud.api.beans.securitygroup.RuleCreateReq;
+import appcloud.api.beans.securitygroup.SecurityGroupCreateReq;
+import appcloud.api.client.AcMessageLogClient;
+import appcloud.api.client.AcUserClient;
+import appcloud.api.client.RuleClient;
+import appcloud.api.client.SecurityGroupClient;
+import appcloud.api.enums.AcLogLevelEnum;
+import appcloud.api.enums.AcModuleEnum;
+import appcloud.openapi.client.CommonClient;
+import appcloud.openapi.client.ControllerClient;
+import appcloud.openapi.response.GainAppkeyPairResponse;
+import com.appcloud.vm.common.Constants;
+import com.appcloud.vm.common.SessionConstants;
+import com.appcloud.vm.fe.util.ClientFactory;
+import com.appcloud.vm.fe.util.OpenClientFactory;
+import com.distributed.common.utils.CollectionUtil;
+import com.free4lab.utils.account.AccountUtil;
+import com.free4lab.utils.account.NewBaseLoginAction;
+import com.opensymphony.xwork2.ActionContext;
+import org.apache.log4j.Logger;
+import org.json.JSONObject;
+
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.*;
+
+/**
+ * 应用侧的LoginAction，继承common中已封装过的BaseLoginAction
+ * @author lzc
+ *
+ */
+public class LoginAction extends NewBaseLoginAction {
+	private static final long serialVersionUID = 6104451188832093462L;
+	final static Logger logger = Logger.getLogger(LoginAction.class);
+//	private static String DEFAULT_REGIONID = "BEIJING";
+//	private static String DEFAULT_ZONEID = "lab";
+	private CommonClient commonClient = OpenClientFactory.getCommonClient();
+//	private ControllerClient controllerClient = OpenClientFactory.getControllerClient();
+
+//	public LoginAction() {
+//		if (Constants.CONTROLLER_ENABLE) {
+//			Map<String, String> routeMap = controllerClient.findOwnRouteInfo();
+//			if (!CollectionUtil.isEmpty(routeMap)) {
+//				DEFAULT_ZONEID = routeMap.get("zoneId");
+//				logger.info("本地的数据中心的zoneId: "+DEFAULT_ZONEID);
+//			}
+//		}
+//	}
+	
+	@Override
+	public boolean writeToSession(JSONObject obj) {
+		logger.info("LoginAction：写session"+obj);
+		if (obj != null && obj.has(SessionConstants.KEY_USER_ID)){
+			//可以通过检查uid字段判断此json对象是否有效
+			Map<String, Object> session = ActionContext.getContext().getSession();
+			//将用户信息存入session，session的key可以自己在应用的Constants里定义
+			Integer loginUserId = jsonGetUserId(obj);
+			String email = jsonGetEmail(obj);
+			String screenName = jsonGetScreenName(obj);
+			String profileImageUrl = jsonGetProfileImageUrl(obj);
+			String userName = jsonGetRealName(obj);
+			Integer userId = (Integer) session.get(SessionConstants.UserID);  // userId 与 loginUserId不同
+
+			session.put(SessionConstants.LoginUserID, loginUserId);
+//			session.put(SessionConstants.UserID, userId);
+			session.put(SessionConstants.UserEmail, email);
+			session.put(SessionConstants.USER_NAME, userName);
+			session.put(SessionConstants.KEY_SCREEN_NAME, screenName);
+			session.put(SessionConstants.KEY_PROFILE_IMAGE_URL, profileImageUrl);
+
+			checkSecurityGroup(userId.toString());
+//			checkAndSaveUser(userId, email);
+			checkEnterprise(userId);
+			checkIsEnterpriseAdmin(userId.toString());
+
+
+			AcMessageLogClient acMessageLogClient = ClientFactory.getAcMessageLogClient();
+			Date currentDate = new Date(System.currentTimeMillis());
+			String IP = getIp();
+			AcMessageLog log = new AcMessageLog(AcModuleEnum.VM_FRONT,
+					UUID.randomUUID().toString().replace("-", ""), session.get(SessionConstants.UserID).toString(),
+					null, "登录", "用户"+session.get(SessionConstants.UserEmail)+"登录", "LoginAction.class", IP, AcLogLevelEnum.INFO,
+					currentDate);
+			AcMessageLog acMessageLog = acMessageLogClient.addLog(log);
+			if(acMessageLog == null){
+				logger.info("日志写入失败:登录,用户登录,LoginAction.class,"
+						+ AcLogLevelEnum.INFO +"," + currentDate);
+			}else{
+				logger.info("写入日志成功:"+acMessageLog);
+			}
+			return true;
+       } else {
+    	   	logger.info("获取的用户信息为空");
+       }
+       return false;
+	}
+	
+	@Override
+	public String giveDefaultRedirect() {
+		//返回应用默认跳转的地址，
+		return "/sum/sum";
+	}
+   
+	@Override
+	public String writeAccessTokenToSession(String access_token) {
+		logger.info("LoginAction：accessToken，写session"+access_token);
+		Map<String, Object> session = ActionContext.getContext().getSession();
+		//将传入的access_token写入session
+		session.put(SessionConstants.AccessToken, access_token);
+		session.put(SessionConstants.AccToken, access_token.substring(8, 24));
+
+		//自动托管AppKey和secertKey
+		GainAppkeyPairResponse response = commonClient.GainAppkeyPair(Constants.DEFAULT_REGIONID,Constants.DEFAULT_ZONEID, access_token, null);
+		if (response.getErrorCode() != null) {
+			return "get user info error";
+		}
+		Integer userId = response.getUserId();
+		session.put(SessionConstants.UserID, userId);
+		return null;
+	}
+   
+	@Override
+	public String giveClientSecret() {
+		//返回account分配给应用的secret_key
+		return Constants.CLIENT_SECRET_KEY;
+	}
+	
+	private void checkIsEnterpriseAdmin(String userId) {
+		Map<String, Object> session = ActionContext.getContext().getSession();
+		AcUserClient acUserClient = ClientFactory.getAcUserClient();
+		AcUser acUser = acUserClient.get(userId);
+		Integer enterpriseId = acUser.enterpriseId;
+		logger.info(enterpriseId);
+		if (enterpriseId == null || enterpriseId.equals("")) {
+			//普通用户
+			session.put(SessionConstants.IsEnterpriseAdmin, SessionConstants.NORMAL_USER);
+		} else {
+			logger.info(acUser);
+			if (!acUser.userId.equals(acUser.enterpriseId.toString())) {
+				//企业管理员，非拥有者
+				session.put(SessionConstants.IsEnterpriseAdmin, SessionConstants.ENTERPRISE_ADMIN);
+			} else {
+				//企业拥有者
+				session.put(SessionConstants.IsEnterpriseAdmin, SessionConstants.ENTERPRISE_OWNER);
+			}
+		}
+		logger.info(session.get(SessionConstants.IsEnterpriseAdmin));
+	}
+	
+	//检查该用户是否有securityGroup，如果没有的话，给其新增一条
+	private void checkSecurityGroup(String userId){
+
+		SecurityGroupClient securityGroupClient = ClientFactory.getSecurityGroupClient();
+		List<SecurityGroup> groups = securityGroupClient.getSecurityGroups(userId);
+		if (groups == null || groups.isEmpty()) {
+			SecurityGroupCreateReq SecurityGroupEmptyRules = new SecurityGroupCreateReq("关闭所有端口", "默认关闭所有端口");
+			SecurityGroupCreateReq SecurityGroupFullRules = new SecurityGroupCreateReq("开放所有端口", "默认开放所有端口");
+			SecurityGroupCreateReq SecurityGroupOnly22Rules = new SecurityGroupCreateReq("仅开放SSH端口", "默认开放22端口");
+			securityGroupClient.createSecurityGroup(userId, SecurityGroupEmptyRules);
+			securityGroupClient.createSecurityGroup(userId, SecurityGroupFullRules);
+			securityGroupClient.createSecurityGroup(userId, SecurityGroupOnly22Rules);
+			
+			groups = securityGroupClient.getSecurityGroups(userId);
+			RuleCreateReq newRules = null;
+			RuleClient ruleClient = ClientFactory.getRuleClient();
+			for(SecurityGroup sg : groups) {
+				if(sg.name.equals("开放所有端口")) {
+					//开放所有端口
+					newRules = new RuleCreateReq("TCP", new Integer(0), new Integer(65535), 
+							"0.0.0.0/0", "", sg.id);
+					ruleClient.createRule(userId, newRules);
+					newRules = new RuleCreateReq("ICMP", null, null, "0.0.0.0/0", "", sg.id);
+					ruleClient.createRule(userId, newRules);
+				} else if(sg.name.equals("仅开放SSH端口")) {
+					//仅开放ssh端口
+					newRules = new RuleCreateReq("TCP", new Integer(22), new Integer(22), 
+							"0.0.0.0/0", "", sg.id);
+					ruleClient.createRule(userId, newRules);
+				}
+			}
+		}
+	}
+	
+	//检查用户之前是否登陆过，并把用户权限信息写入session
+	private void checkAndSaveUser(String access_token) throws Exception {
+		String userId = AccountUtil.getUserByAccessToken(access_token).getString(appcloud.openapi.constant.Constants.ACCOUNT_USER_ID);  //account拿到的userId
+		String email = AccountUtil.getUserByAccessToken(access_token).getString(appcloud.openapi.constant.Constants.ACCOUNT_EMAIL);
+		logger.info("检查用户权限：userId:" + userId + " " + email);
+		try {
+			AcUserClient acUserClient = ClientFactory.getAcUserClient();
+			AcUser acUser = acUserClient.getAccount(userId.toString());
+			if (acUser == null) {
+				acUserClient.create(new AcUser(userId.toString(), email, true,	Constants.DEFAULT_GROUP, null));
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+	
+	private void checkEnterprise(Integer userId) {
+		logger.info("检查用户所属企业：userId:" + userId);
+		Map<String, Object> session = ActionContext.getContext().getSession();
+		try{
+			AcUserClient acUserClient = ClientFactory.getAcUserClient();
+			AcUser acUser = acUserClient.get(userId.toString());
+			if(acUser != null && acUser.enterpriseId != null) {
+				session.put(SessionConstants.UserID, acUser.enterpriseId);
+			}
+		} catch(Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+	
+	//获取IP
+	private static String getIp() {
+		Enumeration <NetworkInterface>allNetInterfaces;
+		try {
+			allNetInterfaces = NetworkInterface.getNetworkInterfaces();
+			InetAddress ip = null;
+			while (allNetInterfaces.hasMoreElements())
+			{
+				NetworkInterface netInterface = (NetworkInterface) allNetInterfaces.nextElement();
+				Enumeration <InetAddress> addresses = netInterface.getInetAddresses();
+				while (addresses.hasMoreElements())
+				{
+					ip = (InetAddress) addresses.nextElement();
+					if (ip != null && ip instanceof Inet4Address && ip.getHostAddress().startsWith("192"))
+					{
+						return ip.getHostAddress();
+					} 
+				}
+			}
+		} catch (SocketException e) {
+			e.printStackTrace();
+		}
+		return "127.0.0.1";
+	}
+
+	@Override
+	public String giveLandingUrl() {
+		// TODO Auto-generated method stub
+		return "/login.jsp";
+	}
+}

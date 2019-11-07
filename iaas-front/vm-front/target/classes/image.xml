@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+        "http://struts.apache.org/dtds/struts-2.3.dtd">
+
+<struts>
+    <package name="image" namespace="/image" extends="default">
+
+
+        <action name="getImagesListPage" class="com.appcloud.vm.action.image.imagesListAction" method="imgGetImageList">
+            <!--<interceptor-ref name="CheckUserPermission"></interceptor-ref>-->
+            <result name="yunhai">/image/yunhai/yunhai_image_list.jsp</result>
+            <result name="aliyun">/image/aliyun/aliyun_image_list.jsp</result>
+            <result name="query_no_data">/template/_query_no_data.jsp</result>
+        </action>
+
+        <action name="relativeInstance" class="com.appcloud.vm.action.image.RelativeInstanceAction"
+                method="imgGetFirstPage">
+            <!--<interceptor-ref name="CheckUserPermission"></interceptor-ref>-->
+            <result name="success">/image/relativeInstance.jsp</result>
+        </action>
+
+        <action name="getRelativeInstancePage" class="com.appcloud.vm.action.image.RelativeInstanceAction"
+                method="imgGetDivPage">
+            <!--<interceptor-ref name="CheckUserPermission"></interceptor-ref>-->
+            <result name="success">/image/relativeInstanceForPage.jsp</result>
+        </action>
+
+        <action name="deleteimage" class="com.appcloud.vm.action.image.DeleteImageAction">
+            <!--<interceptor-ref name="CheckUserPermission"></interceptor-ref>-->
+            <result name="success"></result>
+        </action>
+
+        <action name="editimage" class="com.appcloud.vm.action.image.EditImageAction" method="execute">
+            <result type="json"></result>
+        </action>
+
+        <action name="publishImage" class="com.appcloud.vm.action.image.EditImageAction" method="publishImage">
+            <result type="json"></result>
+        </action>
+    </package>
+</struts>

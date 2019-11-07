@@ -1,0 +1,121 @@
+package appcloud.distributed.strategy;
+
+import appcloud.distributed.CloudController;
+import appcloud.distributed.configmanager.RouteInfo;
+import appcloud.distributed.configmanager.RouteInfoManager;
+import appcloud.netty.remoting.common.ResponseCode;
+import appcloud.netty.remoting.protocol.RemoteCommand;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+/**
+ * Created by lizhenhao on 2017/12/5.
+ */
+public class OtherLostStrategy implements LostStrategy {
+
+    protected final static Logger LOGGER = LoggerFactory.getLogger(OtherLostStrategy.class);
+
+    private CloudController cloudController;
+
+    /**
+     * 重试列表：如果宕机信息有主机没有接收全，那么进行重试
+     */
+    private List<RouteInfo> retryList = new ArrayList<RouteInfo>();
+
+    public OtherLostStrategy(CloudController cloudController) {
+        this.cloudController = cloudController;
+    }
+
+    public void handlerLostConnection(final RouteInfo monitor) {
+        RouteInfoManager routeInfoManager = cloudController.routeInfoManager;
+        routeInfoManager.removeRouteInfo(monitor.getDataCenter());
+        //判断对方是否是master节点
+        boolean masterAlive = true;
+        RouteInfo newMasterInfo = null;
+        if (isMaster(monitor)) {
+            //如果是master节点
+            masterAlive = false;
+            newMasterInfo = routeInfoManager.getOwnRouteInfo();
+            routeInfoManager.updateMaster(newMasterInfo);
+        }
+        LOGGER.info("monitor routeinfo is not master,now start to notify other cloud plats");
+        List<RouteInfo> list = routeInfoManager.getAllRouteInfo();
+        for (RouteInfo routeInfo : list) {
+            /**
+             * 仍然需要对自己发送宕机请求！不然处理就要在这里执行，代码显得很繁琐。
+             */
+            RemoteCommand response = cloudController.clientWapper.sendBrokerDownRequest(monitor,newMasterInfo,masterAlive,routeInfo.getAddr());
+            if (response.getRemark() != ResponseCode.SUCCESSED) {
+                retryList.add(routeInfo);
+            }
+        }
+        if (retryList.size() > 0) {
+            new Thread(new retryStrategy(masterAlive,newMasterInfo,monitor)).start();
+        }
+
+        if (isMaster(monitor)) cloudController.startMasterTask();
+    }
+
+
+    class retryStrategy implements Runnable {
+
+        boolean masterAlive;
+        RouteInfo monitor;
+        RouteInfo newMasterInfo;
+
+        public retryStrategy(boolean masterAlive, RouteInfo newMasterInfo,RouteInfo monitor) {
+            this.masterAlive = masterAlive;
+            this.monitor = monitor;
+            this.newMasterInfo = newMasterInfo;
+        }
+
+        public void run() {
+            int times = 3;
+            while (times>=0) {
+                Iterator<RouteInfo> iterator = retryList.iterator();
+                while (iterator.hasNext()) {
+                    RouteInfo routeInfo = iterator.next();
+                    /**
+                     * 注意：为什么有重试队列？
+                     * 1.我们不考虑两个云平台在恢复操作间隔内挂掉，
+                     * 2.我们不考虑本模块直接坏掉的情况（如果这样的话那恢复操作都没办法完成）
+                     * 3.我们考虑接收方的内部master控制模块突然异常，因此才有重试队列，重试次数3.
+                     */
+                    /**
+                     * 为什么重新获取？
+                     * 如果存储的地址不是zookeeper的地址，那么控制模块更换后可能出现IP不一致（但是用zookeeper的话，应该不存在这个问题）
+                     */
+                    routeInfo = cloudController.routeInfoManager.getRouteInfo(routeInfo.getDataCenter());
+                    if (routeInfo != null) {
+                        RemoteCommand response = cloudController.clientWapper.sendBrokerDownRequest(monitor,newMasterInfo,masterAlive,routeInfo.getAddr());
+                        if (response.getRemark() == ResponseCode.SUCCESSED) {
+                            iterator.remove();
+                        }
+                    }
+                    else iterator.remove();
+                }
+                if (retryList.size() == 0) break;
+                try {
+                    Thread.sleep(1000);
+                    times--;
+                } catch (InterruptedException e) {
+                    LOGGER.error("thread sleep error");
+                }
+            }
+        }
+    }
+
+    /**
+     * 判断监控对象是否是master
+     * @param monitor
+     * @return
+     */
+    private boolean isMaster(RouteInfo monitor) {
+        if (monitor.getIpAddress().equals(cloudController.routeInfoManager.getMasterIp()) && monitor.getPort().equals(cloudController.routeInfoManager.getMasterPort())) return true;
+        else return false;
+    }
+}

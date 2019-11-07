@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite tests="1" failures="0" name="appcloud.common.TestObjectSerialization" time="0.219" errors="0" skipped="0">
+  <properties>
+    <property name="idea.version" value="2017.2.1"/>
+    <property name="java.runtime.name" value="Java(TM) SE Runtime Environment"/>
+    <property name="sun.boot.library.path" value="H:\mylib\Java\jdk1.8.0_144\jre\bin"/>
+    <property name="java.vm.version" value="25.144-b01"/>
+    <property name="java.vm.vendor" value="Oracle Corporation"/>
+    <property name="maven.multiModuleProjectDirectory" value="H:\code\Intellij Idea\openapi\vm-common"/>
+    <property name="java.vendor.url" value="http://java.oracle.com/"/>
+    <property name="path.separator" value=";"/>
+    <property name="guice.disable.misplaced.annotation.check" value="true"/>
+    <property name="java.vm.name" value="Java HotSpot(TM) 64-Bit Server VM"/>
+    <property name="file.encoding.pkg" value="sun.io"/>
+    <property name="user.script" value=""/>
+    <property name="user.country" value="CN"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="sun.os.patch.level" value=""/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="user.dir" value="H:\code\Intellij Idea\openapi\vm-common"/>
+    <property name="java.runtime.version" value="1.8.0_144-b01"/>
+    <property name="java.awt.graphicsenv" value="sun.awt.Win32GraphicsEnvironment"/>
+    <property name="basedir" value="H:\code\Intellij Idea\openapi\vm-common"/>
+    <property name="java.endorsed.dirs" value="H:\mylib\Java\jdk1.8.0_144\jre\lib\endorsed"/>
+    <property name="os.arch" value="amd64"/>
+    <property name="java.io.tmpdir" value="C:\Users\ADMINI~1\AppData\Local\Temp\"/>
+    <property name="line.separator" value="
+"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="user.variant" value=""/>
+    <property name="os.name" value="Windows 10"/>
+    <property name="classworlds.conf" value="H:\software\IDEA\IntelliJ IDEA 2017.2.1\plugins\maven\lib\maven3\bin\m2.conf"/>
+    <property name="sun.jnu.encoding" value="GBK"/>
+    <property name="java.library.path" value="H:\mylib\Java\jdk1.8.0_144\bin;C:\WINDOWS\Sun\Java\bin;C:\WINDOWS\system32;C:\WINDOWS;C:\ProgramData\Oracle\Java\javapath;C:\windows\system32;C:\windows;C:\windows\System32\Wbem;C:\windows\System32\WindowsPowerShell\v1.0\;H:\software\Latex\CTEX\UserData\miktex\bin;H:\software\Latex\CTEX\MiKTeX\miktex\bin;H:\software\Latex\CTEX\CTeX\ctex\bin;H:\software\Latex\CTEX\CTeX\cct\bin;H:\software\Latex\CTEX\CTeX\ty\bin;H:\software\Latex\CTEX\Ghostscript\gs9.05\bin;H:\software\Latex\CTEX\GSview\gsview;H:\software\Latex\CTEX\WinEdt;C:\Program Files\TortoiseSVN\bin;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;H:\software\gitReal\Git\cmd;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;H:\software\apache-maven-3.6.1\bin;H:\mylib\Java\jdk1.8.0_144\bin;H:\mylib\Java\jdk1.8.0_144\jre\bin;;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\Program Files\NVIDIA Corporation\NVIDIA NGX;C:\Users\Administrator\AppData\Local\Microsoft\WindowsApps;;."/>
+    <property name="surefire.test.class.path" value="H:\code\Intellij Idea\openapi\vm-common\target\test-classes;H:\code\Intellij Idea\openapi\vm-common\target\classes;C:\Users\Administrator\.m2\repository\junit\junit\4.8.2\junit-4.8.2.jar;C:\Users\Administrator\.m2\repository\appcloud\rpc\3.5.0-SNAPSHOT\rpc-3.5.0-SNAPSHOT.jar;C:\Users\Administrator\.m2\repository\log4j\log4j\1.2.16\log4j-1.2.16.jar;C:\Users\Administrator\.m2\repository\com\fasterxml\jackson\core\jackson-databind\2.1.0\jackson-databind-2.1.0.jar;C:\Users\Administrator\.m2\repository\com\fasterxml\jackson\core\jackson-annotations\2.1.0\jackson-annotations-2.1.0.jar;C:\Users\Administrator\.m2\repository\com\fasterxml\jackson\core\jackson-core\2.1.0\jackson-core-2.1.0.jar;C:\Users\Administrator\.m2\repository\tip\tip\0.0.5-SNAPSHOT\tip-0.0.5-SNAPSHOT.jar;C:\Users\Administrator\.m2\repository\org\jboss\netty\netty\3.2.4.Final\netty-3.2.4.Final.jar;C:\Users\Administrator\.m2\repository\com\google\protobuf\protobuf-java\2.4.0a\protobuf-java-2.4.0a.jar;C:\Users\Administrator\.m2\repository\com\rabbitmq\amqp-client\2.8.7\amqp-client-2.8.7.jar;C:\Users\Administrator\.m2\repository\commons-codec\commons-codec\1.7\commons-codec-1.7.jar;C:\Users\Administrator\.m2\repository\org\projectlombok\lombok\1.16.18\lombok-1.16.18.jar;"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="java.class.version" value="52.0"/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="os.version" value="10.0"/>
+    <property name="user.home" value="C:\Users\Administrator"/>
+    <property name="user.timezone" value="Asia/Shanghai"/>
+    <property name="java.awt.printerjob" value="sun.awt.windows.WPrinterJob"/>
+    <property name="java.specification.version" value="1.8"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="user.name" value="Administrator"/>
+    <property name="java.class.path" value="H:\software\IDEA\IntelliJ IDEA 2017.2.1\plugins\maven\lib\maven3\boot\plexus-classworlds-2.5.2.jar;H:\software\IDEA\IntelliJ IDEA 2017.2.1\lib\idea_rt.jar"/>
+    <property name="java.vm.specification.version" value="1.8"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="java.home" value="H:\mylib\Java\jdk1.8.0_144\jre"/>
+    <property name="sun.java.command" value="org.codehaus.classworlds.Launcher -Didea.version=2017.2.1 install"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="user.language" value="zh"/>
+    <property name="awt.toolkit" value="sun.awt.windows.WToolkit"/>
+    <property name="java.vm.info" value="mixed mode"/>
+    <property name="java.version" value="1.8.0_144"/>
+    <property name="java.ext.dirs" value="H:\mylib\Java\jdk1.8.0_144\jre\lib\ext;C:\WINDOWS\Sun\Java\lib\ext"/>
+    <property name="sun.boot.class.path" value="H:\mylib\Java\jdk1.8.0_144\jre\lib\resources.jar;H:\mylib\Java\jdk1.8.0_144\jre\lib\rt.jar;H:\mylib\Java\jdk1.8.0_144\jre\lib\sunrsasign.jar;H:\mylib\Java\jdk1.8.0_144\jre\lib\jsse.jar;H:\mylib\Java\jdk1.8.0_144\jre\lib\jce.jar;H:\mylib\Java\jdk1.8.0_144\jre\lib\charsets.jar;H:\mylib\Java\jdk1.8.0_144\jre\lib\jfr.jar;H:\mylib\Java\jdk1.8.0_144\jre\classes"/>
+    <property name="java.vendor" value="Oracle Corporation"/>
+    <property name="maven.home" value="H:\software\IDEA\IntelliJ IDEA 2017.2.1\plugins\maven\lib\maven3"/>
+    <property name="localRepository" value="C:\Users\Administrator\.m2\repository"/>
+    <property name="file.separator" value="\"/>
+    <property name="java.vendor.url.bug" value="http://bugreport.sun.com/bugreport/"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
+    <property name="sun.desktop" value="windows"/>
+    <property name="sun.cpu.isalist" value="amd64"/>
+  </properties>
+  <testcase classname="appcloud.common.TestObjectSerialization" name="infinitePointing" time="0.183"/>
+</testsuite>

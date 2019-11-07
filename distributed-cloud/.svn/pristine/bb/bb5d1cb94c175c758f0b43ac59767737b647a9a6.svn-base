@@ -1,0 +1,58 @@
+package com.distributed.common.factory;
+
+import com.distributed.common.constant.Constants;
+import com.distributed.common.rpc.RPCClient;
+import com.distributed.common.service.db.AccountService;
+import com.distributed.common.service.db.VmBackupService;
+import com.distributed.common.service.db.VmImageBackService;
+import com.distributed.common.service.db.VmInstanceInfoService;
+
+/**
+ * Created by Idan on 2017/12/8.
+ * 与数据库连接的rpc客户端工厂类
+ */
+public class DbFactory {
+
+    private static RPCClient rpcClient = new RPCClient(Constants.DB_HOST, Constants.DB_PORT);
+    public static volatile VmBackupService vmBackupService;
+    public static volatile VmInstanceInfoService vmInstanceInfoService;
+    public static volatile VmImageBackService vmImageBackService;
+    public static volatile AccountService accountService;
+
+    public static VmBackupService getVmBackUpService() {
+        if (vmBackupService == null) {
+            synchronized (DbFactory.class) {
+                vmBackupService = (VmBackupService) rpcClient.createProxy(VmBackupService.class);
+            }
+        }
+        return vmBackupService;
+    }
+
+    public static VmInstanceInfoService getVmInstanceInfoService() {
+        if (vmInstanceInfoService == null) {
+            synchronized (DbFactory.class) {
+                vmInstanceInfoService = (VmInstanceInfoService) rpcClient.createProxy(VmInstanceInfoService.class);
+            }
+        }
+        return vmInstanceInfoService;
+    }
+
+    public static VmImageBackService getVmImageBackService() {
+        if (vmImageBackService == null) {
+            synchronized (DbFactory.class) {
+                vmImageBackService = (VmImageBackService) rpcClient.createProxy(VmImageBackService.class);
+            }
+        }
+        return vmImageBackService;
+    }
+
+    public static AccountService getAccountService() {
+        if (accountService == null) {
+            synchronized (DbFactory.class) {
+                accountService = (AccountService) rpcClient.createProxy(AccountService.class);
+            }
+        }
+        return accountService;
+    }
+
+}

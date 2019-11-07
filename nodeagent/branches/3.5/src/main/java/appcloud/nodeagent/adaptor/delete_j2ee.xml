@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<body version="0.0">
+<requests>
+    <request type="stopapp">
+       <properties name="app">
+            <property name="appId" value="###APP_ID###" />
+            <property name="type"  value="J2EE" />
+            <property name="uuid" value="###UUID###"/>
+        </properties>
+        <properties name="gc">
+            <property name="waitTime" value="###WAITING_TIME###" />
+        </properties>
+    </request>
+</requests>
+</body>

@@ -1,0 +1,115 @@
+package appcloud.distributed.process.operate;
+
+import appcloud.distributed.configmanager.RouteInfo;
+import appcloud.distributed.configmanager.RouteInfoManager;
+import appcloud.openapi.client.InstanceClient;
+import appcloud.openapi.response.CreateInstanceResponse;
+import com.appcloud.vm.fe.util.OpenClientFactory;
+import com.distributed.common.constant.EnumConstants;
+import com.distributed.common.entity.InstanceBackInfo;
+import com.distributed.common.entity.VmBack;
+import com.distributed.common.entity.VmImageBack;
+import com.distributed.common.factory.DbFactory;
+import com.distributed.common.service.db.VmBackupService;
+import com.distributed.common.service.db.VmInstanceInfoService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+/**
+ * Created by Idan on 2017/12/18.
+ */
+public class BrokeDownOperateImpl implements BrokeDownOperate {
+    private static final Logger logger = LoggerFactory.getLogger(BrokeDownOperateImpl.class);
+
+    private VmBackupService vmBackupService = DbFactory.getVmBackUpService();
+    private VmInstanceInfoService vmInstanceInfoService = DbFactory.getVmInstanceInfoService();
+    private InstanceClient instanceClient = OpenClientFactory.getInstanceClient();
+    private ExecutorService executorService = Executors.newFixedThreadPool(10);
+    private RouteInfoManager routeInfoManager = null;
+
+    public BrokeDownOperateImpl(RouteInfoManager routeInfoManager) {
+        this.routeInfoManager = routeInfoManager;
+    }
+
+    public Boolean dealImageBack(String regionId, String dataCenterUuid) {
+        List<VmBack> vmBacks = null;
+        try {
+            vmBacks = vmBackupService.findByParams(null, null, null, dataCenterUuid, true);
+            if (vmBacks == null || vmBacks.size() == 0) {
+                logger.info("this dataCenter has no backup");
+                return true;
+            }
+            //TODO 2018/1/17 部分成功，部分出错，应该的逻辑
+            for (VmBack vmBack: vmBacks) {
+                executorService.execute(new VmBackThread(vmBack, regionId, null)); // 没有返回值，这里应该改进
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+        return false;
+    }
+
+    public Boolean updateRegister(RouteInfo downBrokerInfo,RouteInfo newMasterInfo,boolean masterAlive) {
+        try {
+            String dataCenter = downBrokerInfo.getDataCenter();
+            routeInfoManager.removeRouteInfo(dataCenter);
+            if (!masterAlive) {
+                logger.info("the master has down, the ip:"+newMasterInfo.getIpAddress()+" and port: "+newMasterInfo.getPort());
+                routeInfoManager.updateMaster(newMasterInfo);
+            }
+            return true;
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return false;
+        }
+    }
+
+    public Boolean updateImgBack(String dataCenterUuid, String hostUuid) {
+        logger.info("update the imageback status in this dataCenter, dataCenter: "+dataCenterUuid+", host:"+hostUuid);
+        try {
+            vmBackupService.updateVmBack(null, hostUuid,null,dataCenterUuid, null,  EnumConstants.SurvivalStatus.DEAD.toString());
+            //TODO 把本地主机的镜像重新备份到新的结点, 最好要有个标志位
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("failed to update the imageback status in this dataCenter, dataCenter: "+dataCenterUuid+", host:"+hostUuid + e.getMessage());
+            return false;
+        }
+    }
+
+    class VmBackThread implements Runnable{
+
+        private String regionId;
+        private String zoneId;
+        private VmBack vmBack;
+
+        public VmBackThread(VmBack vmBack, String regionId, String zoneId) {
+            this.vmBack = vmBack;
+            this.regionId = regionId;
+            this.zoneId = zoneId;
+        }
+
+        @Override
+        public void run() {
+            InstanceBackInfo vmInfo = vmBack.getInstanceBackInfo();
+            VmImageBack imageBack = vmBack.getVmImageBack();
+            if (vmInfo ==  null || imageBack == null) {
+                logger.info("the vm info is null, the imageBack is null");
+            }
+            try {
+                CreateInstanceResponse response = instanceClient.RecoveryInstance(regionId, zoneId, imageBack.getVolumeUuid(), vmInfo.getImageUuid(), vmInfo.getInstanceType(),
+                        vmInfo.getSecurityGroupId().toString(), vmInfo.getDisplayName(), vmInfo.getDisplayDescription(), vmInfo.getInstanceChargeType(),
+                        vmInfo.getInstanceChargeLength(), vmInfo.getInternetChargeType(), vmInfo.getMaxBandwidth().toString(), vmBack.getDestHostUuid(), vmInfo.getPassword(),
+                        vmInfo.getSystemDiskSize(), vmInfo.getPriVmMac(), vmInfo.getPubVmMac(), vmInfo.getAppkeyId(), vmInfo.getAppkeySecret(), null);
+            } catch (Exception e) {
+                e.printStackTrace();
+                logger.info("recovery the vm failed, the uuid is: "+vmBack.getUuid());
+            }
+        }
+    }
+}

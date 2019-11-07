@@ -1,0 +1,306 @@
+package com.appcloud.vm.action.image;
+
+import aliyun.openapi.client.AliImageClient;
+import appcloud.openapi.client.ImageClient;
+import appcloud.openapi.client.RegionClient;
+import appcloud.openapi.datatype.ImageDetailItem;
+import appcloud.openapi.datatype.ImageDetailSet;
+import appcloud.openapi.datatype.RegionItem;
+import appcloud.openapi.response.GetImageListResponse;
+import com.aliyuncs.ecs.model.v20140526.DescribeImagesResponse;
+import com.appcloud.vm.action.BaseAction;
+import com.appcloud.vm.fe.common.Constants;
+import com.appcloud.vm.fe.entity.Image;
+import com.appcloud.vm.fe.manager.AppkeyManager;
+import com.appcloud.vm.fe.model.Appkey;
+import com.appcloud.vm.fe.util.OpenClientFactory;
+import com.appcloud.vm.util.CollectionUtil;
+import org.apache.log4j.Logger;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Created by stone on 2016/5/31.
+ * modified by 包鑫彤 on 2016/7/29. 新增加了对于阿里云镜像显示,优化了请求逻辑和显示方式。
+ */
+public class imagesListAction extends BaseAction {
+
+    public static final long serialVersionUID = 1L;
+    public Logger LOGGER = Logger.getLogger(imagesListAction.class);
+
+    private Integer userId = this.getSessionUserID();
+    private AppkeyManager appkeyManager = new AppkeyManager();
+
+    private static final String ITEM_EACH_PAGE = "10";  //用于选择一页显示几条数据
+    private String appname;
+    private String regionId;
+
+    //分页相关属性
+    private int totalItem;
+    private int totalPage;//总的页数
+    private int currentPage;//当前页
+    private int page = 1;
+
+
+    //对云海列表查找以及精确搜索可能用的参数
+    private List<Image> result = new ArrayList<Image>();
+    private String imgResult = "0";//查询结果，1:表示参数出错，0:正确
+    private String souType = "all";//对应tab标签
+    private String skeyword;
+    private String imgType;//镜像的权限类型：public、group、private
+    private String imgOsType;//镜像系统的类型
+    private String software;//镜像的类型
+
+    //对阿里云镜像列表及精确搜索ap可能需要用到的参数
+    private List<DescribeImagesResponse.Image> aliYunImages = new ArrayList<>();
+    private String searchType; //搜索类型: 镜像的ID 镜像的名称 创建镜像的快照 ID
+    private String searchKey;  //搜索关键字\
+    private String imageOwnerAlias;// 镜像所有者别名。取值 : system | self | others | marketplace
+    private String aliYunResult; // success 成功 error 失败 0 数据项数量为0  此字段已经被弃用
+
+
+    /**
+     * 根据提供商和 regionId来获取对应的镜像列表
+     * @return 返回的数据是jsp 页面，具体请到 配置文件 image.xml 中查看
+     */
+    public String imgGetImageList() {
+        Appkey appkey = appkeyManager.getAppkeyByUserIdAndAppName(userId, appname);
+        switch (appkey.getProvider()) {
+            case Constants.YUN_HAI:
+                return getYunHaiImage(appkey);
+            case Constants.ALI_YUN:
+                return getAliYunImage(appkey);
+            case Constants.AMAZON:
+                return getAmazonImage(appkey);
+        }
+        return Constants.QUERY_NO_DATA;
+    }
+
+    /**
+     * 根据搜索条件 来确定 精确搜索的属性
+     * @param appkey
+     * @param searchType
+     * @return 阿里云API返回的 镜像响应
+     */
+    private DescribeImagesResponse getAliYunImageBySearchType(Appkey appkey, String searchType) {
+        AliImageClient aliImageClient = OpenClientFactory.getAliImageClient();
+        DescribeImagesResponse describeImagesResponse = null;
+        switch (searchType) {
+            case "image-id":
+                describeImagesResponse = aliImageClient.DescribeImages(regionId, searchKey, null, null, null, null, null,
+                        null, null, String.valueOf(page), ITEM_EACH_PAGE, appkey.getAppkeyId(), appkey.getAppkeySecret(), null);
+                break;
+            case "image-name":
+                describeImagesResponse = aliImageClient.DescribeImages(regionId, null, null, null, searchKey, imageOwnerAlias, null,
+                        null, null, String.valueOf(page), ITEM_EACH_PAGE, appkey.getAppkeyId(), appkey.getAppkeySecret(), null);
+                break;
+            case "snapshot-id":
+                describeImagesResponse = aliImageClient.DescribeImages(regionId, null, null, searchKey, null, null, null,
+                        null, null, String.valueOf(page), ITEM_EACH_PAGE, appkey.getAppkeyId(), appkey.getAppkeySecret(), null);
+                break;
+        }
+        return describeImagesResponse;
+    }
+
+
+    /**
+     * 根据云海的Appkey来查找返回对应的 镜像列表
+     * @param appkey
+     * @return 返回的数据是jsp 页面，具体请到 配置文件 image.xml 中查看
+     */
+    private String getYunHaiImage(Appkey appkey) {
+        if (appkey == null) return Constants.QUERY_NO_DATA;
+        GetImageListResponse getImageListResponse = getYunHaiImageBySoutType(appkey);
+        if (null != getImageListResponse && getImageListResponse.getTotalCount() !=0 ) {
+            LOGGER.info("云海获取云镜像成功");
+            ImageDetailSet imageDetailSet = getImageListResponse.getImageDetails();
+            List<ImageDetailItem> imageDetailItems = imageDetailSet.getImageDetailItems();
+            for (ImageDetailItem imageItem : imageDetailItems) {
+                result.add(new Image(appkey.getAppname(), regionId, imageItem.getImageUuid(), imageItem.getImageName(), imageItem.getStatus(),
+                        imageItem.getOsType(), imageItem.getCreated(), imageItem.getDescription(), imageItem.getDistribution(),
+                        Constants.YUN_HAI, imageItem.getSize(), imageItem.getDiskFormat(), imageItem.getOsArch(), imageItem.getSoftware(), imageItem.getAccount(), imageItem.getType()));
+            }
+            totalItem = getImageListResponse.getTotalCount();
+            totalPage = totalItem / getImageListResponse.getPageSize();
+            if (totalItem > totalPage * getImageListResponse.getPageSize()) totalPage++;
+            currentPage = getImageListResponse.getPageNumber();
+        } else {
+            return Constants.QUERY_NO_DATA;
+        }
+        return Constants.YUN_HAI;
+    }
+
+    private GetImageListResponse getYunHaiImageBySoutType(Appkey appkey){
+        GetImageListResponse getImageListResponse = null;
+        ImageClient imageClient = OpenClientFactory.getImageClient();
+        getImageListResponse = imageClient.DescribeImages(regionId, null,
+                "image", null, null, null, skeyword, skeyword, null, imgType, imgOsType, skeyword, null, null, null, String.valueOf(page), ITEM_EACH_PAGE,
+                appkey.getAppkeyId(), appkey.getAppkeySecret(), appkey.getUserEmail());
+        return getImageListResponse;
+    }
+
+    /**
+     * 根据阿里云的Appkey来查找对应的镜像列表
+     * @param appkey
+     * @return 返回的数据是jsp 页面，具体请到 配置文件 image.xml 中查看
+     */
+    private String getAliYunImage(Appkey appkey) {
+        if (appkey == null) {
+            return Constants.QUERY_NO_DATA;
+        }
+        AliImageClient aliImageClient = OpenClientFactory.getAliImageClient();
+        DescribeImagesResponse describeImagesResponse;
+        if (searchType != null && searchKey != null) {
+            describeImagesResponse = getAliYunImageBySearchType(appkey, searchType);
+
+        } else if (imageOwnerAlias != null) {
+            describeImagesResponse = aliImageClient.DescribeImages(regionId, null, null, null, null, imageOwnerAlias, null,
+                    null, null, String.valueOf(page), ITEM_EACH_PAGE, appkey.getAppkeyId(), appkey.getAppkeySecret(), null);
+        } else {
+            describeImagesResponse = aliImageClient.DescribeImages(regionId, null, null, null, null, null, null,
+                    null, null, String.valueOf(page), ITEM_EACH_PAGE, appkey.getAppkeyId(), appkey.getAppkeySecret(), null);
+        }
+        if (describeImagesResponse == null) {
+            aliYunResult = "error";
+            return Constants.QUERY_NO_DATA;
+        } else {
+            List<DescribeImagesResponse.Image> images = describeImagesResponse.getImages();
+            totalItem = describeImagesResponse.getTotalCount();
+            totalPage = totalItem / describeImagesResponse.getPageSize();
+            if (totalItem > totalPage * describeImagesResponse.getPageSize()) totalPage++;
+            if (CollectionUtil.isNotEmpty(images)) {
+                aliYunImages = images;
+                return Constants.ALI_YUN;
+            } else {
+                aliYunResult = "0";
+                return Constants.QUERY_NO_DATA;
+            }
+
+        }
+    }
+
+    private String getAmazonImage(Appkey appkey) {
+        return Constants.AMAZON;
+    }
+
+    public String getRegionId() {
+        return (regionId).trim();
+    }
+
+    public void setRegionId(String regionId) {
+        this.regionId = regionId;
+    }
+
+    public String getAppname() {
+        return appname;
+    }
+
+    public void setAppname(String appname) {
+        this.appname = appname;
+    }
+
+    public List<Image> getResult() {
+        return result;
+    }
+
+    public void setResult(List<Image> result) {
+        this.result = result;
+    }
+
+    public List<DescribeImagesResponse.Image> getAliYunImages() {
+        return aliYunImages;
+    }
+
+    public void setAliYunImages(List<DescribeImagesResponse.Image> aliYunImages) {
+        this.aliYunImages = aliYunImages;
+    }
+
+    public String getSearchKey() {
+        return (searchKey).trim();
+    }
+
+    public void setSearchKey(String searchKey) {
+        this.searchKey = searchKey;
+    }
+
+    public String getSearchType() {
+        return (searchType).trim();
+    }
+
+    public void setSearchType(String searchType) {
+        this.searchType = searchType;
+    }
+
+    public String getImageOwnerAlias() {
+        return (imageOwnerAlias).trim();
+    }
+
+    public void setImageOwnerAlias(String imageOwnerAlias) {
+        this.imageOwnerAlias = imageOwnerAlias;
+    }
+
+    public String getAliYunResult() {
+        return (aliYunResult).trim();
+    }
+
+    public void setAliYunResult(String aliYunResult) {
+        this.aliYunResult = aliYunResult;
+    }
+
+    public int getTotalPage() {
+        return totalPage;
+    }
+
+    public void setTotalPage(int totalPage) {
+        this.totalPage = totalPage;
+    }
+
+    public int getPage() {
+        return page;
+    }
+
+    public void setPage(int page) {
+        this.page = page;
+    }
+
+    public String getSouType() {
+        return (souType).trim();
+    }
+
+    public void setSouType(String souType) {
+        this.souType = souType;
+    }
+
+    public String getSkeyword() {
+        return skeyword;
+    }
+
+    public void setSkeyword(String skeyword) {
+        this.skeyword = skeyword;
+    }
+
+    public String getImgType() {
+        return imgType;
+    }
+
+    public void setImgType(String imgType) {
+        this.imgType = imgType;
+    }
+
+    public String getImgOsType() {
+        return imgOsType;
+    }
+
+    public void setImgOsType(String imgOsType) {
+        this.imgOsType = imgOsType;
+    }
+
+    public String getSoftware() {
+        return software;
+    }
+
+    public void setSoftware(String software) {
+        this.software = software;
+    }
+}

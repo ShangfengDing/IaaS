@@ -1,0 +1,346 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>appcloud</groupId>
+    <artifactId>nodeagent</artifactId>
+    <version>3.5.0</version>
+    <packaging>jar</packaging>
+    <name>nodeagent</name>    
+    <description>a module that manages the resources of a host</description>
+
+    <properties>
+		<spring.version>3.0.7.RELEASE</spring.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <version.file.dir>src/main/java/appcloud/nodeagent/util</version.file.dir>
+	</properties>
+    
+    <dependencies>
+        <dependency>
+            <groupId>appcloud</groupId>
+            <artifactId>common</artifactId>
+            <version>3.5.0-SNAPSHOT</version>
+        </dependency>
+         <dependency>
+            <groupId>appcloud</groupId>
+            <artifactId>rpc</artifactId>
+            <version>3.5.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>appcloud.common</groupId>
+            <artifactId>common</artifactId>
+            <version>0.2.3.2</version>
+            <exclusions>
+            	<exclusion>
+            		<artifactId>tip</artifactId>
+            		<groupId>tip</groupId>
+            	</exclusion>
+            </exclusions>
+        </dependency>
+        
+        <dependency>
+            <groupId>appcloud</groupId>
+            <artifactId>volumescheduler</artifactId>
+            <version>3.5.0-SNAPSHOT</version>
+        </dependency>
+        
+	    <dependency>
+            <groupId>appcloud.vmscheduler</groupId>
+            <artifactId>vm-scheduler</artifactId>
+            <version>3.5.0-SNAPSHOT</version>
+        </dependency>
+		
+        <dependency>
+		    <groupId>appcloud</groupId>
+		    <artifactId>volumeprovider</artifactId>
+		    <version>3.5.0-SNAPSHOT</version>
+		</dependency>
+		
+		<dependency>
+            <groupId>appcloud.vmc</groupId>
+            <artifactId>vm-controller</artifactId>
+            <version>3.5.0-SNAPSHOT</version>
+        </dependency>
+        
+	    <dependency>
+            <groupId>appcloud</groupId>
+            <artifactId>imageserver</artifactId>
+            <version>3.5.0-SNAPSHOT</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>appcloud</groupId>
+            <artifactId>resourcescheduler</artifactId>
+            <version>3.5.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+          	<groupId>netprovider</groupId>
+  			<artifactId>netprovider</artifactId>
+  			<version>3.5.0-SNAPSHOT</version>
+        </dependency>
+        <!-- Testing frameworks and related dependencies -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.8.2</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Spring -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-core</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+        <dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-web</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+
+        <!-- 
+        <dependency>
+			<groupId>fr.inria.powerapi.sensor</groupId>
+			<artifactId>sensor-sigar</artifactId>
+			<version>1.5</version>
+		</dependency>
+        --> 
+    </dependencies>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>                
+            </resource>
+            <resource>
+				<directory>src/main/java</directory>
+				<excludes>
+					<exclude>**/*.java</exclude>
+					<exclude>**/.svn/*</exclude>
+				</excludes>
+			</resource>
+        </resources>
+        <finalName>${project.artifactId}-${project.version}</finalName>
+        
+        <pluginManagement>  
+            <plugins>  
+                <plugin>  
+                    <groupId>org.eclipse.m2e</groupId>  
+                    <artifactId>lifecycle-mapping</artifactId>  
+                    <version>1.0.0</version>  
+                    <configuration>  
+                        <lifecycleMappingMetadata>  
+                            <pluginExecutions>  
+                                <pluginExecution>  
+                                    <pluginExecutionFilter>  
+                                        <groupId>org.apache.maven.plugins</groupId>  
+                                        <artifactId>maven-dependency-plugin</artifactId>  
+                                        <versionRange>[2.0,)</versionRange>  
+                                        <goals>  
+                                            <goal>copy-dependencies</goal>  
+                                        </goals>  
+                                    </pluginExecutionFilter>  
+                                    <action>  
+                                        <ignore />  
+                                    </action>  
+                                </pluginExecution>  
+                            </pluginExecutions>  
+                        </lifecycleMappingMetadata>  
+                    </configuration>  
+                </plugin>  
+            </plugins>  
+        </pluginManagement>  
+        
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.2.1</version>
+                <configuration>
+                 <executable>java</executable>
+                 <arguments>
+                    <argument>-classpath</argument>
+                    <classpath/>
+                 </arguments>
+                </configuration>
+            </plugin>
+            <plugin><!-- enforce dev environment -->
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>1.0</version>
+                <executions>
+                    <execution>
+                        <id>enforce-versions</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>2.2.1</version>
+                                </requireMavenVersion>
+                                <requireJavaVersion>
+                                    <version>1.6</version>
+                                </requireJavaVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.4.3</version>
+                <configuration>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+                <executions>
+                </executions>
+            </plugin>
+            <!-- compiler -->
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <encoding>UTF-8</encoding>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                    <debug>true</debug>
+                    <optimize>true</optimize>
+                    <showDeprecations>true</showDeprecations>
+                </configuration>
+            </plugin>
+
+            <!-- test plugin -->
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.7.2</version>
+                <configuration>
+                    <forkMode>never</forkMode>
+                    <skip>true</skip>
+                    <excludes>
+                        <exclude>**/Abstract*</exclude>
+                        <exclude>**/TestUtil*</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin><!-- bundle change Meta-inf -->
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>2.3.4</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-SymbolicName>${project.groupId}</Bundle-SymbolicName>
+                        <Bundle-DocURL>${project.url}</Bundle-DocURL>
+                        <!--
+            <Bundle-Activator>
+              ${project.groupId}.util.BundleActivator
+            </Bundle-Activator>  -->
+                        <Export-Package>
+                            !${project.groupId}.example.*,
+                            !${project.groupId}.util.internal.*,
+                            ${project.groupId}.*;version=${project.version}
+                        </Export-Package>
+                        <Private-Package>
+                            ${project.groupId}.example.*,
+                            ${project.groupId}.util.internal.*,
+                        </Private-Package>
+                        <Import-Package>
+                            *;resolution:=optional
+                        </Import-Package>
+                        <Eclipse-BuddyPolicy>registered</Eclipse-BuddyPolicy>
+                        <Bundle-BuddyPolicy>registered</Bundle-BuddyPolicy>
+                        <Main-Class>${project.groupId}.bootstrap.Main</Main-Class>
+                    </instructions>
+                </configuration>
+            </plugin>
+            <plugin><!-- build the ***-sources.jar -->
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.1.2</version>
+                <executions>
+                    <execution>
+                        <id>attach-source</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <attach>true</attach>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>       
+            <plugin>
+	            <groupId>org.apache.maven.plugins</groupId>
+	            <artifactId>maven-assembly-plugin</artifactId>
+	            <version>2.2-beta-5</version>
+	            <configuration>
+	                <descriptorRefs>
+	                    <descriptorRef>jar-with-dependencies</descriptorRef>
+	                </descriptorRefs>
+	                <archive>
+	                    <manifest>
+	                        <addClasspath>true</addClasspath>
+	                        <mainClass>appcloud.nodeagent.Agent</mainClass>
+	                    </manifest>
+	                </archive>
+	            </configuration>
+	        </plugin>
+	        
+            <plugin>  
+                <groupId>org.apache.maven.plugins</groupId>  
+                <artifactId>maven-dependency-plugin</artifactId>  
+                <executions>  
+                    <execution>  
+                        <id>copy-dependencies</id>  
+                        <phase>package</phase>  
+                        <goals>  
+                            <goal>copy-dependencies</goal>  
+                        </goals>  
+                        <configuration>  
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>  
+                            <excludeTransitive>false</excludeTransitive>  
+                            <stripVersion>true</stripVersion>  
+                        </configuration>  
+                    </execution>  
+                </executions>  
+            </plugin>
+        </plugins>
+
+
+    </build>
+
+    <mailingLists>
+        <mailingList>
+            <name>wangchao</name>
+            <post>elementalife@gmail.com</post>
+        </mailingList>
+    </mailingLists>
+
+    <repositories>
+        <repository>
+            <id>artifactory</id>
+            <name>your local artifactory</name>
+            <url>http://maven.free4lab.com/artifactory/repo</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>artifactory</id>
+            <name>qingya artifactory</name>
+            <url>http://maven.free4lab.com/artifactory/plugins-releases</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
+
+</project>

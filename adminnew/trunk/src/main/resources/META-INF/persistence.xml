@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="1.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_1_0.xsd">
+    <persistence-unit name="iaas_ai_monitor_PU" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.ejb.HibernatePersistence</provider>
+        <properties>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL5Dialect" />
+            <property name="hibernate.connection.driver_class" value="com.mysql.jdbc.Driver" />
+            <property name="hibernate.show_sql" value="false" />
+
+            <property name="hibernate.connection.username" value="root"/>
+            <property name="hibernate.connection.password" value="MYSQL@free4inno"/>
+            <!--<property name="hibernate.connection.url" value="jdbc:mysql://192.168.1.101:3306/iaas_ai_monitor"/>-->
+            <!--<property name="hibernate.connection.url" value="jdbc:mysql://21.16.1.79:3306/iaas_ai_monitor"/>-->
+            <property name="hibernate.connection.url" value="jdbc:mysql://daas.free4inno.com:6033/iaas_ai_monitor"/>
+            <property name="hibernate.cache.provider_class" value="org.hibernate.cache.NoCacheProvider"/>
+            <property name="connection.provider_class" value="org.hibernate.connection.C3P0ConnectionProvider"/>
+            <property name="hibernate.c3p0.acquire_increment" value="2"/>
+            <property name="hibernate.c3p0.idle_test_period" value="3000"/>
+            <property name="hibernate.c3p0.max_size" value="30"/>
+            <property name="hibernate.c3p0.max_statements" value="15"/>
+            <property name="hibernate.c3p0.min_size" value="2"/>
+            <property name="hibernate.c3p0.timeout" value="25200"/>
+            <property name="hibernate.c3p0.preferredTestQuery" value="select 1;"/>
+        </properties>
+    </persistence-unit>
+
+    <persistence-unit name="freelol_PU" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.ejb.HibernatePersistence</provider>
+        <properties>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL5Dialect" />
+            <property name="hibernate.connection.driver_class" value="com.mysql.jdbc.Driver" />
+            <property name="hibernate.show_sql" value="false" />
+            <property name="hibernate.connection.username" value="root"/>
+            <property name="hibernate.connection.password" value="MYSQL@free4inno"/>
+            <!--<property name="hibernate.connection.url" value="jdbc:mysql://192.168.1.101:3306/freelol"/>-->
+            <!--<property name="hibernate.connection.url" value="jdbc:mysql://21.16.1.79:3306/freelol"/>-->
+            <property name="hibernate.connection.url" value="jdbc:mysql://daas.free4inno.com:6033/freelol"/>
+            <property name="hibernate.cache.provider_class" value="org.hibernate.cache.NoCacheProvider"/>
+            <property name="connection.provider_class" value="org.hibernate.connection.C3P0ConnectionProvider"/>
+            <property name="hibernate.c3p0.acquire_increment" value="2"/>
+            <property name="hibernate.c3p0.idle_test_period" value="3000"/>
+            <property name="hibernate.c3p0.max_size" value="30"/>
+            <property name="hibernate.c3p0.max_statements" value="15"/>
+            <property name="hibernate.c3p0.min_size" value="2"/>
+            <property name="hibernate.c3p0.timeout" value="25200"/>
+            <property name="hibernate.c3p0.preferredTestQuery" value="select 1;"/>
+        </properties>
+    </persistence-unit>
+</persistence>

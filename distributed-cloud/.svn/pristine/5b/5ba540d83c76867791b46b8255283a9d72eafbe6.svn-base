@@ -1,0 +1,37 @@
+package appcloud.distributed.service;
+
+import appcloud.distributed.common.Constants;
+import appcloud.distributed.configmanager.RouteInfo;
+import appcloud.distributed.configmanager.RouteInfoManager;
+import com.distributed.common.service.controller.RouteInfoService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
+
+/**
+ * Created by zouji on 2018/1/10.
+ */
+public class RouteInfoServiceImpl implements RouteInfoService {
+
+    private final Logger logger = LoggerFactory.getLogger(RouteInfoServiceImpl.class);
+
+    public Set<String> findRegionIds() {
+        Set<String> regionIds = new HashSet<String>();
+        regionIds.add(Constants.REGION_ID);
+        return regionIds;
+    }
+
+    public List<Map<String, String>> findProductDomains() {
+        List<Map<String, String>> productDomainList = new ArrayList<Map<String, String>>();
+        List<RouteInfo> routeInfoList = RouteInfoManager.getRouteInfoManager().getAllRouteInfo();
+        for (RouteInfo routeInfo : routeInfoList) {
+            Map<String, String> productDomain = new HashMap<String, String>();
+            productDomain.put("productName", routeInfo.getAddr());
+            productDomain.put("zoneId", routeInfo.getDataCenter());
+            productDomain.put("domainName", routeInfo.getDomainName());
+            productDomainList.add(productDomain);
+        }
+        return productDomainList;
+    }
+}

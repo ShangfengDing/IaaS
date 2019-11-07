@@ -1,0 +1,830 @@
+package appcloud.resourcescheduler.impl;
+
+import appcloud.common.constant.RoutingKeys;
+import appcloud.common.errorcode.AREC;
+import appcloud.common.errorcode.ErrorCode;
+import appcloud.common.errorcode.NAEC;
+import appcloud.common.errorcode.RSEC;
+import appcloud.common.model.*;
+import appcloud.common.model.Instance.InstanceTypeEnum;
+import appcloud.common.model.RoutingEntry.RETypeEnum;
+import appcloud.common.model.VmImage.VmImageOSTypeEnum;
+import appcloud.common.model.VmInstance.VmStatusEnum;
+import appcloud.common.proxy.HostProxy;
+import appcloud.common.proxy.InstanceProxy;
+import appcloud.common.proxy.J2EEAppProxy;
+import appcloud.common.proxy.ResrcStrategyProxy;
+import appcloud.common.service.AppRouterService;
+import appcloud.common.service.NodeAgentService;
+import appcloud.common.service.ResourceSchedulerService;
+import appcloud.common.util.LolLogUtil;
+import appcloud.common.util.RoutingKeyGenerator;
+import appcloud.common.util.WarLocationTool;
+import appcloud.resourcescheduler.ResourceScheduler;
+import appcloud.resourcescheduler.common.ConnectionManager;
+import appcloud.resourcescheduler.model.Resource;
+import appcloud.resourcescheduler.service.*;
+import appcloud.resourcescheduler.service.impl.*;
+import appcloud.resourcescheduler.strategy.HostSelector;
+import appcloud.rpc.tools.RpcException;
+import org.apache.log4j.Logger;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class ResourceSchedulerImpl implements ResourceSchedulerService {
+
+	private static final int DEFAULT_WAITING_TIME = 2000;
+
+	private NodeAgentService nodeAgentService = (NodeAgentService) ConnectionManager.getInstance().getAMQPService(NodeAgentService.class, RoutingKeys.NODE_AGENT_PRE);
+	private AppRouterService appRouterService = (AppRouterService) ConnectionManager.getInstance().getAMQPService(AppRouterService.class, RoutingKeys.APP_ROUTER);
+
+	private ResrcStrategyProxy resrcStrategyProxy = (ResrcStrategyProxy) ConnectionManager.getInstance().getDBProxy(ResrcStrategyProxy.class);
+	private J2EEAppProxy j2eeAppProxy =  (J2EEAppProxy) ConnectionManager.getInstance().getDBProxy(J2EEAppProxy.class);
+	private HostProxy hostProxy = (HostProxy) ConnectionManager.getInstance().getDBProxy(HostProxy.class);
+	private InstanceProxy instanceProxy = (InstanceProxy) ConnectionManager.getInstance().getDBProxy(InstanceProxy.class);
+	
+	
+	private static Logger logger = Logger
+			.getLogger(ResourceSchedulerImpl.class);
+	
+	private static LolLogUtil loller = null;
+	static {
+		try {
+			String ipAddress = ResourceScheduler.getHost().getIp();
+			loller = new LolLogUtil(MessageLog.ModuleEnum.RESOURCE_SCHEDULER, ResourceSchedulerImpl.class, ipAddress);
+		} catch (RpcException e) {
+			logger.error(e.getMessage());
+		}
+	}
+	
+	public RSEC createJ2EEApp(J2EEApp app, int copyNum, int resrcStrategyId) {
+		RSEC result = RSEC.NO_ERROR;
+
+		logger.info("app create request got: " + app + ", copyNum: " + copyNum
+				+ "strategyId: " + resrcStrategyId);
+
+		// step 1. select the host to deploy
+		ResrcStrategy strategy;
+		List<Host> hosts = new ArrayList<Host>();
+		try {
+			strategy = resrcStrategyProxy.getById(resrcStrategyId);
+			
+			Resource resource = new Resource();
+			resource.setMemoryMb(app.getMinMemory());
+			hosts = HostSelector.selectNodes(strategy, copyNum, resource, InstanceTypeEnum.J2EE);
+			
+			if (hosts.size() < copyNum) {
+				result = RSEC.RSR_STG;
+				logger.warn("hosts " + hosts + "doesn't meet the requirements");
+			} else {
+				logger.info("hosts selected are: " + hosts);
+			}
+		} catch (Exception e) {
+			logger.warn("db error");
+			e.printStackTrace();
+			result = RSEC.DB_ERROR;
+		}
+		
+
+		// step 2. deploy apps on the hosts
+		List<Instance> instances = new ArrayList<Instance>();
+		if (result.equals(RSEC.NO_ERROR)) {
+			int counter = copyNum;  // to deploy such app.
+			for (Host host : hosts) {
+				if (counter > 0) {
+					logger.info("notifying " + host + " to deploy instance");
+					Instance instance = startJavaInstance(host, app);
+					if (instance != null) {
+						instances.add(instance);
+						logger.info("instance" + instance + "from " + host
+								+ " deployed");
+						counter--;
+					} else {
+						logger.info(host.getIp() + " deploy app failed");
+					}
+				}
+			}
+
+			if (counter > 0) {
+				logger.warn("only ( " + instances.size() + "/" + copyNum
+						+ " ) copies deployed");
+				result = RSEC.LESS_DEPLOY;
+			}
+		}
+
+		// step 3. notify the routers
+		if (result.equals(RSEC.NO_ERROR) || result.equals(RSEC.LESS_DEPLOY)) {
+			List<RoutingEntry> routings = new ArrayList<RoutingEntry>();
+			for (Instance instance : instances) {
+				RoutingEntry rt = genRoutingEntry(app, instance);
+				routings.add(rt);
+			}
+
+			logger.info("notifying routing server to add routing info:"
+					+ routings);
+
+			AREC routeResults;
+			try {
+				routeResults = appRouterService.addRoutingEntries(routings);
+				if (!routeResults.equals(AREC.NO_ERROR)) {
+					logger.warn("FAILED adding routing info: \n" +
+							routings + "\n, error:"+ ErrorCode.getMessage(routeResults));
+					result = RSEC.RT_ERROR;
+				}
+			} catch (RpcException e) {
+				logger.warn("RPC Exception:" + e);
+				e.printStackTrace();
+				result = RSEC.RPC_ERROR;
+			}			
+		}
+
+		if (result.equals(RSEC.NO_ERROR)) {
+			logger.info("successfully deployed: " + app);
+		}
+		// step 4. return to caller
+		return result;
+	}
+
+	public RSEC stopJ2EEApp(String appUuid, int waitingTime) {
+		logger.info("receive stop request of appUuid:" + appUuid
+				+ "waiting time:" + waitingTime);
+
+		J2EEApp app = null;
+		try {
+			app = j2eeAppProxy.getByUuid(appUuid, false, true, true);
+		} catch (Exception e) {
+			return RSEC.DB_ERROR;
+		}
+
+		if (app != null) {
+			logger.info("trying to stop app:" + app);
+			for (Instance instance : app.getInstances()) {
+				if (!stopInstance(instance, waitingTime)) {
+					return RSEC.NA_ERROR;
+				} else {
+					logger.info("instance: " + instance.getUuid() + " stopped");
+				}
+			}
+		} else {
+			logger.warn("FAILD finding instance of appUuid:" + appUuid);
+			return RSEC.APP_NOT_EXIST;
+		}
+
+		return RSEC.NO_ERROR;
+	}
+
+	public RSEC deleteJ2EEApp(String appUuid, int waitingTime,
+			String warLocation) {
+		return stopJ2EEApp(appUuid, waitingTime);
+	}
+
+	public RSEC deleteJ2EEInstance(String instanceUuid) {
+		Instance instance;
+		try {
+			instance = instanceProxy.getByUuid(instanceUuid, false, false, false);
+		} catch (Exception e) {
+			logger.warn("db error" + e.getMessage());
+			e.printStackTrace();
+			return RSEC.DB_ERROR;
+		}
+		
+		stopInstance(instance, DEFAULT_WAITING_TIME);
+
+		return RSEC.NO_ERROR;
+	}
+
+	public RSEC increaseInstanceCopy(String appId, int num) {
+		return RSEC.UNKNOWN_ERROR;
+	}
+
+	private Instance startJavaInstance(Host host, J2EEApp app) {
+		try {
+			return nodeAgentService.StartJ2EEInstance(
+					RoutingKeyGenerator.getNodeAgentRoutingKey(host),
+					app.getUuid(), WarLocationTool.getWarLocation(app.getUuid()),
+					app.getMinMemory(), app.getMaxMemory());
+		} catch (RpcException e) {
+			logger.warn("RPC Exception:" + e);
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	private boolean stopInstance(Instance instance, int waitingTime) {
+		Host host = instance.getHost();
+
+		if (host == null) {
+			String hostId = instance.getHostUuid();
+			try {
+				host = hostProxy.getByUuid(hostId, false, false, false);
+			} catch (Exception e) {
+				logger.warn("db error" + e.getMessage());
+				e.printStackTrace();
+				return false;
+			}
+		}
+
+		if (host == null) {
+			logger.warn("could not found host info of intance: " + instance);
+			return false;
+		}
+
+		logger.info("stopping the instance--" + instance + "on host--" + host);
+		// now, stop the instance;
+		NAEC stopped;
+		try {
+			stopped = nodeAgentService.StopJ2EEInstance(
+					RoutingKeyGenerator.getNodeAgentRoutingKey(host),
+					instance.getAppUuid(), instance.getUuid(), waitingTime);
+		} catch (RpcException e) {
+			logger.warn("RPC Exception:" + e);
+			e.printStackTrace();
+			return false;
+		}
+		
+		// delete routing entry if instance is stopped
+		if (stopped.equals(NAEC.NO_ERROR)) {
+			RoutingEntry rt = genRoutingEntry(null, instance);	// only used to display error info
+			logger.info("deleting rt: " + rt);
+			AREC rtResult;
+			try {
+				rtResult = appRouterService.deleteDestRoutingEntries(instance.getServiceIP(), instance.getServicePort());
+			} catch (RpcException e) {
+				logger.warn("RPC Exception:" + e);
+				e.printStackTrace();
+				return false;
+			}			
+			if (!rtResult.equals(AREC.NO_ERROR)) {
+				logger.warn("FAILED deleting rt: " + rt + ", error:" + ErrorCode.getMessage(rtResult));
+				return false;
+			}
+		} else {
+			logger.warn("FAILED stopping instance--" + instance + "on host" + host.getIp());
+			return false;
+		}
+		return true;
+	}
+
+	private RoutingEntry genRoutingEntry(J2EEApp app, Instance instance) {
+		RoutingEntry rt = new RoutingEntry();
+
+		rt.setDestPrefix(instance.getServiceIP());
+		rt.setDestSuffix(instance.getServicePort());
+		rt.setIsValid(1);
+		if (app != null) {
+			rt.setSrcPrefix(app.getDomainPrefix());
+			rt.setSrcSuffix(app.getDomainSuffix());
+		}
+		rt.setType(RETypeEnum.IP);
+		rt.setWeight(1);
+
+		return rt;
+	}
+
+	public RSEC createVM(String uuid, Integer templateId, String mac, String ip) {
+		RSEC result = RSEC.NO_ERROR;
+		int resrcStrategyId = 1;
+		int copyNum = 1;
+
+		logger.info("VM create request got: " + uuid + ", templateId: " + templateId
+				+ ", mac: " + mac + ", ip:" + ip);
+
+		ResrcStrategy strategy;
+		List<Host> hosts = new ArrayList<Host>();
+		try {
+			strategy = resrcStrategyProxy.getById(resrcStrategyId);
+			
+			Resource resource = new Resource();
+			hosts = HostSelector.selectNodes(strategy, copyNum, resource, InstanceTypeEnum.VM);
+			
+			if (hosts.size() < copyNum) {
+				result = RSEC.RSR_STG;
+				logger.warn("hosts " + hosts + "doesn't meet the requirements");
+			} else {
+				logger.info("hosts selected are: " + hosts);
+			}
+		} catch (Exception e) {
+			logger.warn("db error");
+			e.printStackTrace();
+			result = RSEC.DB_ERROR;
+		}
+		
+
+		// step 2. deploy apps on the hosts
+		List<Instance> instances = new ArrayList<Instance>();
+		if (result.equals(RSEC.NO_ERROR)) {
+			int counter = copyNum;  // to deploy such app.
+			for (Host host : hosts) {
+				if (counter > 0) {
+					logger.info("notifying " + host + " to deploy instance");
+					Instance instance = startVmInstance(host, uuid, templateId, mac, ip);
+					if (instance != null) {
+						instances.add(instance);
+						logger.info("instance" + instance + "from " + host
+								+ " deployed");
+						counter--;
+					} else {
+						logger.info(host.getIp() + " deploy app failed");
+					}
+				}
+			}
+
+			if (counter > 0) {
+				logger.warn("only ( " + instances.size() + "/" + copyNum
+						+ " ) copies deployed");
+				result = RSEC.LESS_DEPLOY;
+			}
+		}
+		
+
+		if (result.equals(RSEC.NO_ERROR)) {
+			logger.info("successfully deployed vm: " + uuid);
+		}
+		// step 3. return to caller
+		return result;
+	}
+
+	public RSEC deleteVM(String uuid) {
+		logger.info("receving DELETE VM request: " + uuid);
+		
+		// step 0. find which host it is on
+		Instance instance;
+		try {
+			instance = instanceProxy.getByUuid(uuid, false, true, false);
+		} catch (Exception e) {
+			logger.warn("db error" + e.getMessage());
+			e.printStackTrace();
+			return RSEC.DB_ERROR;
+		}
+		Host host  = instance.getHost();
+		
+		// step 1. notify nodeagent to delete vm
+		try {
+			logger.info("trying to delete vm[" + uuid + "] on host " + host.getIp());
+			NAEC error = nodeAgentService.deleteVM(RoutingKeyGenerator.getNodeAgentRoutingKey(host), uuid);
+			
+			if (error.equals(NAEC.NO_ERROR)) {
+				return RSEC.NO_ERROR;
+			} else {
+				logger.warn("Get NodeAgent Error: " + ErrorCode.getMessage(error));
+				return RSEC.NA_ERROR;
+			}
+		} catch (RpcException e) {
+			logger.warn("RPC Error");
+			e.printStackTrace();
+			return RSEC.NA_ERROR;
+		}
+		
+		
+	}
+
+	public RSEC dealVM(String uuid, String action, Integer templateId) {
+		logger.info("receving DEAL VM request, uuid:" + uuid + ", action:" + action
+				+ ", templateId:" + templateId);
+		
+		// step 0. find which host it is on
+		Instance instance;
+		try {
+			instance = instanceProxy.getByUuid(uuid, false, true, false);
+		} catch (Exception e) {
+			logger.warn("db error" + e.getMessage());
+			e.printStackTrace();
+			return RSEC.DB_ERROR;
+		}
+		
+		if (instance == null) {
+			logger.warn("instance with uuid: " + uuid + " not exist!");
+			return RSEC.APP_NOT_EXIST;
+		}
+		
+		Host host  = instance.getHost();
+		
+		NAEC error;
+		try {
+			logger.info("trying to deal vm[" + uuid + "] on host " + host.getIp());
+			error = nodeAgentService.dealVM(RoutingKeyGenerator.getNodeAgentRoutingKey(host), uuid, action, templateId);
+			
+			if (error.equals(NAEC.NO_ERROR)) {
+				return RSEC.NO_ERROR;
+			} else {
+				logger.warn("Get NodeAgent Error: " + ErrorCode.getMessage(error));
+				return RSEC.RPC_ERROR;
+			}
+		} catch (RpcException e) {
+			logger.warn("RPC Exception:" + e);
+			e.printStackTrace();
+			return RSEC.NA_ERROR;
+		}
+	}
+	
+	private Instance startVmInstance(Host host, String uuid, Integer templateId, String mac, String ip) {
+		try {
+			return nodeAgentService.createVM(
+					RoutingKeyGenerator.getNodeAgentRoutingKey(host),
+					uuid, templateId, mac, ip);
+		} catch (RpcException e) {
+			logger.warn("RPC Exception:" + e);
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	VmService vmService = new VmServiceImpl();
+	VolumeService volumeService = new VolumeServiceImpl();
+	AggregateService aggregateService = new AggregateServiceImpl();
+	FlavorService flavorService = new FlavorServiceImpl();
+	SecurityGroupService securityGroupService = new SecurityGroupServiceImpl();
+	NetworkService networkService = new NetworkServiceImpl();
+	ImageService imageService = new ImageServiceImpl();
+	
+	@Override
+	public String createVM(String name, String userId, String imgId,
+			Integer flavorId, Integer sgId, Integer avalibilityZoneId, List<Integer> clusterIds, String newPassword,
+			Map<String, String> metadata, RpcExtra rpcExtra) throws RpcException {
+		
+		String vmUuid = vmService.createVM(name, userId, imgId, flavorId, sgId, avalibilityZoneId, clusterIds, newPassword, metadata, rpcExtra);
+		return vmUuid;
+	}
+
+	@Override
+	public String recoveryVM(String name, String userId, String imgUuid, Integer flavorId, Integer sgId, Integer avalibilityZoneId, String hostUuid, String newPassword, Map<String, String> metadata, RpcExtra rpcExtra) throws RpcException {
+		String vmUuid = vmService.recoveryVM(name, userId, imgUuid, flavorId, sgId, avalibilityZoneId, hostUuid, newPassword, metadata, rpcExtra);
+		return vmUuid;
+	}
+
+	@Override
+	public void startVM(String uuid, RpcExtra rpcExtra) throws RpcException {
+		vmService.startVM(uuid, rpcExtra);
+	}
+
+	@Override
+	public void stopVM(String uuid, RpcExtra rpcExtra) throws RpcException {
+		vmService.stopVM(uuid, rpcExtra);
+	}
+
+	@Override
+	public void resumeVM(String uuid, RpcExtra rpcExtra) throws RpcException {
+		vmService.resumeVM(uuid, rpcExtra);
+	}
+
+	@Override
+	public void rebootVM(String uuid, RpcExtra rpcExtra) throws RpcException {
+		vmService.rebootVM(uuid, rpcExtra);
+	}
+
+	@Override
+	public void rebuildVM(String uuid, Integer userId, Integer flavorId,
+			Integer sgId, RpcExtra rpcExtra) throws RpcException {
+		vmService.rebuildVM(uuid, userId, flavorId, sgId, rpcExtra);
+	}
+
+	@Override
+	public void suspendVM(String uuid, RpcExtra rpcExtra) throws RpcException {
+		vmService.suspendVM(uuid, rpcExtra);
+	}
+
+	@Override
+	public void forceDeleteVM(String uuid, RpcExtra rpcExtra) throws RpcException {
+		vmService.forceDeleteVM(uuid, rpcExtra);
+	}
+
+	@Override
+	public void terminateVM(String uuid, RpcExtra rpcExtra) throws RpcException {
+		vmService.terminateVM(uuid, rpcExtra);
+	}
+
+	@Override
+	public String createVolume(Integer userId, Integer avalibilityZoneId, List<Integer> clusterIds, String name, String displayName, String discription, Integer size,
+			String type, Map<String, String> metadata, RpcExtra rpcExtra) throws RpcException {
+		return volumeService.createVolume(userId, avalibilityZoneId, clusterIds, name, displayName, discription, size, type, metadata, rpcExtra);
+	}
+
+	@Override
+	public String createVolumeImageBack(Integer userId, String displayName, String discription,String volumeUuid,RpcExtra rpcExtra) throws RpcException {
+		return volumeService.createVolumeImageBack(userId,  displayName, discription, volumeUuid, rpcExtra);
+	}
+	
+	@Override
+	public String revertVolume(String volumeId, String instanceId, RpcExtra rpcExtra)
+			throws RpcException {
+		return volumeService.revertVolume(volumeId, instanceId, rpcExtra);
+	}
+
+	@Override
+	public String attachVolume(String volumeId, String instanceId, RpcExtra rpcExtra) throws RpcException {
+		return volumeService.attachVolume(volumeId, instanceId, rpcExtra);
+	}
+
+	@Override
+	public void detachVolume(String volumeId, String instanceId, RpcExtra rpcExtra) throws RpcException {
+		volumeService.detachVolume(volumeId, instanceId, rpcExtra);
+	}
+
+	@Override
+	public void updateVolume(String volumeUuid, String displayName,
+			String discription, HashMap<String, String> metadata, RpcExtra rpcExtra) throws RpcException {
+		volumeService.updateVolume(volumeUuid, displayName, discription, metadata, rpcExtra);
+	}
+	
+	@Override
+	public String createSnapshot(String displayName, String displayDescription,
+			String volumeId, Boolean force, RpcExtra rpcExtra) throws RpcException {
+		return volumeService.createSnapshot(displayName, displayDescription, volumeId, force, rpcExtra);
+	}
+	
+	@Override
+	public void deleteSnapshot(String snapshotUuid, RpcExtra rpcExtra) throws RpcException {
+		volumeService.deleteSnapshot(snapshotUuid, rpcExtra);
+	}
+
+	@Override
+	public void revertSnapshot(String snapshotUuid, RpcExtra rpcExtra) throws RpcException {
+		volumeService.revertSnapshot(snapshotUuid, rpcExtra);
+	}
+	
+	@Override
+	public void updateSnapshot(String snapshotUuid, String displayName,
+			String discription, Integer userId, RpcExtra rpcExtra) throws RpcException {
+		volumeService.updateSnapshot(snapshotUuid, displayName, discription, userId, rpcExtra);
+	}
+	
+	@Override
+	public Integer createAggregate(String name, Integer availabilityZoneId, RpcExtra rpcExtra) throws RpcException {
+		return aggregateService.createAggregate(name, availabilityZoneId, rpcExtra);
+	}
+
+	@Override
+	public Integer addHostToAggregate(String hostId, Integer aggregateId, RpcExtra rpcExtra) throws RpcException {
+		return aggregateService.addHostToAggregate(hostId, aggregateId, rpcExtra);
+	}
+	
+	@Override
+	public Integer removeHostFromAggregate(String hostId, Integer aggregateId, RpcExtra rpcExtra) throws RpcException {
+		return aggregateService.removeHostFromAggregate(hostId, aggregateId, rpcExtra);
+	}
+
+	@Override
+	public Integer createFlavor(String name, Integer ram, Integer disk,
+			Integer vcpus, RpcExtra rpcExtra) throws RpcException{
+		System.out.println("createFlavor(String name, Integer ram, Integer disk, Integer vcpus)");
+		return flavorService.createFlavor(name, ram, disk, vcpus, rpcExtra);
+	}
+	
+	@Override
+	public Integer createSecurityGroup(String userId, String name,
+			String description, RpcExtra rpcExtra) throws RpcException {
+		return securityGroupService.createSecurityGroup(userId, name, description, rpcExtra);
+	}
+
+	@Override
+	public Boolean deleteSecurityGroup(Integer sgId, RpcExtra rpcExtra) throws RpcException {
+		return securityGroupService.deleteSecurityGroup(sgId, rpcExtra);
+	}
+
+	@Override
+	public Integer createSecurityGroupRule(Integer sgId, Integer fromPort,
+			Integer toPort, String protocal, String range, RpcExtra rpcExtra) throws RpcException {
+		return securityGroupService.createSecurityGroupRule(sgId, fromPort, toPort, protocal, range, rpcExtra);
+	}
+
+	@Override
+	public void deleteSecurityGroupRule(Integer ruleId, RpcExtra rpcExtra) throws RpcException {
+		securityGroupService.deleteSecurityGroupRule(ruleId, rpcExtra);
+	}
+
+	@Override
+	public void updateSecurityGroup(Integer sgId, String name,
+			String description, Integer userId, RpcExtra rpcExtra) throws RpcException {
+		securityGroupService.updateSecurityGroup(sgId, name, description, userId, rpcExtra);
+	}
+
+	@Override
+	public void createIpSegment(Integer type, Integer clusterId,
+			VmIpSegMent ipSegment, RpcExtra rpcExtra) throws RpcException {
+		networkService.createIpSegment(type, clusterId, ipSegment, rpcExtra);
+	}
+
+	@Override
+	public void updateImage(String imageUuid, String name, String description, String account, String software,
+			String groupIdList, RpcExtra rpcExtra) throws RpcException {
+		imageService.updateImage(imageUuid, name, description, account, software, groupIdList, rpcExtra);
+	}
+
+	@Override
+	public String createBackUp(String displayName, String displayDescription,
+			String volumeUuid, Boolean force, RpcExtra rpcExtra) throws RpcException {
+		return volumeService.createBackUp(displayName, displayDescription, volumeUuid, force, rpcExtra);
+	}
+
+	@Override
+	public void deleteBackUp(String BackUpUuid, RpcExtra rpcExtra) throws RpcException {
+		volumeService.deleteBackUp(BackUpUuid, rpcExtra);
+	}
+
+	@Override
+	public void revertBackUp(String BackUpUuid, RpcExtra rpcExtra) throws RpcException {
+		volumeService.revertBackUp(BackUpUuid, rpcExtra);
+	}
+
+	@Override
+	public void updateBackUp(String backUpUuid, String displayName,
+			String discription, RpcExtra rpcExtra) throws RpcException {
+		volumeService.updateBackUp(backUpUuid, displayName, discription, rpcExtra);
+	}
+
+	@Override
+	public void bootFromISO(String imageUuid, String instanceUuid, RpcExtra rpcExtra)
+			throws RpcException {
+		vmService.bootFromISO(imageUuid, instanceUuid, rpcExtra);
+	}
+
+	@Override
+	public void detachISO(String uuid, RpcExtra rpcExtra) throws RpcException {
+		vmService.detachISO(uuid, rpcExtra);
+	}
+
+	@Override
+	public void forceStopVM(String uuid, RpcExtra rpcExtra) throws RpcException {
+		vmService.forceStopVM(uuid, rpcExtra);
+	}
+
+	@Override
+	public void deleteVolume(String volumeUuid, RpcExtra rpcExtra) throws RpcException {
+		volumeService.deleteVolume(volumeUuid, rpcExtra);
+	}
+
+	@Override
+	public void forceDeleteVolume(String volumeUuid, RpcExtra rpcExtra) throws RpcException {
+		volumeService.forceDeleteVolume(volumeUuid, rpcExtra);
+	}
+
+	
+	/*public String createImage(Integer userId, String serverUuid,
+			String volumeUuid, String displayName, String displayDescription,
+			Boolean isPublic, String distribution, RpcExtra rpcExtra) throws RpcException {*/
+	@Override
+	public String createImage(Integer userId, String serverUuid,
+			String volumeUuid,String account,String displayName, String displayDescription,
+			String groupIdList, String distribution, String software, RpcExtra rpcExtra) throws RpcException {
+		logger.info("resource-scheduler start create image...");
+		final String paramInfos = "createImage: " + userId + ", " + serverUuid + ", "
+				+ volumeUuid + ", " + displayName + ", " + displayDescription
+				+ ", " + groupIdList + ", " + distribution+","+software;
+		logger.info(paramInfos);
+		return imageService.createImage(userId, serverUuid, volumeUuid,account,displayName, displayDescription, groupIdList, distribution, software, rpcExtra);
+	}
+
+	@Override
+	public String authorizeImage(VmImage vmImage, RpcExtra rpcExtra) throws RpcException {
+		return imageService.authorizeImage(vmImage, rpcExtra);
+	}
+
+
+	@Override
+	public boolean deleteImage(String imageUuid, String groupId ,RpcExtra rpcExtra) throws RpcException {
+		return imageService.deleteImage(imageUuid,groupId, rpcExtra);
+	}
+
+	@Override
+	public boolean delNetIpSegment(Integer ipSegId, RpcExtra rpcExtra) throws RpcException {
+		return networkService.delNetIpSegment(ipSegId, rpcExtra);
+	}
+
+	@Override
+	public VmStatusEnum getVMState(String uuid, RpcExtra rpcExtra) throws RpcException {
+		return vmService.getVMState(uuid, rpcExtra);
+	}
+
+	@Override
+	public Integer createVmZone(String name, RpcExtra rpcExtra)
+			throws RpcException {
+		return aggregateService.createAvailabilityZone(name, rpcExtra);
+	}
+
+	@Override
+	public Integer updateVmZone(Integer zoneId, String name, RpcExtra rpcExtra)
+			throws RpcException {
+		return aggregateService.updateAvailabilityZone(zoneId, name, rpcExtra);
+	}
+
+	@Override
+	public void deleteVmZone(Integer zoneId, RpcExtra rpcExtra)
+			throws RpcException {
+		aggregateService.deleteAvailabilityZone(zoneId, rpcExtra);
+	}
+
+	@Override
+	public Boolean modVmHostName(String instanceUuid, String newHostName, VmImageOSTypeEnum OSType, RpcExtra rpcExtra)
+			throws RpcException {
+		return vmService.modVmHostName(instanceUuid, newHostName, OSType, rpcExtra);
+	}
+	
+	@Override
+	public Boolean modVmPasswd(String instanceUuid, String name,
+			String newPasswd, VmImageOSTypeEnum OSType, RpcExtra rpcExtra)
+			throws RpcException {
+		return vmService.modVmPasswd(instanceUuid, name, newPasswd, OSType, rpcExtra);
+	}
+
+	/**
+	 * 离线迁移虚拟机
+	 */
+	@Override
+	public void migrateVM(String uuid, String hostUuid, RpcExtra rpcExtra)
+			throws RpcException {
+		vmService.migrateVM(uuid, hostUuid, rpcExtra);
+	}
+	
+	/**
+	 * 在线迁移虚拟机
+	 */
+	@Override
+	public void onlineMigrateVM(String uuid, String hostUuid, RpcExtra rpcExtra)
+			throws RpcException {
+		vmService.onlineMigrateVM(uuid, hostUuid, rpcExtra);
+		
+	}
+
+	public static void main(String[] args) {
+		ResourceSchedulerImpl rsi = new ResourceSchedulerImpl();
+		try {
+			rsi.onlineMigrateVM("c363dafe26864f84a341ee8352628ab4", "782BCB435306", new RpcExtra());
+		} catch (RpcException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	@Override
+	public int setVmMaxBandwidth(String instanceUuid, Map<String,String> metadatas,boolean release,
+			RpcExtra rpcExtra) throws RpcException {
+		return networkService.setVmMaxBandwidth(instanceUuid, metadatas, release,rpcExtra);
+	}
+
+	@Override
+	public boolean cancelVmMaxBandwidth(String instanceUuid,
+			NetSegment netType, FlowType flowType, RpcExtra rpcExtra)
+			throws RpcException {
+		return networkService.cancelVmMaxBandwidth(instanceUuid, netType, flowType, rpcExtra);
+	}
+
+	@Override
+	public String KeepAlive() throws Exception {
+		
+		logger.info(String.format("---------------------keepalive-------------------"));
+		logger.info(String.format("---------------------"+this.getClass()+":success-------------------"));
+			
+		boolean flag = true;
+		String result= "";
+		try
+		{
+			result = vmService.KeepAlive();
+		}catch (Exception e)
+		{
+			logger.info(String.format("---------------------keepalive-------------------"));
+			logger.info(String.format("---------------------"+vmService.getClass()+":fail-------------------"));
+			flag = false;
+		}
+		if(result.equals("fail"))
+			flag = false;	
+		result= "";
+		try
+		{
+			result = volumeService.KeepAlive(); 
+		}catch (Exception e)
+		{
+			logger.info(String.format("---------------------keepalive-------------------"));
+			logger.info(String.format("---------------------"+volumeService.getClass()+":fail-------------------"));
+			flag = false;
+		}
+		if(result.equals("fail"))
+			flag = false;
+		result= "";
+		try
+		{
+			result = networkService.KeepAlive(); 
+		}catch (Exception e)
+		{
+			logger.info(String.format("---------------------keepalive-------------------"));
+			logger.info(String.format("---------------------"+networkService.getClass()+":fail-------------------"));
+			flag = false;
+		}
+		if(result.equals("fail"))
+			flag = false;	
+		try
+		{
+			imageService.KeepAlive();
+		}catch (Exception e)
+		{
+			logger.info(String.format("---------------------keepalive-------------------"));
+			logger.info(String.format("---------------------"+imageService.getClass()+":fail-------------------"));
+			flag = false;
+		}	
+		if(flag)
+			return "success";
+		else
+			return "fail";
+	}
+}

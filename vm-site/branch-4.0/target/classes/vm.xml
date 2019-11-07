@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
+        "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+    <!-- 虚拟机 -->
+    <package name="vm" namespace="/vm" extends="default">
+        <!--获得区域相关的信息-->
+        <action name="getNewInstanceInfo" class="com.appcloud.vm.action.vm.newvm.PreNewYunHaiVmAction" method="yunhaiGetInfo">
+            <result type="json">
+                <param name="root">result</param>
+            </result>
+        </action>
+        <!--获得配置阿里云ECS的选项信息-->
+        <action name="getAliyunNewInstanceInfo" class="com.appcloud.vm.action.vm.newvm.PreNewAliYunVmAction"
+                method="AliInfo">
+
+        </action>
+        <!--创建阿里云主机-->
+        <action name="newAliYunInstance" class="com.appcloud.vm.action.vm.newvm.NewAliYunVmAction"
+                method="createAliYunInstance">
+
+        </action>
+        <!--创建新的主机-->
+        <action name="newInstance" class="com.appcloud.vm.action.vm.NewVmAction" method="newInstance">
+            <result type="json">
+                <param name="root">message</param>
+            </result>
+        </action>
+        <!-- 获取主机的价格 -->
+        <action name="getInstancePrice" class="com.appcloud.vm.action.vm.ModifyChargeTypeAction" method="vmGetPrice">
+            <result type="json">
+                <param name="root">vmPrice</param>
+            </result>
+        </action>
+        <!-- 修改付费 -->
+        <action name="modifycharge" class="com.appcloud.vm.action.vm.ModifyChargeTypeAction" method="execute">
+            <result type="json"></result>
+        </action>
+        <!--创建资源-->
+        <action name="modifyresource" class="com.appcloud.vm.action.vm.ModifyResourceAction">
+            <result type="json"></result>
+        </action>
+        <!--修改防火墙-->
+        <action name="modifysecuritygroup" class="com.appcloud.vm.action.vm.ModifySecurityGroup">
+
+        </action>
+        <action name="vmprice" class="com.appcloud.vm.action.vm.VmPriceAction">
+            <!-- <interceptor-ref name="CheckUserPermission"></interceptor-ref> -->
+            <result type="json"></result>
+        </action>
+        <action name="cluster" class="com.appcloud.vm.action.vm.ClusterAction">
+            <result type="json"></result>
+        </action>
+        <action name="newInstancePage" class="com.appcloud.vm.action.vm.NewVmAction" method="newInstancePage">
+            <result>newvm/newyunhaivm.jsp</result>
+        </action>
+        <action name="editvm" class="com.appcloud.vm.action.vm.EditVmAction">
+            <!-- <interceptor-ref name="CheckUserPermission"></interceptor-ref> -->
+            <result type="json"></result>
+        </action>
+        <action name="preeditvm" class="com.appcloud.vm.action.vm.PreEditVmAction">
+            <!-- <interceptor-ref name="CheckUserPermission"></interceptor-ref> -->
+            <result>/template/rename.jsp</result>
+        </action>
+        <action name="vmlist" class="com.appcloud.vm.action.vm.VmListAction" method="firstPage">
+            <!-- <interceptor-ref name="CheckUserPermission"></interceptor-ref> -->
+            <result>/vm/vmlist.jsp</result>
+        </action>
+        <action name="vmlistDiv" class="com.appcloud.vm.action.vm.VmListAction" method="vmGetDivPage">
+            <!-- <interceptor-ref name="CheckUserPermission"></interceptor-ref> -->
+            <result>/vm/vmDivPage.jsp</result>
+        </action>
+        <!-- <action name="sum" class="com.appcloud.vm.action.sum.SumAction">
+         <interceptor-ref name="CheckUserPermission"></interceptor-ref>
+         <result>/sum/sum.jsp</result>
+        </action> -->
+        <action name="vmlistbyuid" class="com.appcloud.vm.action.vm.VmListByUidAction">
+            <interceptor-ref name="CheckUserPermission"></interceptor-ref>
+            <result type="json"></result>
+        </action>
+        <action name="vmdetail" class="com.appcloud.vm.action.vm.VmDetailAction">
+            <!--  <interceptor-ref name="CheckUserPermission"></interceptor-ref> -->
+            <result>/vm/vmdetail.jsp</result>
+        </action>
+        <action name="vmstatus" class="com.appcloud.vm.action.vm.VmStatusAction">
+            <!--  <interceptor-ref name="CheckUserPermission"></interceptor-ref> -->
+            <result type="json"></result>
+        </action>
+        <action name="vmmonitor" class="com.appcloud.vm.action.vm.VmMonitorAction">
+            <!-- <interceptor-ref name="CheckUserPermission"></interceptor-ref> -->
+            <result type="json"></result>
+        </action>
+        <action name="vmoperate" class="com.appcloud.vm.action.vm.VmOperateAction">
+            <!-- <interceptor-ref name="CheckUserPermission"></interceptor-ref> -->
+            <result type="json"></result>
+        </action>
+        <action name="prevminstall" class="com.appcloud.vm.action.vm.PreVmInstallAction">
+            <!--           <interceptor-ref name="CheckUserPermission"></interceptor-ref> -->
+            <result type="json"></result>
+        </action>
+        <action name="vminstall" class="com.appcloud.vm.action.vm.VmInstallAction">
+            <!-- <interceptor-ref name="CheckUserPermission"></interceptor-ref> -->
+            <result type="json"></result>
+        </action>
+        <action name="prenewflavor" class="com.appcloud.vm.action.vm.PreNewFlavorAction">
+            <interceptor-ref name="CheckUserPermission"></interceptor-ref>
+            <result>/vm/newflavor.jsp</result>
+        </action>
+        <action name="newflavor" class="com.appcloud.vm.action.vm.NewFlavorAction">
+            <interceptor-ref name="CheckUserPermission"></interceptor-ref>
+            <result type="json"></result>
+        </action>
+        <action name="prenewfw" class="com.appcloud.vm.action.vm.PreNewFwAction">
+            <interceptor-ref name="CheckUserPermission"></interceptor-ref>
+            <result>/vm/newfw.jsp</result>
+        </action>
+        <action name="newfw" class="com.appcloud.vm.action.vm.NewFwAction">
+            <interceptor-ref name="CheckUserPermission"></interceptor-ref>
+            <result type="json"></result>
+        </action>
+        <action name="prenewimg" class="com.appcloud.vm.action.vm.PreNewImgAction">
+            <interceptor-ref name="CheckUserPermission"></interceptor-ref>
+            <result>/vm/newimg.jsp</result>
+        </action>
+        <action name="newimg" class="com.appcloud.vm.action.vm.NewImgAction">
+            <!--<interceptor-ref name="CheckUserPermission"></interceptor-ref>-->
+            <result type="json"></result>
+        </action>
+        <!-- added by yhw -->
+        <action name="renewvm" class="com.appcloud.vm.action.vm.ReNewVmAction">
+            <interceptor-ref name="CheckUserPermission"></interceptor-ref>
+            <result type="json"></result>
+        </action>
+        <action name="renewvmpayment" class="com.appcloud.vm.action.vm.ReNewVmPaymentAction">
+            <interceptor-ref name="CheckUserPermission"></interceptor-ref>
+            <result type="json"></result>
+        </action>
+        <action name="helpcontent" class="com.appcloud.vm.action.help.ShowHelpContentAction">
+            <result type="json">
+                <param name="root">helpcontent</param>
+            </result>
+        </action>
+        <action name="getbalance" class="com.appcloud.vm.action.finance.BalanceAction">
+            <result type="json"></result>
+        </action>
+    </package>
+</struts>

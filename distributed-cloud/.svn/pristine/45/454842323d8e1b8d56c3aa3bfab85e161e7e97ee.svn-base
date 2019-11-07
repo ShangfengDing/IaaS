@@ -1,0 +1,273 @@
+package appcloud.distributed.process;
+
+import appcloud.distributed.CloudControllerClientWapper;
+import appcloud.distributed.common.Constants;
+import appcloud.distributed.configmanager.RouteInfo;
+import appcloud.distributed.configmanager.RouteInfoManager;
+import appcloud.distributed.header.ReadyToTransHeader;
+import appcloud.distributed.header.VmBackCheckHeader;
+import appcloud.distributed.process.operate.TransPortOperate;
+import appcloud.distributed.process.operate.TransPortOperateImpl;
+import appcloud.distributed.util.NumUtil;
+import appcloud.netty.remoting.common.RequestCode;
+import appcloud.netty.remoting.common.ResponseCode;
+import appcloud.netty.remoting.protocol.RemoteCommand;
+import appcloud.netty.remoting.remote.NettyRequestProcessor;
+import com.distributed.common.constant.EnumConstants;
+import com.distributed.common.entity.*;
+import com.distributed.common.factory.ControllerFactory;
+import com.distributed.common.factory.DbFactory;
+import com.distributed.common.service.controller.AccountClient;
+import com.distributed.common.service.db.*;
+import com.distributed.common.utils.ArrayUtil;
+import com.distributed.common.utils.CollectionUtil;
+import com.distributed.common.utils.ModelUtil;
+import com.distributed.common.utils.UuidUtil;
+import io.netty.channel.ChannelHandlerContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+/**
+ * Created by lizhenhao on 2018/1/5.
+ */
+public class ReadyTransProcess implements NettyRequestProcessor {
+
+    private final static Logger logger = LoggerFactory.getLogger(ReadyTransProcess.class);
+
+    private TransPortOperate transPortOperate = new TransPortOperateImpl();
+
+
+    private final VmBackupService vmBackupService = DbFactory.getVmBackUpService();
+    private final VmInstanceInfoService instanceInfoService = DbFactory.getVmInstanceInfoService();
+    private final RouteInfoManager routeInfoManager = RouteInfoManager.getRouteInfoManager();
+    private final VmInstanceService vmInstanceService = DbFactory.getVmInstanceService();
+    private final VmHostService vmHostService = DbFactory.getVmHostService();
+    private final CloudControllerClientWapper clientWapper = CloudControllerClientWapper.getInstance();
+    private final AccountClient accountClient = ControllerFactory.getAccountClient();
+    private final VmImageBackService vmImageBackService = DbFactory.getVmImageBackService();
+    private final VmGroupService vmGroupService = DbFactory.getVmGroupService();
+    private final AccountService accountService = DbFactory.getAccountService();
+
+    private Random random = new Random();
+
+    /**
+     * 镜像备份中源数据中心所做的操作
+     *
+     * @param ctx
+     * @param request
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public RemoteCommand processRequest(ChannelHandlerContext ctx, RemoteCommand request) throws Exception {
+        int requestCode = request.getCode();
+        RemoteCommand response;
+        switch (requestCode) {
+            case RequestCode.READY_IMAGE_BACK:
+                request.decodeConsumerHeader(ReadyToTransHeader.class);
+                ReadyToTransHeader readyToTransHeader = (ReadyToTransHeader) request.getConsumHeader();
+                logger.info("接收到的数据同步请求，"+readyToTransHeader.toString());
+                String requestId = readyToTransHeader.getRequestId();
+                String instanceUuid = readyToTransHeader.getInstanceUuid();
+                String diskId = readyToTransHeader.getDiskId();  //当前备份的imageUuid
+                String destDataCenter = readyToTransHeader.getDestDataCenter();
+                String sourceDataCenter = routeInfoManager.getOwnDataCenter();
+                boolean needToClean = readyToTransHeader.isNeedToClean();
+
+                // 获得源镜像的地址，注意 location的形式是： /nfs/192.168.1.24/volume……
+                String sourceLocation = null;
+                VmImageBack vmImageBack = vmImageBackService.getByUuid(diskId);
+                VmBack destVmBack = null;
+                if (ModelUtil.isEmpty(vmImageBack)) {
+                    logger.info("the vmImage info is null, maybe fail to create imageBack");
+                    response = RemoteCommand.createReponseRemoteCommand(RequestCode.SYSTEM_ERROR, ResponseCode.ERROR);
+                    return response;
+                } else {
+                    String providerLocation = vmImageBack.getProviderLocation();
+                    String[] locations = providerLocation.split(":");
+                    if (ArrayUtil.isNotEmpty(locations) && locations.length == 3) {
+                        sourceLocation = Constants.NFS + ":/" + locations[0] + ":/" + locations[2];
+                        System.out.println("the source location of vmImage is: " + sourceLocation);
+                    }
+                }
+
+                // step2 判断是否已经备份过
+                List<VmBack> checkResult = vmBackupService.findByParams(instanceUuid, null, null, sourceDataCenter, null, EnumConstants.SurvivalStatus.ALIVE.toString(), false);
+                if (CollectionUtil.isEmpty(checkResult)) {
+                    logger.info("该虚拟机之前没有备份过");
+                    InstanceBackInfo instanceBackInfo = instanceInfoService.findByUuid(instanceUuid);
+
+                    String destUuid = UuidUtil.getRandomUuid();
+
+                    // step2 没有备份过，检查传入的目的主机的正确性，选择主机，发送消息过去
+                    RouteInfo destRouteInfo;
+                    if (destDataCenter != null) {
+                        RouteInfo destRouteInfo1 = routeInfoManager.getRouteInfo(destDataCenter);
+                        if (!ModelUtil.isEmpty(destRouteInfo1)){
+                            destRouteInfo = destRouteInfo1;
+                        } else {
+                            logger.info("the routeInfo does not exist, the dataCenter: "+sourceDataCenter);
+                            destRouteInfo = selectDataCenter(sourceDataCenter);
+                        }
+                    } else {
+                        destRouteInfo = selectDataCenter(sourceDataCenter);
+                    }
+
+                    // TODO: 适配zstack 无需创建instanceBackInfo
+                    VmInstance vmInstance = vmInstanceService.findByUuid(instanceUuid, true);
+                    if (ModelUtil.isEmpty(instanceBackInfo)) {
+                        instanceBackInfo = new InstanceBackInfo(destUuid, vmInstance.getUserId(), vmInstance.getImageUuid(), vmInstance.getInstanceTypeId()+"", vmInstance.getSecurityGroupId(), vmInstance.getName(), vmInstance.getDisplayDescription(), vmInstance.getVncPassword(),
+                                vmInstance.getPriVmMac(), vmInstance.getPubVmMac(), vmInstance.getInstanceChargeType(), vmInstance.getInstanceChargeLength(), vmInstance.getInternetChargeType(), vmInstance.getMaxBandwidth(), vmInstance.getSystemDiskCategory(), vmInstance.getSystemDiskSize(),
+                                null, vmInstance.getAppkeyId(), vmInstance.getAppkeySecret(),null);
+                    }
+                    logger.info("destRouteInfo:"+destRouteInfo+", vmInstance: "+vmInstance+", instanceBackInfo:"+instanceBackInfo);
+
+                    // step3 数据准备
+                    String userEmail = readyToTransHeader.getUserEmail();
+                    Appkey appkey = accountService.findByZoneIdAndEmail(destRouteInfo.getDataCenter(), userEmail);
+                    if (ModelUtil.isEmpty(appkey)) {
+                        logger.info("dest dataCenter has no this user, now create a user");
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                List<VmGroup> groups = vmGroupService.findAll();
+                                if (CollectionUtil.isEmpty(groups)) {
+                                    logger.info("this dataCenter has no vmGroups");
+                                }
+                                VmGroup group = groups.get(0);
+                                logger.info("the group is: " + group.toString());
+                                accountClient.userCreate(Constants.REGION_ID, destRouteInfo.getDataCenter(), userEmail, group.getSecretKey(), readyToTransHeader.getAppkeyId(), readyToTransHeader.getAppkeySecret(), userEmail, readyToTransHeader.getAccountName());
+                            }
+                        }).start();
+                    }
+
+                    //TODO 2018/3/18 这个请求，首次请求时会阻塞，急需解决
+                    RemoteCommand checkDestCommand = null;
+                    try {
+                         checkDestCommand = clientWapper.sendCheckDestRequest(requestId, destRouteInfo.getAddr(), instanceBackInfo);
+                    } catch (Exception e) {
+                        logger.error(e.getMessage());
+                        response = RemoteCommand.createReponseRemoteCommand(RequestCode.CHECK_BACKUP_DEST, ResponseCode.ERROR);
+                        return response;
+                    }
+                    if (!checkDestCommand.getRemark().equals(ResponseCode.SUCCESSED)) {
+                        return RemoteCommand.createErrorRemoteCommand();
+                    }
+
+                    VmBackCheckHeader checkResponse = (VmBackCheckHeader) checkDestCommand.decodeConsumerHeader(VmBackCheckHeader.class);
+                    if (ModelUtil.isEmpty(checkResponse)) {
+                        logger.error("目标数据中心返回的数据为null");
+                        return RemoteCommand.createErrorRemoteCommand();
+                    }
+                    Host destHost = checkResponse.getHost();
+
+                    //step4-1 是否需要在本地备份
+                    Host localHost = selectLocalHost(vmInstance.getHostUuid());
+                    if (localHost == null) {
+                        logger.info("源数据中心物理机有限，不能进行数据中心内部备份");
+                    } else {
+                        //TODO 2018-6-18 此处没有必要再经过controller
+                        response = backUp(destUuid, instanceUuid, sourceDataCenter, sourceDataCenter, vmInstance.getHostUuid(), localHost, sourceLocation, routeInfoManager.getOwnAddr(), needToClean);
+                    }
+
+                    //step4-2 传输文件到目的数据中心的物理机上
+                    response = backUp(destUuid, instanceUuid, sourceDataCenter, destRouteInfo.getDataCenter(), vmInstance.getHostUuid(), destHost, sourceLocation, destRouteInfo.getAddr(), needToClean);
+                    return response;
+                } else {
+                    ExecutorService executorService = Executors.newFixedThreadPool(2);
+                    for (VmBack vmBack: checkResult) {
+                        String finalSourceLocation = sourceLocation;
+                        executorService.submit(new Runnable() {
+                            @Override
+                            public void run() {
+                                String destDataCenter = vmBack.getDestDataCenter();
+                                logger.info("该虚拟机之前有备份，备份的地址是：" + destDataCenter);
+
+                                //step4 传输文件
+                                RouteInfo destRouteInfo = routeInfoManager.getRouteInfo(destDataCenter);
+                                transPortOperate.transportImageBack(finalSourceLocation, destRouteInfo.getAddr(), needToClean, vmBack);
+                            }
+                        });
+                    }
+                }
+                response = RemoteCommand.createReponseRemoteCommand(RequestCode.SUCCESS, ResponseCode.SUCCESSED);
+                break;
+            default:
+                response = RemoteCommand.createReponseRemoteCommand(RequestCode.DEFAULT, ResponseCode.DEFAULT);
+                break;
+        }
+        return response;
+    }
+
+    public boolean rejectRequest() {
+        return false;
+    }
+
+
+    private RouteInfo selectDataCenter(String sourceDataCenter) {
+        List<RouteInfo> routeInfoList = routeInfoManager.getAllRouteInfo();
+        Map<String, RouteInfo> routeInfoMap = new HashMap<>();
+        for (RouteInfo routeInfo:routeInfoList) {
+            routeInfoMap.put(routeInfo.getDataCenter(), routeInfo);
+        }
+        // TODO 此处应该有一定策略
+//        Integer size = routeInfoList.size();
+//        Integer index = NumUtil.selectAB(0, size);
+//        while (routeInfoList.get(index).getDataCenter().equals(sourceDataCenter)) {
+//            index = NumUtil.selectAB(0, size);
+//        }
+        if (sourceDataCenter.equals("discloud3")) {
+            return routeInfoMap.get("discloud2");
+        } else if (sourceDataCenter.equals("discloud2")){
+            return routeInfoMap.get("discloud3");
+        } else {
+            return routeInfoMap.get("discloud2");
+        }
+//        return routeInfoList.get(index);
+    }
+
+    // 选择本地备份的地址
+    public Host selectLocalHost(String sourceHostUuid) {
+        List<VmHost> hostList = vmHostService.findByParams(null, EnumConstants.HostType.COMPUTE_NODE.toString(), null, null, null);
+        if (CollectionUtil.isEmpty(hostList) || hostList.size() == 1) {
+            return null;
+        }
+        List<Host> availableHostList = new ArrayList<>();
+        for (VmHost vmHost: hostList) {
+            if (!vmHost.getUuid().equals(sourceHostUuid)) {
+                availableHostList.add(new Host(vmHost.getUuid(), vmHost.getIp()));
+            }
+        }
+        int index = random.nextInt(availableHostList.size());
+        return availableHostList.get(index);
+    }
+
+    // 备份传输镜像
+    private RemoteCommand backUp(String destUuid, String instanceUuid, String sourceDataCenter, String destDataCenter, String sourceHostUuid, Host destHost, String sourceLocation, String destAddr, boolean needToClean) {
+        VmBack destVmBack = new VmBack(destUuid, instanceUuid, sourceDataCenter, destDataCenter, sourceHostUuid, destHost.getUuid(),
+                destHost.getIp(), EnumConstants.DataCenterType.SOURCE.toString(), EnumConstants.SurvivalStatus.ALIVE.toString());
+        try {
+            vmBackupService.add(destVmBack);
+            VmImageBack vmImageBack = vmImageBackService.getByInstanceUuidAndTop(instanceUuid, true);
+            destVmBack.setVmImageBack(vmImageBack);
+            logger.info("备份的信息："+destVmBack.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return RemoteCommand.createErrorRemoteCommand();
+        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                transPortOperate.transportImageBack(sourceLocation, destAddr, needToClean, destVmBack);
+            }
+        }).start();
+        return RemoteCommand.createSuccessRemoteCommand();
+    }
+
+
+
+}

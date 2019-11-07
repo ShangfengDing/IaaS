@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+          "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"       
+          "http://struts.apache.org/dtds/struts-2.0.dtd">
+<!-- 
+  - This file is included by the struts.xml file as an example
+  - of how to break up the configuration file into multiple files.
+-->
+<struts>
+  <package name="system" namespace="/system" extends="default">
+  
+    <!-- 基础设施 -->
+  	<!--<action name="infrastructure" class="appcloud.admin.action.system.InfrastructureAction">-->
+        <!--<result>/system/infrastructure.jsp</result>-->
+    <!--</action>-->
+	  <action name="infrastructure" class="appcloud.admin.action.monitor.CloudAction" method="getServiceInfo">
+		  <result>/monitor/home.jsp</result>
+	  </action>
+   <!-- 数据中心 -->
+	<!-- 节点管理 -->
+	<action name="host" class="appcloud.admin.action.system.HostAction">
+		<result>/system/searchhost.jsp</result>
+	</action>
+	<action name="prehosttocluster" class="appcloud.admin.action.system.PreHostToClusterAction">
+		<result>/system/hosttocluster.jsp</result>
+	</action>
+	<action name="hosttocluster" class="appcloud.admin.action.system.HostOperateAction" method="hostToCluster">
+		<result type="json"></result>
+	</action>
+	<action name="startservice" class="appcloud.admin.action.system.HostOperateAction" method="startService">
+		<result type="json"></result>
+	</action>
+	<action name="stopservice" class="appcloud.admin.action.system.HostOperateAction" method="stopService">
+		<result type="json"></result>
+	</action>
+	<action name="hostmonitor" class="appcloud.admin.action.system.HostMonitorAction">
+		<result type="json"></result>
+	</action>
+	<action name="searchhost" class="appcloud.admin.action.system.SearchHostAction">
+		<result type="json"></result>
+	</action>
+	<action name="hostservice" class="appcloud.admin.action.system.HostServiceAction">
+		<result>/system/hostdetail.jsp</result>
+	</action>
+	<action name="hostdetail" class="appcloud.admin.action.system.HostDetailAction">
+		<result name="success">/system/_nodeAllocation.jsp</result>
+	</action>
+	
+	<!-- 集群管理 -->
+	<action name="cluster" class="appcloud.admin.action.system.ClusterAction" method="findAllCluster">
+		<result>/system/cluster.jsp</result>
+	</action>
+	  <action name="countCluster" class="appcloud.admin.action.system.ClusterAction">
+		  <result type="json"></result>
+	  </action>
+	<action name="prenewcluster" class="appcloud.admin.action.system.PreNewClusterAction">
+		<result>/system/newcluster.jsp</result>
+	</action>
+	<action name="newcluster" class="appcloud.admin.action.system.NewClusterAction">
+		<result type="json"></result>
+	</action>
+	<action name="clusterdetail" class="appcloud.admin.action.system.ClusterDetailAction">
+		<result>/system/clusterdetail.jsp</result>
+	</action>
+	<action name="prechangers" class="appcloud.admin.action.system.PreChangeRSAction">
+		<result>/system/resourcestrategy.jsp</result>
+	</action>
+	<action name="changers" class="appcloud.admin.action.system.ChangeRSAction">
+		<result name="success" type="redirect">clusterdetail?id=${clusterId}</result>
+	</action>
+	<action name="setoversell" class="appcloud.admin.action.system.SetOverSellAction">
+		<result name="success" type="redirect">clusterdetail?id=${clusterId}</result>
+	</action>
+	<action name="newnet" class="appcloud.admin.action.network.NewNetAction">
+            <result name="success" type="redirect">clusterdetail?id=${aggregateId}</result>
+	</action>
+
+	  <!-- 分布式云 -->
+	  <action name="cloud" class="appcloud.admin.action.system.CloudAction">
+		  <result name="success" >/system/cloud.jsp</result>
+	  </action>
+	  <action name="cloudInfo" class="appcloud.admin.action.system.CloudAction" method="cloudInfoList">
+		  <result name="success" type="json"/>
+	  </action>
+	  <action name="removeDeadCloud" class="appcloud.admin.action.system.CloudAction" method="removeDead">
+		  <result name="success" type="json"/>
+	  </action>
+
+
+	<!--  数据中心 -->
+	<action name="zone" class="appcloud.admin.action.system.ZoneAction">
+		<result>/system/zone.jsp</result>
+	</action>
+	
+	<action name="newzone" class="appcloud.admin.action.system.NewZoneAction">
+        <result type="json"></result>
+    </action>
+	
+	<action name="editzone" class="appcloud.admin.action.system.EditZoneAction">
+        <result type="json"></result>
+    </action>
+	<!-- 虚拟机搜索 -->
+	<action name="gethostbycid" class="appcloud.admin.action.system.HostByCidAction">
+        <result type="json"></result>
+    </action>
+	<action name="getclusterandhostbyzid" class="appcloud.admin.action.system.ClusterAndHostByZidAction">
+        <result type="json"></result>
+    </action>
+	  <action name="hostmanage">
+		  <result name="success">/system/hostmanage.jsp</result>
+	  </action>
+	  <!--<action name="hostmanage"  class="appcloud.admin.action.system.VmSummaryAction" method="searchVmAll">-->
+		  <!--<result name="success">/system/hostmanage.jsp</result>-->
+	  <!--</action>-->
+	  <action name="findState"  class="appcloud.admin.action.system.HBaseAction" method="findState">
+		  <result type="json"></result>
+	  </action>
+	  <!--<action name="findAllNode" class="appcloud.admin.action.system.VmSummaryAction" method="searchVmAll">-->
+		  <!--<result type="json"></result>-->
+	  <!--</action>-->
+	  <action name="findAllNode" class="appcloud.admin.action.system.VmHostAction" method="findAllNode">
+		  <result type="json"></result>
+	  </action>
+	  <action name="deleteService" class="appcloud.admin.action.system.VmSummaryAction" method="delteService">
+		  <result type="json"></result>
+	  </action>
+	  <action name="modifyService" class="appcloud.admin.action.system.VmSummaryAction" method="modifyService">
+		  <result type="json"></result>
+	  </action>
+	  <action name="addService" class="appcloud.admin.action.system.VmSummaryAction" method="addService">
+		  <result type="json"></result>
+	  </action>
+	  <action name="findServiceByUUID" class="appcloud.admin.action.system.VmSummaryAction" method="findServiceByUUID">
+		  <result type="json"></result>
+	  </action>
+	  <action name="vmSummaryInfo" class="appcloud.admin.action.system.VmSummaryAction" method="vmInfo">
+		  <result name="success">/system/hostadmanage.jsp</result>
+		  <!--<result type="json"></result>-->
+	  </action>
+	  <action name="findInfrastructure" class="appcloud.admin.action.system.InfrastructureAction">
+		  <result type="json"></result>
+	  </action>
+	  <action name="SearchAllNode" class="appcloud.admin.action.system.VmHostAction" method="findAllNode">
+		  <result name="success">/system/_nodeList.jsp</result>
+	  </action>
+      <action name="findNodeByUUID" class="appcloud.admin.action.system.VmHostAction" method="findNodeByUUID">
+          <result type="json"></result>
+      </action>
+      <action name="modifyNode" class="appcloud.admin.action.system.VmHostAction" method="modifyNode">
+          <result type="json"></result>
+      </action>
+	  <action name="nodeDetail" class="appcloud.admin.action.system.VmHostAction" method="findNodeByUUID">
+		  <result name="success">/system/nodedetail.jsp</result>
+	  </action>
+	  <action name="countClusterDevices" class="appcloud.admin.action.system.ClusterAction" method="countClusterDevices">
+		  <result type="json"></result>
+	  </action>
+	  <action name="countVm" class="appcloud.admin.action.system.VmSummaryAction" method="countVm">
+		  <result type="json"></result>
+	  </action>
+	  <action name="findLoadHistory" class="appcloud.admin.action.system.VmSummaryAction" method="vmInfo">
+		  <result name="success">/system/_nodedetailA.jsp</result>
+	  </action>
+	  <action name="findServiceStatus" class="appcloud.admin.action.system.HostDetailAction">
+		  <result name="success">/system/_nodeService.jsp</result>
+	  </action>
+	  <action name="loadHistoryData" class="appcloud.admin.action.system.VmSummaryAction" method="vmInfo">
+		  <result type="json"></result>
+	  </action>
+	  <action name="findNodeByType" class="appcloud.admin.action.system.VmHostAction" method="findNodeByType">
+		  <result name="success">/system/_nodeList.jsp</result>
+	  </action>
+	  <action name="findDeviceByType" class="appcloud.admin.action.system.VmSummaryAction" method="findDeviceByType">
+		  <result name="success">/system/_deviceList.jsp</result>
+	  </action>
+	  <action name="countNode" class="appcloud.admin.action.system.VmHostAction" method="findNodeByType">
+		  <result type="json"></result>
+	  </action>
+	  <action name="getInfrastructureInfo" class="appcloud.admin.action.monitor.CloudAction" method="getServiceInfo">
+		  <result type="json"></result>
+	  </action>
+	  <action name="getZone" class="appcloud.admin.action.system.ZoneAction" method="getZone">
+		  <result type="json"></result>
+	  </action>
+   </package>
+</struts>

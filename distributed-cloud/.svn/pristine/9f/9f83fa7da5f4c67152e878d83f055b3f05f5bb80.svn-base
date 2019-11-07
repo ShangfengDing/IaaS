@@ -1,0 +1,94 @@
+package appcloud.distributed.util;
+
+import appcloud.distributed.Transport.MappedWriteFile;
+import appcloud.distributed.Transport.Position;
+import com.distributed.common.store.IoHelper;
+import sun.nio.ch.DirectBuffer;
+
+import java.nio.ByteBuffer;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * Created by lizhenhao on 2017/12/17.
+ */
+public class FileUtil {
+
+    public final static String NFS_ROOT = "/nfs/";
+
+    public final static ConcurrentHashMap<String,Position> transportPostion = new ConcurrentHashMap();
+
+    public final static ConcurrentHashMap<String,MappedWriteFile> writeOpenFile = new ConcurrentHashMap<String, MappedWriteFile>();
+
+
+    /**
+     * 清除堆外内存
+     * @param byteBuffer
+     */
+    public static void clean(final ByteBuffer byteBuffer) {
+        if (byteBuffer.isDirect()) {
+            ((DirectBuffer)byteBuffer).cleaner().clean();
+        }
+    }
+
+
+    /**
+     * 解析镜像存储路径
+     * @param location
+     * @return
+     */
+    public static String parseBackLocation(String location) {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (!StringUtil.isEmpty(location)) {
+            String[] strings = location.split("\\:");
+            if (strings.length != 3) return null;
+            stringBuilder.append(NFS_ROOT+strings[0]+strings[2]);
+            return stringBuilder.toString();
+        }
+        else return null;
+    }
+
+    /**
+     * 检查镜像路径
+     */
+    public static boolean checkBackLocation(String location) {
+        if (location.startsWith(NFS_ROOT)) return true;
+        else return false;
+        // TODO: 2018/1/5 更加细致的检查
+    }
+
+    /**
+     * 存贮日志到某一文件中
+     * @param value
+     * @param folderPath
+     * @param fileName
+     * @return
+     */
+    public static Boolean store(String value, String folderPath, String fileName) {
+        return IoHelper.storeOneLine(value, folderPath, fileName);
+    }
+
+    /**
+     * 获得指定数目的日志, 注意是倒着读取
+     */
+    public static List<String> getReverseFileLines(String filePath, Integer num) {
+        return IoHelper.getReverseFileLines(filePath, num);
+    }
+
+    /**
+     * 正则获取目的地址
+     * @param destIp
+     * @param sourceFilePath
+     * @return
+     */
+    public static String getDestFilePath(String destIp, String sourceFilePath) {
+        String destFilePath = sourceFilePath.replaceAll("[0-9]{3}.[0-9]{3}.[0-9]+.[0-9]+",destIp);
+        return destFilePath;
+    }
+
+    @Deprecated
+    public static String getTestFilePath() {
+        return "D:\\data\\test\\bitcoin-on-nodejs.pdf";
+    }
+
+}

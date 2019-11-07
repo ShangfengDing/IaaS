@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<body version="0.0">
+<requests>
+    <request type="startapp">
+        <properties name="app">
+            <property name="appId" value="###APP_ID###" />
+            <property name="type" value="J2EE" />
+            <property name="num" value="###NUM###"/>
+            <!--<property name="location" value="###LOCATION###"/>-->
+        </properties>
+        <properties name="gc">
+            <property name="-Xms" value="###XMS###m"/>
+            <property name="-Xmx" value="###XMX###m"/>
+        </properties>
+    </request>
+</requests>
+</body>

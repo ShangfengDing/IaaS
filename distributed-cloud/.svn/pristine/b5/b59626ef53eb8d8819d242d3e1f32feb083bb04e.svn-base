@@ -1,0 +1,13 @@
+package appcloud.netty.remoting.common;
+
+
+/**
+ * Created by lizhenhao on 2017/11/7.
+ */
+
+//@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "typeName")
+//@JsonSubTypes({ @JsonSubTypes.Type(value = RegisterConsumerHeader.class, name = "B"), @JsonSubTypes.Type(value = C.class, name = "C") })
+public abstract class ConsumerHeader {
+
+    public abstract void checkFileds();
+}

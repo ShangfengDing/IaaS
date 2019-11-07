@@ -1,0 +1,5 @@
+#volume provider properties
+
+LIBVIRT_CONN=qemu:///system
+#emulatorName=/usr/libexec/qemu-kvm
+emulatorName=/usr/bin/qemu-system-x86_64

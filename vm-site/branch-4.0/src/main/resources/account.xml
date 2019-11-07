@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+          "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"       
+          "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+	<!-- 登录退出 -->
+    <package name="account" namespace="/account" extends="default">
+       <action name="login" class="com.appcloud.vm.action.account.LoginAction">
+           <result name="success" type="redirect">${redirect_url}</result>
+            <!--<result name="success" type="redirect">${redirect_url}</result>-->
+            <result name="input" type="redirect">/error/404.jsp</result>
+       </action>
+       <action name="landing" class="com.appcloud.vm.action.account.LandingAction">
+			<result name="success" type="redirect">${redirect_url}</result>
+			<result name="input">/error/404.jsp</result>
+	    	<result name="error">/error/404.jsp</result>
+		</action>
+      <action name="logout" class="com.appcloud.vm.action.account.LogoutAction">
+            <result name="success" type="json"></result>
+            <result name="input" type="redirect">/error/404.jsp</result>
+        </action>
+        <action name="newaccount" class="com.appcloud.vm.action.account.AccountAction">
+            <result>/sum/account.jsp</result>
+        </action>
+        <action name="newAccountInIaaS" class="com.appcloud.vm.action.account.AccountAction" method="newAccountInIaaS">
+            <result>/sum/account.jsp</result>
+        </action>
+        <action name="checkaccount" class="com.appcloud.vm.action.account.AccountAction" method="checkAccount">
+            <result type="json"></result>
+        </action>
+        <action name="checkAccountExist" class="com.appcloud.vm.action.account.AccountAction" method="checkAccountExist">
+            <result type="json"></result>
+        </action>
+        <action name="editAccount" class="com.appcloud.vm.action.account.AccountAction" method="preupdate">
+            <result>/sum/editAccount.jsp</result>
+        </action>
+         <action name="deleteAccount" class="com.appcloud.vm.action.account.AccountAction" method="deleteAccount">
+            <result>/sum/account.jsp</result>
+        </action>
+        <action name="unbundlingAccount" class="com.appcloud.vm.action.account.AccountAction" method="unbundlingAccount">
+            <result>/sum/account.jsp</result>
+        </action>
+        <action name="getAccountZoneId" class="com.appcloud.vm.action.account.AccountAction" method="findAccountZoneId">
+            <result type="json">
+                <param name="root">zone</param>
+            </result>
+        </action>
+        <action name="newAppcloudAccountModal" class="com.appcloud.vm.action.account.AccountAction" method="newAppcloudAccountModal">
+            <result>/sum/newAccount.jsp</result>
+        </action>
+
+        <!-- 获得所有的云海账户 -->
+        <action name="getYunhaiAcount" class="com.appcloud.vm.action.account.AccountAction" method="findYunhaiAccount">
+            <result type="json"></result>
+        </action>
+    </package>
+</struts>

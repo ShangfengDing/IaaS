@@ -1,0 +1,15 @@
+package com.distributed.common.service.db;
+
+import com.distributed.common.entity.InstanceBackInfo;
+
+/**
+ * Created by Idan on 2017/12/17.
+ */
+public interface VmInstanceInfoService {
+
+
+    InstanceBackInfo findByUuid(String uuid);
+
+    Boolean add(InstanceBackInfo vmBackInfo);
+
+}

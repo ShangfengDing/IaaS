@@ -1,0 +1,251 @@
+package com.appcloud.vm.action.fw;
+
+
+import aliyun.openapi.client.AliSecurityGroupClient;
+import appcloud.openapi.client.SecurityGroupClient;
+import appcloud.openapi.response.BaseResponse;
+import appcloud.openapi.response.CreateSecurityGroupResponse;
+import com.aliyuncs.ecs.model.v20140526.DeleteSecurityGroupResponse;
+import com.aliyuncs.ecs.model.v20140526.ModifySecurityGroupAttributeResponse;
+import com.aliyuncs.exceptions.ClientException;
+import com.appcloud.vm.action.BaseAction;
+import com.appcloud.vm.common.Log;
+import com.appcloud.vm.fe.common.Constants;
+import com.appcloud.vm.fe.manager.AppkeyManager;
+import com.appcloud.vm.fe.model.Appkey;
+import com.appcloud.vm.fe.util.OpenClientFactory;
+import com.appcloud.vm.util.ResultUtils;
+import org.apache.log4j.Logger;
+import org.apache.struts2.ServletActionContext;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 所有的对于防火墙的操作均在这里进行
+ *
+ * @author 包鑫彤
+ * @create 2016-07-12-15:23
+ * @since 1.0.0
+ */
+public class FwOperateAction extends BaseAction {
+
+
+    private static final long serialVersionUID = 1L;
+    private Logger logger = Logger.getLogger(FwOperateAction.class);
+    private static String REGIONID = "beijing";  //需要修改
+    private AppkeyManager appkeyManager = new AppkeyManager();
+    private SecurityGroupClient securityGroupClient = OpenClientFactory.getSecurityGroupClient();/** 云海安全组规则*/
+    private AliSecurityGroupClient aliSecurityGroupClient = OpenClientFactory.getAliSecurityGroupClient();
+    private Integer userId = this.getSessionUserID();
+    private List<Appkey>  appkeyList = appkeyManager.getAppkeyByUserId(userId);
+
+    /** 提供商  **/
+    private String appname;
+    /** 地域Id  **/
+    private String regionId;
+    private String zoneId=com.appcloud.vm.common.Constants.ZONE_ID;;
+    /** 用户邮箱  **/
+    private String userEmail;
+    /** 防火墙的ID*/
+    private String securityGroupId;
+    /** 防火墙的名字*/
+    private String securityGroupName;
+    /** 防火墙的描述*/
+    private String securityGroupDescription;
+
+    /**
+     * 新建防火墙
+     *
+     * @return
+     */
+    public String createSecurityGroup(){
+    	Appkey appkey = appkeyManager.getAppkeyByUserIdAndAppName(userId, appname);
+        if(null!=appkey){
+            String appkeyId = appkey.getAppkeyId();
+            String appkeySecret = appkey.getAppkeySecret();
+            String userEmail = appkey.getUserEmail();
+            switch (appkey.getProvider()) {
+                case Constants.YUN_HAI:
+                    zoneId=com.appcloud.vm.common.Constants.ZONE_ID;
+                    CreateSecurityGroupResponse createSecurityGroupResponse = securityGroupClient.CreateSecurityGroup(regionId,zoneId, securityGroupName, securityGroupDescription, null, appkeyId, appkeySecret, userEmail);
+                    fwLogInfo(appkey, createSecurityGroupResponse.getSecurityGroupId(), "create security group", createSecurityGroupResponse.getMessage()); // 日志
+                    ResultUtils.toJson(ServletActionContext.getResponse(),createSecurityGroupResponse);
+                    break;
+                case Constants.ALI_YUN:
+				com.aliyuncs.ecs.model.v20140526.CreateSecurityGroupResponse aliCreateSecurityGroupResponse;
+				try {
+					aliCreateSecurityGroupResponse = aliSecurityGroupClient.CreateSecurityGroup(regionId, securityGroupName, securityGroupDescription, null, appkeyId, appkeySecret, userEmail);
+                    fwLogInfo(appkey, aliCreateSecurityGroupResponse.getSecurityGroupId(), "create security group", null); // 日志
+                    ResultUtils.toJson(ServletActionContext.getResponse(),aliCreateSecurityGroupResponse);
+				} catch (ClientException e) {
+                    fwLogInfo(appkey, null , "create security group", e.getErrMsg()); // 日志
+                    ResultUtils.toJson(ServletActionContext.getResponse(),e.getErrMsg());
+				}
+                	break;
+                case Constants.AMAZON:
+                    break;
+
+            }
+        }    
+        return null;
+    }
+
+
+    /**
+     * 删除防火墙
+     *
+     * @return
+     */
+    public String deleteSecurityGroup(){
+    	Appkey appkey = appkeyManager.getAppkeyByUserIdAndAppName(userId, appname.trim());
+        if(null!=appkey){
+            String appkeyId = appkey.getAppkeyId();
+            String appkeySecret = appkey.getAppkeySecret();
+            String userEmail = appkey.getUserEmail();
+            switch (appkey.getProvider()) {
+                case Constants.YUN_HAI:
+                    zoneId=com.appcloud.vm.common.Constants.ZONE_ID;
+                    BaseResponse deleteSecurityGroupResponse = securityGroupClient.DeleteSecurityGroup(regionId,zoneId,securityGroupId,appkeyId,appkeySecret,userEmail);
+                    fwLogInfo(appkey, securityGroupId, "delete security group", deleteSecurityGroupResponse.getMessage()); // 日志
+                    ResultUtils.toJson(ServletActionContext.getResponse(),deleteSecurityGroupResponse);
+                    break;
+                case Constants.ALI_YUN:
+				try {
+					DeleteSecurityGroupResponse aliDeleteSecurityGroupResponse = aliSecurityGroupClient.DeleteSecurityGroup(regionId, securityGroupId, appkeyId, appkeySecret, userEmail);
+                    fwLogInfo(appkey, securityGroupId, "delete security group", null); // 日志
+                    ResultUtils.toJson(ServletActionContext.getResponse(),aliDeleteSecurityGroupResponse);
+				} catch (ClientException e) {
+                    fwLogInfo(appkey, securityGroupId, "delete security group", e.getErrMsg()); // 日志
+                    ResultUtils.toJson(ServletActionContext.getResponse(), e.getErrMsg());
+				}
+                	break;
+                case Constants.AMAZON:
+                    break;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 修改防火墙
+     *
+     * @return
+     * @throws Exception
+     */
+    public String updateSecurityGroup() {
+    	Appkey appkey = appkeyManager.getAppkeyByUserIdAndAppName(userId, appname.trim());
+        if(null!=appkey){
+            String appkeyId = appkey.getAppkeyId();
+            String appkeySecret = appkey.getAppkeySecret();
+            String userEmail = appkey.getUserEmail();
+            switch (appkey.getProvider()) {
+                case Constants.YUN_HAI:
+                    zoneId=com.appcloud.vm.common.Constants.ZONE_ID;
+                    BaseResponse modifySecurityGroupResponse = securityGroupClient.ModifySecurityGroupAttribute(regionId,zoneId,securityGroupId,securityGroupName,securityGroupDescription,appkeyId,appkeySecret,userEmail);
+                    fwLogInfo(appkey, securityGroupId,"modify security group", modifySecurityGroupResponse.getMessage()); // 日志
+                    ResultUtils.toJson(ServletActionContext.getResponse(),modifySecurityGroupResponse);
+                    break;
+                case Constants.ALI_YUN:
+                    ModifySecurityGroupAttributeResponse aliMSGAttrResponse = null;
+                    try {
+                        aliMSGAttrResponse = aliSecurityGroupClient.ModifySecurityGroupAttribute(regionId, securityGroupId, securityGroupName, securityGroupDescription, appkeyId, appkeySecret, userEmail);
+                        fwLogInfo(appkey, securityGroupId,"modify security group", null); // 日志
+                        ResultUtils.toJson(ServletActionContext.getResponse(), aliMSGAttrResponse);
+                    } catch (ClientException e) {
+                        fwLogInfo(appkey, securityGroupId,"modify security group", e.getErrMsg()); // 日志
+                        ResultUtils.toJson(ServletActionContext.getResponse(), e.getErrMsg());
+                    }
+                	break;
+                case Constants.AMAZON:
+                    break;
+            }
+        }
+        return null;
+    }
+
+    //将操作日志传到乐志
+    public void fwLogInfo (Appkey appkey,String id, String operation, String message) {
+        Map<String, String> mapLog = new HashMap<>();
+        mapLog.put("userId", userId.toString());
+        mapLog.put("device", "fw");
+        mapLog.put("deviceId", id);
+        mapLog.put("provider", appkey.getProvider());
+        mapLog.put("operateType", operation);
+        if (null == message) {
+            mapLog.put("result", "success");
+            Log.INFO(mapLog, appkey, regionId);
+        } else {
+            mapLog.put("result", message);
+            Log.ERROR(mapLog, appkey, regionId);
+        }
+    }
+
+    public String getSecurityGroupId() {
+        return securityGroupId;
+    }
+
+    public void setSecurityGroupId(String securityGroupId) {
+        this.securityGroupId = securityGroupId;
+    }
+
+    public String getSecurityGroupName() {
+        return securityGroupName;
+    }
+
+    public void setSecurityGroupName(String securityGroupName) {
+        this.securityGroupName = securityGroupName;
+    }
+
+    public String getSecurityGroupDescription() {
+        return securityGroupDescription;
+    }
+
+    public void setSecurityGroupDescription(String securityGroupDescription) {
+        this.securityGroupDescription = securityGroupDescription;
+    }
+
+
+    public String getAppname() {
+        return appname;
+    }
+
+    public void setAppname(String appname) {
+        this.appname = appname;
+    }
+
+    public String getRegionId() {
+		return regionId;
+	}
+
+	public void setRegionId(String regionId) {
+		this.regionId = regionId;
+	}
+
+	public String getUserEmail() {
+		return userEmail;
+	}
+
+	public void setUserEmail(String userEmail) {
+		this.userEmail = userEmail;
+	}
+
+    public String getZoneId() {
+        return zoneId;
+    }
+
+    public void setZoneId(String zoneId) {
+        this.zoneId = zoneId;
+    }
+
+    @Override
+	public String toString() {
+		return "FwOperateAction [appname=" + appname + ", regionId="
+				+ regionId + ", userEmail=" + userEmail + ", securityGroupId="
+				+ securityGroupId + ", securityGroupName=" + securityGroupName
+				+ ", securityGroupDescription=" + securityGroupDescription
+				+ "]";
+	}
+
+}

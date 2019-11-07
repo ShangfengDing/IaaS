@@ -1,0 +1,2 @@
+#set vnc token dir
+TOKENS_DIRECTION=/nfs/192.168.1.58

@@ -1,0 +1,7 @@
+[
+  {
+    "service":"com.distributed.common.service.op.AccountService",
+    "factory":"com.distributed.common.factory.DbFactory",
+    "method":"getAccountService"
+  }
+]

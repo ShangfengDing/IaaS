@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Endpoints>
+	<!-- 开关，controller是否开启，值只能是true和false -->
+	<ControllerEnable>false</ControllerEnable>
+
+	<Endpoint name="cn-beijing">
+		<RegionIds>
+			<RegionId>BEIJING</RegionId>
+		</RegionIds>
+
+		<Products>
+			<Product>
+				<ProductName>iaas</ProductName>
+				<ZoneId>iaas-lab</ZoneId>
+				<!--<DomainName>localhost:8081/openapi-server</DomainName>-->
+				<DomainName>openapi.free4lab.com</DomainName>
+			</Product>
+			<Product>
+				<ProductName>iaas</ProductName>
+				<ZoneId>zpark</ZoneId>
+				<!--<DomainName>localhost:8081/openapi-server</DomainName>-->
+				<DomainName>openapi.free4inno.com</DomainName>
+			</Product>
+		</Products>
+	</Endpoint>
+</Endpoints>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+          "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"       
+          "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+	<!-- 虚拟机 -->
+    <package name="preview" namespace="/preview" extends="default">
+		<action name="previewvm" class="com.appcloud.vm.action.preview.PreviewVmAction">
+            <result>/preview/previewvm.jsp</result>
+       	</action>
+    </package>
+</struts>

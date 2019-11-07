@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<body version="0.0">
+<requests>
+    <request type="dealapp">
+        <properties name="app">
+            <property name="appId" value="###UUID###" />
+            <property name="type"  value="VM" />
+            <property name="uuid" value="###UUID###" />
+        </properties>
+        <properties name="gc">
+            <property name="action"  value="###ACTION###" />
+            <property name="tempId"  value="###TEMP_ID###" /><!--上传模板时使用-->
+        </properties>
+    </request>
+</requests>
+</body>

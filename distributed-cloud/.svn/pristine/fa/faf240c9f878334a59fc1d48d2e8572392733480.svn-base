@@ -1,0 +1,14 @@
+[
+  {
+    "proxyClass":"com.distributed.common.service.controller.RouteInfoService",
+    "implClass":"appcloud.distributed.service.RouteInfoServiceImpl"
+  },
+  {
+    "proxyClass":"com.distributed.common.service.controller.AccountClient",
+    "implClass":"appcloud.distributed.service.AccountClientImpl"
+  },
+  {
+    "proxyClass":"com.distributed.common.service.controller.BackUpVmClient",
+    "implClass":"appcloud.distributed.service.BackUpVmClientImpl"
+  }
+]

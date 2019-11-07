@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<body version="0.0">
+<requests>
+    <request type="stopapp">
+        <properties name="app">
+            <property name="appId" value="###UUID###" />
+            <property name="type"  value="VM" />
+            <property name="uuid" value="###UUID###" />
+        </properties>
+    </request>
+</requests>
+</body>

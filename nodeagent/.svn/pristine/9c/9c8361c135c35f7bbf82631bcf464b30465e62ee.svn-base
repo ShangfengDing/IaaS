@@ -1,0 +1,24 @@
+# To change this template, choose Tools | Templates
+# and open the template in the editor.
+
+vmConnectStr=qemu:///system
+emulatorName=/usr/bin/qemu-kvm
+
+nfsLocation=/nfs/
+
+baseImgLocation=/vm/
+imgLocation=/vm-user/
+storageLocation=/vm-user-storage/
+
+defaultVmXml=default-vm.xml
+defaultStorageXml=default-storage.xml
+
+debug=true
+
+#default xml properties
+libvirtType = hvm
+osArch = x86_64
+osMachine = pc-1.2
+defaultNetwork = bridge
+privateBridge = br0
+publicBridge = br1

@@ -1,0 +1,795 @@
+package appcloud.vp;
+
+import appcloud.common.model.*;
+import appcloud.common.model.VmImage.VmImageOSTypeEnum;
+import appcloud.common.model.VmVolume.VmVolumeTypeEnum;
+import appcloud.common.service.VolumeProviderService;
+import appcloud.common.util.LolLogUtil;
+import appcloud.common.util.io.NFSUtil;
+import appcloud.rpc.tools.RpcException;
+import appcloud.vp.qemuimg.VolumeManager;
+import appcloud.vp.util.CommandResult;
+import appcloud.vp.util.FileSystemUtil;
+import org.apache.log4j.Logger;
+
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+public class VolumeProvider implements VolumeProviderService {
+
+	private static Logger logger = Logger.getLogger(VolumeProvider.class);
+	
+	private static LolLogUtil loller = null;
+	static {
+		try {
+			String ipAddress = VolumeProviderServer.getHost().getIp();
+			loller = new LolLogUtil(MessageLog.ModuleEnum.VOLUME_PROVIDER, VolumeProvider.class, ipAddress);
+		} catch (RpcException e) {
+			logger.error(e.getMessage());
+		}
+	}
+	// imageServerHost 镜像
+	// baseImage 在镜像物理机上的路径
+	public VmVolume createVolume(String routingKey, String uuid,
+			String imageServerHost, String baseImage, Float blockSize, RpcExtra rpcExtra)
+			throws RpcException {
+		logger.info("creating volume: " + uuid + " imageServerHost:" +imageServerHost + " baseImage:" + baseImage + " blockSize:"+blockSize);
+		VmVolume result = new VmVolume();
+		
+		String fmt = VmVolumeTypeEnum.QCOW2.toString();
+		try {
+			String destImgDir = FileSystemUtil.getImgDir(uuid);
+			logger.info("the dest is: "+destImgDir);
+			boolean createDir = FileSystemUtil.createDirIfNotExist(NFSUtil.DEFAULT_NFS_SRV_PATH + Conf.VOLUME_PREFIX + destImgDir);
+			if(createDir == false) {
+				loller.error(LolLogUtil.CREATE_VOLUME, "create " + NFSUtil.DEFAULT_NFS_SRV_PATH + Conf.VOLUME_PREFIX + destImgDir +" failed!", rpcExtra);
+				logger.info("create " + NFSUtil.DEFAULT_NFS_SRV_PATH + Conf.VOLUME_PREFIX + destImgDir +" failed!");
+				throw new RpcException("create " + NFSUtil.DEFAULT_NFS_SRV_PATH + Conf.VOLUME_PREFIX + destImgDir +" failed!");
+			}
+			String volumefilePath = genVolumeFilePath(destImgDir, uuid);  //得到路径，后缀是.img
+			CommandResult commandResult = new VolumeManager().createVolume(fmt,
+					volumefilePath, imageServerHost,baseImage, blockSize);
+			
+			if(!handleError(commandResult)) {
+				logger.error("Create volume failed! Caused by "
+						+ commandResult.getOutput() + " |"
+						+ commandResult.getError());
+				result.setMessage(commandResult.toString());
+				
+				loller.error(LolLogUtil.CREATE_VOLUME, "Create volume failed! Caused by " +commandResult.toString(), rpcExtra);
+				
+				throw new RpcException(commandResult.toString());
+			} else {
+				result.setProviderLocation(Conf.VOLUME_PROVIDER_HOST,NFSUtil.DEFAULT_NFS_SRV_PATH,volumefilePath);
+				result.setVolumeType(VmVolumeTypeEnum.QCOW2);
+				result.setMessage(commandResult.toString());
+				
+				loller.info(LolLogUtil.CREATE_VOLUME, "Create volume success! " + commandResult.toString(), rpcExtra);
+			}
+		} catch (IOException e) {
+			logger.error(e.getMessage());
+			result.setMessage(e.getMessage());
+			loller.error(LolLogUtil.CREATE_VOLUME, "Create volume failed! Caused by " +e.getMessage(), rpcExtra);
+			throw new RpcException("IOException",e);
+		} 
+		return result;
+	}
+
+	public VmVolume createWindowsVolume(String routingKey, String uuid,
+								 String imageServerHost, String baseImage, Float blockSize, RpcExtra rpcExtra)
+			throws RpcException {
+		logger.info("creating  windows volume: " + uuid + " imageServerHost:" +imageServerHost + " baseImage:" + baseImage + " blockSize:"+blockSize);
+		VmVolume result = new VmVolume();
+
+		String fmt = VmVolumeTypeEnum.QCOW2.toString();
+		try {
+			String destImgDir = FileSystemUtil.getImgDir(uuid);
+			logger.info("the dest is: "+destImgDir);
+			boolean createDir = FileSystemUtil.createDirIfNotExist(NFSUtil.DEFAULT_NFS_SRV_PATH + Conf.VOLUME_PREFIX + destImgDir);
+			if(createDir == false) {
+				loller.error(LolLogUtil.CREATE_VOLUME, "create " + NFSUtil.DEFAULT_NFS_SRV_PATH + Conf.VOLUME_PREFIX + destImgDir +" failed!", rpcExtra);
+				logger.info("create " + NFSUtil.DEFAULT_NFS_SRV_PATH + Conf.VOLUME_PREFIX + destImgDir +" failed!");
+				throw new RpcException("create " + NFSUtil.DEFAULT_NFS_SRV_PATH + Conf.VOLUME_PREFIX + destImgDir +" failed!");
+			}
+			String volumefilePath = genVolumeFilePath(destImgDir, uuid);  //得到路径，后缀是.img
+			CommandResult commandResult = new VolumeManager().createWindowsVolume(volumefilePath, imageServerHost,baseImage);
+
+			if(!handleError(commandResult)) {
+				logger.error("Create volume failed! Caused by "
+						+ commandResult.getOutput() + " |"
+						+ commandResult.getError());
+				result.setMessage(commandResult.toString());
+
+				loller.error(LolLogUtil.CREATE_VOLUME, "Create volume failed! Caused by " +commandResult.toString(), rpcExtra);
+
+				throw new RpcException(commandResult.toString());
+			} else {
+				result.setProviderLocation(Conf.VOLUME_PROVIDER_HOST,NFSUtil.DEFAULT_NFS_SRV_PATH,volumefilePath);
+				result.setVolumeType(VmVolumeTypeEnum.QCOW2);
+				result.setMessage(commandResult.toString());
+
+				loller.info(LolLogUtil.CREATE_VOLUME, "Create volume success! " + commandResult.toString(), rpcExtra);
+			}
+		} catch (IOException e) {
+			logger.error(e.getMessage());
+			result.setMessage(e.getMessage());
+			loller.error(LolLogUtil.CREATE_VOLUME, "Create volume failed! Caused by " +e.getMessage(), rpcExtra);
+			throw new RpcException("IOException",e);
+		}
+		return result;
+	}
+
+	public VmImageBack createVolumeImageBack(String routingKey,String backUuid,String activeUuid,Float size,RpcExtra rpcExtra) throws RpcException {
+		logger.info("creating volumeImageBack: uuid is " + backUuid+" routingKey is " + routingKey);
+		VmImageBack vmImageBack = new VmImageBack();
+		String fmt = VmVolumeTypeEnum.QCOW2.toString();
+
+		try {
+			String backImgDir = FileSystemUtil.getImgDir(backUuid);
+			String backImgPath = genVolumeFilePath(backImgDir, backUuid);
+			String activeImgDir = FileSystemUtil.getImgDir(activeUuid);
+			String activeVolumePath = genVolumeFilePath(activeImgDir, activeUuid);
+
+			boolean createDir = FileSystemUtil.createDirIfNotExist(NFSUtil.DEFAULT_NFS_SRV_PATH + Conf.VOLUME_PREFIX + activeImgDir);
+			if(createDir == false) {
+				loller.error(LolLogUtil.CREATE_VOLUME, "create " + NFSUtil.DEFAULT_NFS_SRV_PATH + Conf.VOLUME_PREFIX + activeImgDir +" failed!", rpcExtra);
+				throw new RpcException("create " + NFSUtil.DEFAULT_NFS_SRV_PATH + Conf.VOLUME_PREFIX + activeImgDir +" failed!");
+			}
+
+			CommandResult result = new VolumeManager().createVolumeImageBack(fmt,activeVolumePath,backImgPath,size);
+
+			if (!handleError(result)) {
+				logger.error("Create volume failed! Caused by "
+						+ result.getOutput() + " |"
+						+ result.getError());
+				loller.error(LolLogUtil.CREATE_VOLUME_IMAGEBACK, "Create volume failed! Caused by " +result.toString(), rpcExtra);
+				throw new RpcException(result.toString());
+			}
+			else {
+				vmImageBack.setProviderLocation(Conf.VOLUME_PROVIDER_HOST,NFSUtil.DEFAULT_NFS_SRV_PATH,activeVolumePath);
+				loller.info(LolLogUtil.CREATE_VOLUME, "Create volume success! " + result.toString(), rpcExtra);
+			}
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			loller.error(LolLogUtil.CREATE_VOLUME_IMAGEBACK, "Create volume imageback failed! Caused by " +e.getMessage(), rpcExtra);
+			throw new RpcException("IOException",e);
+		}
+		return vmImageBack;
+	}
+
+	public VmVolume deleteVolume(String routingKey, String uuid, RpcExtra rpcExtra)
+			throws RpcException {
+		logger.info("deleting volume: " + uuid );
+		
+		VmVolume result = new VmVolume();
+		try {
+			String destImgDir = FileSystemUtil.getImgDir(uuid);
+			String volumefilePath = genVolumeFilePath(destImgDir, uuid);
+			CommandResult commandResult = new VolumeManager().deleteVolume(
+					volumefilePath);
+			
+					
+			if (!handleError(commandResult)) {
+				logger.error("Delete volume failed! Caused by "
+						+ commandResult.getOutput() + " |"
+						+ commandResult.getError());
+				result.setMessage(commandResult.toString());
+				loller.error(LolLogUtil.DELETE_VOLUME, "Delete volume failed! Caused by " + commandResult.toString(), rpcExtra);
+				throw new RpcException(commandResult.toString());
+			} else {
+				result.setMessage(commandResult.toString());
+				loller.info(LolLogUtil.DELETE_VOLUME, "Delete volume success! " + commandResult.toString(), rpcExtra);
+			}
+		} catch (IOException e) {
+			logger.error(e.getMessage());
+			result.setMessage(e.getMessage());
+			loller.error(LolLogUtil.DELETE_VOLUME, "Delete volume failed! Caused by " + e.getMessage(), rpcExtra);
+			throw new RpcException("IOException",e);
+		}
+		return result;
+	}
+
+	public VmVolume createSnapshot(String routingKey, String uuid,
+			String snapshotTag, RpcExtra rpcExtra) throws RpcException {
+		VmVolume result = new VmVolume();
+		try {
+			String destImgDir = FileSystemUtil.getImgDir(uuid);
+			String volumefilePath = genVolumeFilePath(destImgDir, uuid);
+			CommandResult commandResult = new VolumeManager().createSnapshot(snapshotTag, volumefilePath);
+			if (!handleError(commandResult)) {
+				logger.error("Create snapshot: " +snapshotTag+ " failed! Caused by "
+						+ commandResult.getOutput() + " |"
+						+ commandResult.getError());
+				result.setMessage(commandResult.toString());
+				loller.error(LolLogUtil.CREATE_SNAPSHOT, "Create snapshot failed! Caused by " + commandResult.toString(), rpcExtra);
+				throw new RpcException(commandResult.toString());
+			} else {
+				result.setProviderLocation(Conf.VOLUME_PROVIDER_HOST,NFSUtil.DEFAULT_NFS_SRV_PATH,volumefilePath);
+				commandResult.setOutput("Create snapshot:"+ snapshotTag+ " successfully");
+				result.setMessage(commandResult.toString());
+				loller.info(LolLogUtil.CREATE_SNAPSHOT, "Create snapshot success! " + commandResult.toString(), rpcExtra);
+			}
+		} catch (IOException e) {
+			logger.error(e.getMessage());
+			result.setMessage(e.getMessage());
+			loller.error(LolLogUtil.CREATE_SNAPSHOT, "Create snapshot failed! Caused by " + e.getMessage(), rpcExtra);
+			throw new RpcException("IOException",e);
+		}
+		logger.info("result: "+result.toString());
+		return result;
+	}
+
+	public VmVolume applySnapshot(String routingKey, String uuid,
+			String snapshotTag, RpcExtra rpcExtra) throws RpcException {
+		VmVolume result = new VmVolume();
+		try {
+			String destImgDir = FileSystemUtil.getImgDir(uuid);
+			String volumefilePath = genVolumeFilePath(destImgDir, uuid);
+			CommandResult commandResult = new VolumeManager().applySnapshot(snapshotTag, volumefilePath);
+			if (!handleError(commandResult)) {
+				logger.error("Apply snapshot: " +snapshotTag+ " failed! Caused by "
+						+ commandResult.getOutput() + " |"
+						+ commandResult.getError());
+				result.setMessage(commandResult.toString());
+				loller.error(LolLogUtil.APPLY_SNAPSHOT, "Apply snapshot failed! Caused by " + commandResult.toString(), rpcExtra);
+				throw new RpcException(commandResult.toString());
+			} else {
+				result.setProviderLocation(Conf.VOLUME_PROVIDER_HOST,NFSUtil.DEFAULT_NFS_SRV_PATH,volumefilePath);
+				commandResult.setOutput("Apply snapshot:"+ snapshotTag+ " successfully");
+				result.setMessage(commandResult.toString());
+				loller.info(LolLogUtil.APPLY_SNAPSHOT, "Apply snapshot success! " + commandResult.toString(), rpcExtra);
+			}
+		} catch (IOException e) {
+			logger.error(e.getMessage());
+			result.setMessage(e.getMessage());
+			loller.error(LolLogUtil.APPLY_SNAPSHOT, "Apply snapshot failed! Caused by " + e.getMessage(), rpcExtra);
+			throw new RpcException("IOException",e);
+		}
+		logger.info("result: "+result.toString());
+		return result;
+	}
+
+	public VmVolume deleteSnapshot(String routingKey, String uuid,
+			String snapshotTag, RpcExtra rpcExtra) throws RpcException {
+		VmVolume result = new VmVolume();
+		try {
+			String destImgDir = FileSystemUtil.getImgDir(uuid);
+			String volumefilePath = genVolumeFilePath(destImgDir, uuid);
+			CommandResult commandResult = new VolumeManager().deleteSnapshot(snapshotTag, volumefilePath);
+			if (!handleError(commandResult)) {
+				logger.error("Delete snapshot: " +snapshotTag+ " failed! Caused by "
+						+ commandResult.getOutput() + " |"
+						+ commandResult.getError());
+				result.setMessage(commandResult.toString());
+				loller.error(LolLogUtil.DELETE_SNAPSHOT, "Delete snapshot failed! Caused by " + commandResult.toString(), rpcExtra);
+				throw new RpcException(commandResult.toString());
+			} else {
+				result.setProviderLocation(Conf.VOLUME_PROVIDER_HOST,NFSUtil.DEFAULT_NFS_SRV_PATH,volumefilePath);
+				commandResult.setOutput("Delete snapshot:"+ snapshotTag + " successfully");
+				result.setMessage(commandResult.toString());
+				loller.info(LolLogUtil.DELETE_SNAPSHOT, "Delete snapshot success! " + commandResult.toString(), rpcExtra);
+			}
+		} catch (IOException e) {
+			logger.error(e.getMessage());
+			result.setMessage(e.getMessage());
+			loller.error(LolLogUtil.DELETE_SNAPSHOT, "Delete snapshot failed! Caused by " + e.getMessage(), rpcExtra);
+			throw new RpcException("IOException",e);
+		}
+		logger.info("result: "+result.toString());
+		return result;
+	}
+
+	public VmVolume resizeRawImg(String routingKey, String uuid,
+			Float blockSize, RpcExtra rpcExtra) throws RpcException {
+		VmVolume result = new VmVolume();
+		try {
+			String destImgDir = FileSystemUtil.getImgDir(uuid);
+			String volumefilePath = genVolumeFilePath(destImgDir, uuid);
+			CommandResult commandResult = new VolumeManager().resizeRawImg(volumefilePath, blockSize);
+			if (!handleError(commandResult)) {
+				logger.error("Resize image failed! Caused by "
+						+ commandResult.getOutput() + " |"
+						+ commandResult.getError());
+				result.setMessage(commandResult.toString());
+				loller.error(LolLogUtil.RESIZE_RAWIMG, "Resize raw img! Caused by " + commandResult.toString(), rpcExtra);
+				throw new RpcException(commandResult.toString());
+			} else {
+				result.setProviderLocation(Conf.VOLUME_PROVIDER_HOST,NFSUtil.DEFAULT_NFS_SRV_PATH,volumefilePath);
+				result.setMessage(commandResult.toString());
+				loller.info(LolLogUtil.RESIZE_RAWIMG, "Resize raw img success! " + commandResult.toString(), rpcExtra);
+			}
+		} catch (IOException e) {
+			logger.error(e.getMessage());
+			result.setMessage(e.getMessage());
+			loller.error(LolLogUtil.RESIZE_RAWIMG, "Resize raw img failed! Caused by " + e.getMessage(), rpcExtra);
+			throw new RpcException("IOException",e);
+		}
+		logger.info("result: "+result.toString());
+		return result;
+	}
+
+	public VmVolume convertImgFormat(String routingKey, String targetFormat,
+			String uuid, String destUuid, RpcExtra rpcExtra) throws RpcException {
+		VmVolume result = new VmVolume();
+		try {
+			logger.info("convert image format starting...");
+			String srcImgDir = FileSystemUtil.getImgDir(uuid);
+			String srcVolumefilePath = Conf.VOLUME_PREFIX + srcImgDir+uuid+Conf.VOLUME_SUFFIX;
+			
+			String destImgDir = FileSystemUtil.getImgDir(destUuid);
+			String destVolumefilePath = Conf.VOLUME_PREFIX + destImgDir+destUuid+Conf.VOLUME_SUFFIX;
+			
+			CommandResult commandResult = new VolumeManager().convertImgFormat(targetFormat,srcVolumefilePath,destVolumefilePath);
+			if (!handleError(commandResult)) {
+				logger.error("Resize image failed! Caused by "
+						+ commandResult.getOutput() + " |"
+						+ commandResult.getError());
+				result.setMessage(commandResult.toString());
+				loller.error(LolLogUtil.CONVERT_IMG_FORMAT, "Convert img format failed! Caused by " + commandResult.toString(), rpcExtra);
+				throw new RpcException(commandResult.toString());
+			} else {
+				logger.info("provider commond result : " + commandResult.toString());
+				result.setProviderLocation(Conf.VOLUME_PROVIDER_HOST,NFSUtil.DEFAULT_NFS_SRV_PATH,destVolumefilePath);
+				logger.info("provider location : " + result.getProviderLocation());
+				result.setMessage(commandResult.toString());
+				if(targetFormat != null) {
+					result.setVolumeType(VmVolumeTypeEnum.valueOf(targetFormat.toUpperCase()));
+				}
+				loller.info(LolLogUtil.CONVERT_IMG_FORMAT, "Convert img format success! " + commandResult.toString(), rpcExtra);
+			}
+		} catch (IOException e) {
+			logger.error(e.getMessage());
+			result.setMessage(e.getMessage());
+			loller.error(LolLogUtil.CONVERT_IMG_FORMAT, "Convert img format failed! Caused by " + e.getMessage(), rpcExtra);
+			throw new RpcException("IOException",e);
+		}
+		logger.info("result: "+result.toString());
+		return result;
+	}
+
+	// 将磁盘中的镜像发布到imageServer中，
+	// 将备份的镜像发送到每一个imageServer
+	public VmVolume releaseImg(String routingKey, String uuid, String host,
+			String destPath, RpcExtra rpcExtra) throws RpcException {
+		VmVolume result = new VmVolume();
+		try {
+			String destImgDir = FileSystemUtil.getImgDir(uuid);
+			String volumefilePath = genVolumeFilePath(destImgDir, uuid); //这是在volume下面的image的地址
+			CommandResult commandResult = new VolumeManager().releaseImg(volumefilePath, host, destPath);
+			if (!handleError(commandResult)) {
+				logger.error("Release image failed! Caused by "
+						+ commandResult.getOutput() + " |"
+						+ commandResult.getError());
+				result.setMessage(commandResult.toString());
+				loller.error(LolLogUtil.RELEASE_IMG, "Release img failed! Caused by " + commandResult.toString(), rpcExtra);
+				throw new RpcException(commandResult.toString());
+			} else {
+				result.setProviderLocation(host,NFSUtil.DEFAULT_NFS_SRV_PATH,destPath);
+				result.setMessage(commandResult.toString());
+				loller.info(LolLogUtil.RELEASE_IMG, "Release img success! " + commandResult.toString(), rpcExtra);
+			}
+		} catch (IOException e) {
+			logger.error(e.getMessage());
+			result.setMessage(e.getMessage());
+			loller.error(LolLogUtil.RELEASE_IMG, "Release img failed! Caused by " + e.getMessage(), rpcExtra);
+			throw new RpcException("IOException",e);
+		}
+		logger.info("result: "+result.toString());
+		return result;
+	}
+
+	// 将备份的镜像发送到每一个imageServer
+	public VmVolume authorizeImg(String routingKey, String sourcefilePath, String hostIp,
+							   String destPath, RpcExtra rpcExtra) throws RpcException {
+		VmVolume result = new VmVolume();
+		try {
+			CommandResult commandResult = new VolumeManager().releaseImg(sourcefilePath, hostIp, destPath);
+			if (!handleError(commandResult)) {
+				logger.error("Release image failed! Caused by "
+						+ commandResult.getOutput() + " |"
+						+ commandResult.getError());
+				result.setMessage(commandResult.toString());
+				loller.error(LolLogUtil.RELEASE_IMG, "Release img failed! Caused by " + commandResult.toString(), rpcExtra);
+				throw new RpcException(commandResult.toString());
+			} else {
+				result.setProviderLocation(hostIp,NFSUtil.DEFAULT_NFS_SRV_PATH,destPath);
+				result.setMessage(commandResult.toString());
+				loller.info(LolLogUtil.RELEASE_IMG, "Release img success! " + commandResult.toString(), rpcExtra);
+			}
+		} catch (IOException e) {
+			logger.error(e.getMessage());
+			result.setMessage(e.getMessage());
+			loller.error(LolLogUtil.RELEASE_IMG, "Release img failed! Caused by " + e.getMessage(), rpcExtra);
+			throw new RpcException("IOException",e);
+		}
+		logger.info("result: "+result.toString());
+		return result;
+	}
+
+	public VmVolume copyImg(String routingKey, String uuid, String host,
+			String destUuid, String baseImage, RpcExtra rpcExtra) throws RpcException {
+		VmVolume result = new VmVolume();
+		try {
+			String srcImgDir = FileSystemUtil.getImgDir(uuid);
+			String srcVolumefilePath = Conf.VOLUME_PREFIX + srcImgDir+uuid+Conf.VOLUME_SUFFIX;
+			
+			String destImgDir = FileSystemUtil.getImgDir(destUuid);
+			String destVolumefilePath = Conf.VOLUME_PREFIX + destImgDir+destUuid+Conf.VOLUME_SUFFIX;
+			if(host == null) {
+				host = Conf.VOLUME_PROVIDER_HOST;
+			}
+			CommandResult commandResult = new VolumeManager().copyImg(srcVolumefilePath,host,destVolumefilePath,baseImage);
+			if (!handleError(commandResult)) {
+				logger.error("Resize image failed! Caused by "
+						+ commandResult.getOutput() + " |"
+						+ commandResult.getError());
+				result.setMessage(commandResult.toString());
+				loller.error(LolLogUtil.COPY_IMG, "Copy img failed! Caused by " + commandResult.toString(), rpcExtra);
+				throw new RpcException(commandResult.toString());
+			} else {				
+				result.setProviderLocation(host,NFSUtil.DEFAULT_NFS_SRV_PATH,destVolumefilePath);
+				result.setMessage(commandResult.toString());
+				loller.info(LolLogUtil.COPY_IMG, "Copy img success! " + commandResult.toString(), rpcExtra);
+			}
+		} catch (IOException e) {
+			logger.error(e.getMessage());
+			result.setMessage(e.getMessage());
+			loller.error(LolLogUtil.COPY_IMG, "Copy img failed! Caused by " + e.getMessage(), rpcExtra);
+			throw new RpcException("IOException",e);
+		}
+		logger.info("result: "+result.toString());
+		return result;
+	}
+	
+	@Deprecated
+	public VmVolume moveImg(String routingKey, String uuid, String host, RpcExtra rpcExtra) throws RpcException {
+		VmVolume result = new VmVolume();
+		try {
+			String destImgDir = FileSystemUtil.getImgDir(uuid);
+			String volumefilePath = genVolumeFilePath(destImgDir, uuid);
+			CommandResult commandResult = new VolumeManager().moveImg(volumefilePath,host);
+			if (!handleError(commandResult)) {
+				logger.error("Resize image failed! Caused by "
+						+ commandResult.getOutput() + " |"
+						+ commandResult.getError());
+				result.setMessage(commandResult.toString());
+				loller.error(LolLogUtil.MOVE_IMG, "Move img failed! Caused by " + commandResult.toString(), rpcExtra);
+				throw new RpcException(commandResult.toString());
+			} else {
+				result.setProviderLocation(host,NFSUtil.DEFAULT_NFS_SRV_PATH,volumefilePath);
+				result.setMessage(commandResult.toString());
+				loller.info(LolLogUtil.MOVE_IMG, "Move img success! " + commandResult.toString(), rpcExtra);
+			}
+		} catch (IOException e) {
+			logger.error(e.getMessage());
+			result.setMessage(e.getMessage());
+			loller.error(LolLogUtil.MOVE_IMG, "Move img failed! Caused by " + e.getMessage(), rpcExtra);
+			throw new RpcException("IOException",e);
+		}
+		logger.info("result: "+result.toString());
+		return result;
+	}
+	
+	public VmVolume downloadImg(String routingKey,String host, String srcPath, Boolean overwrite, RpcExtra rpcExtra) throws RpcException {
+		logger.info("download : " + host);
+		VmVolume result = new VmVolume();
+		try {
+			String destPath = srcPath;
+			CommandResult commandResult = new VolumeManager().downloadImg(host, srcPath, destPath, overwrite);
+			if (!handleError(commandResult)) {
+				logger.error("copy iso failed! Caused by "
+						+ commandResult.getOutput() + " |"
+						+ commandResult.getError());
+				result.setMessage(commandResult.toString());
+				loller.error(LolLogUtil.DOWNLOAD_IMG, "Download img failed! Caused by " + commandResult.toString(), rpcExtra);
+				throw new RpcException(commandResult.toString());
+			} else {
+				result.setProviderLocation(Conf.VOLUME_PROVIDER_HOST,NFSUtil.DEFAULT_NFS_SRV_PATH,destPath);
+				result.setMessage(commandResult.toString());
+				loller.info(LolLogUtil.DOWNLOAD_IMG, "Download img success! " + commandResult.toString(), rpcExtra);
+			}
+		} catch (IOException e) {
+			logger.error(e.getMessage());
+			result.setMessage(e.getMessage());
+			loller.error(LolLogUtil.DOWNLOAD_IMG, "Download img failed! Caused by " + e.getMessage(), rpcExtra);
+			throw new RpcException("IOException",e);
+		}
+		logger.info("result: "+result.toString());
+		return result;
+	}
+	
+	private static String genVolumeFilePath(String destImgDir, String uuid) {
+		return Conf.VOLUME_PREFIX + destImgDir+uuid+Conf.VOLUME_SUFFIX;
+	}	
+
+	private static boolean handleError(CommandResult commandResult) {
+		if (commandResult.getExitValue() == CommandResult.EXIT_VALUE_TIMEOUT
+				|| !VolumeManager.isEmptyString(commandResult.getError())) {
+			return false;
+		}
+		return true;
+	}
+	
+	
+	public VmVolume revertVolume(String routingKey, String uuid,
+			String imageServerHost, String baseImage, Float blockSize,
+			RpcExtra rpcExtra) throws RpcException {
+		logger.info("reverting volume: " + uuid + " imageServerHost:" +imageServerHost + " baseImage:" + baseImage + " blockSize:"+blockSize);
+		VmVolume result = new VmVolume();
+		
+		String fmt = VmVolumeTypeEnum.QCOW2.toString();
+		try {
+			String destImgDir = FileSystemUtil.getImgDir(uuid);
+			boolean createDir = FileSystemUtil.createDirIfNotExist(NFSUtil.DEFAULT_NFS_SRV_PATH + Conf.VOLUME_PREFIX + destImgDir);
+			if(createDir == false) {
+				loller.error(LolLogUtil.REVERT_VOLUME, "revert " + NFSUtil.DEFAULT_NFS_SRV_PATH + Conf.VOLUME_PREFIX + destImgDir +" failed!", rpcExtra);
+				throw new RpcException("create " + NFSUtil.DEFAULT_NFS_SRV_PATH + Conf.VOLUME_PREFIX + destImgDir +" failed!");
+			}
+			String volumefilePath = genVolumeFilePath(destImgDir, uuid);
+			CommandResult commandResult = new VolumeManager().revertVolume(fmt,
+					volumefilePath, imageServerHost,baseImage, blockSize);
+			
+			if(!handleError(commandResult)) {
+				logger.error("revert volume failed! Caused by "
+						+ commandResult.getOutput() + " |"
+						+ commandResult.getError());
+				result.setMessage(commandResult.toString());
+				
+				loller.error(LolLogUtil.REVERT_VOLUME, "revert volume failed! Caused by " +commandResult.toString(), rpcExtra);
+				
+				throw new RpcException(commandResult.toString());
+			} else {
+				result.setProviderLocation(Conf.VOLUME_PROVIDER_HOST,NFSUtil.DEFAULT_NFS_SRV_PATH,volumefilePath);
+				result.setVolumeType(VmVolumeTypeEnum.QCOW2);
+				result.setMessage(commandResult.toString());
+				
+				loller.info(LolLogUtil.REVERT_VOLUME, "revert volume success! " + commandResult.toString(), rpcExtra);
+			}
+		} catch (IOException e) {
+			logger.error(e.getMessage());
+			result.setMessage(e.getMessage());
+			loller.error(LolLogUtil.REVERT_VOLUME, "revert volume failed! Caused by " +e.getMessage(), rpcExtra);
+			throw new RpcException("IOException",e);
+		} 
+		return result;
+	}
+
+	public static void main(String[] args)  {
+//		long starttime = System.currentTimeMillis();
+//		VmVolume result = new VmVolume();
+//		if("createVolume".equalsIgnoreCase(args[0])) {
+//			result = new VolumeProvider().createVolume("now unused", args[1], args[2], args[3], null, null);
+//		} else if("deleteVolume".equalsIgnoreCase(args[0])) {
+//			result = new VolumeProvider().deleteVolume("now unused", args[1], null);
+//		} else if("createSnapshot".equalsIgnoreCase(args[0])) {
+//			result = new VolumeProvider().createSnapshot("now unused", args[1], args[2], null);
+//		} else if("applySnapshot".equalsIgnoreCase(args[0])) {
+//			result = new VolumeProvider().applySnapshot("now unused", args[1], args[2], null);
+//		} else if("deleteSnapshot".equalsIgnoreCase(args[0])) {
+//			result = new VolumeProvider().deleteSnapshot("now unused", args[1], args[2], null);
+//		} else if("convertImgFormat".equalsIgnoreCase(args[0])) {
+//			result = new VolumeProvider().convertImgFormat("now unused", args[1], args[2], args[3], null);
+//		} else if("copyImg".equalsIgnoreCase(args[0])) {
+//			result = new VolumeProvider().copyImg("now unused", args[1], args[2], args[3], args[4], null);
+//		} else if("releaseImg".equalsIgnoreCase(args[0])) {
+//			result = new VolumeProvider().releaseImg("now unused", args[1], args[2], args[3], null);
+//		} else if("resizeRawImg".equalsIgnoreCase(args[0])) {
+//			result = new VolumeProvider().resizeRawImg("now unused", args[1], Float.parseFloat(args[2]), null);
+//		} else if("downloadImg".equalsIgnoreCase(args[0])) {
+//			result = new VolumeProvider().downloadImg("now unused", args[1], args[2], null, null);
+//		}else if("--help".equalsIgnoreCase(args[0])) {
+//			logger.info("DESCRIPTION:");
+//			logger.info("createVolume uuid imageHost images/c/e/rhel.img");
+//			logger.info("deleteVolume uuid");
+//			logger.info("createSnapshot uuid snapshotTag");
+//			logger.info("applySnapshot uuid snapshotTag");
+//			logger.info("deleteSnapshot uuid snapShotTag");
+//			logger.info("convertImgFormat fmt uuid destUuid");
+//			logger.info("copyImg uuid volumeHost destUuid baseImg");
+//			logger.info("releaseImg uuid imageHost images/d/e/user.img");
+//			logger.info("resizeRawImg uuid blockSize");
+//			logger.info("downloadImg imghost srcPath[iso/a/c/ubuntu.iso]");
+//		} else {
+//			logger.info("not supported opperation!");
+//			logger.info("Try '--help' for more information.");
+//		}
+//		
+//		logger.info("result: "+result.toString());
+//		logger.info(args[0] + " takes time:" + (System.currentTimeMillis() - starttime));
+		/*String uuid = null;
+		String name = null;
+		String newPasswd = null;
+		if (args[0] != null) {
+			uuid = args[0];
+		} 
+		if (args.length >1 && args[1] != null) {
+			name = args[1];
+		}
+		if (args.length>2 && args[2] != null) {
+			newPasswd = args[2];
+		}*/
+		/*VmVolume result = new VolumeProvider().modVmPasswd("", uuid, name, newPasswd, VmImageOSTypeEnum.LINUX, null);*/
+		String imageUuid = "images/x/q/9bf00774b8f042bf9419266aded49d95.img";
+		System.out.println("imageUuid : " + imageUuid);
+		//String result = new VolumeProvider().getImgMd5sum("", imageUuid, null);
+		//System.out.println("getImgMd5sum result : " + result);
+	}
+
+	public VmVolume modVmHostName(String routingKey, String uuid, String newHostName, VmImageOSTypeEnum OSType, RpcExtra rpcExtra)
+			throws RpcException {
+		logger.info("modVmHostName volumeImg: "+uuid+", newHostName:"+newHostName);
+		VmVolume result = new VmVolume();
+		try {
+			String destImgDir = FileSystemUtil.getImgDir(uuid);
+			String imgPath = NFSUtil.DEFAULT_NFS_SRV_PATH + genVolumeFilePath(destImgDir, uuid);
+			CommandResult commandResult = new VolumeManager().modVmHostName(imgPath, newHostName);
+			
+					
+			if (!handleError(commandResult)) {
+				logger.error("modVmHostName failed! Caused by "
+						+ commandResult.getOutput() + " |"
+						+ commandResult.getError());
+				result.setMessage(commandResult.toString());
+				loller.error(LolLogUtil.MOD_VM_HOSTNAME, "mod vm hostname failed! Caused by " + commandResult.toString(), rpcExtra);
+				throw new RpcException(commandResult.toString());
+			} else {
+				result.setMessage(commandResult.toString());
+				logger.info("mod vm hostname success! ");
+				loller.info(LolLogUtil.MOD_VM_HOSTNAME, "mod vm hostname success! " + commandResult.toString(), rpcExtra);
+			}
+		} catch (IOException e) {
+			logger.error(e.getMessage());
+			result.setMessage(e.getMessage());
+			loller.error(LolLogUtil.MOD_VM_HOSTNAME, "mod vm hostname failed! Caused by " + e.getMessage(), rpcExtra);
+			throw new RpcException("IOException",e);
+		}
+		return result;
+	}
+	
+	public VmVolume modVmPasswd(String routingKey, String uuid, String name, String newPasswd, VmImageOSTypeEnum OSType, RpcExtra rpcExtra)
+			throws RpcException {
+		logger.info("modVmPasswd volumeImg: "+uuid+", name:"+name+", newPasswd:"+newPasswd);
+		VmVolume result = new VmVolume();
+		try {
+			String destImgDir = FileSystemUtil.getImgDir(uuid);
+			String imgPath = NFSUtil.DEFAULT_NFS_SRV_PATH + genVolumeFilePath(destImgDir, uuid);
+			CommandResult commandResult = new VolumeManager().modVmPasswd(imgPath, name, newPasswd);
+			
+					
+			if (!handleError(commandResult)) {
+				logger.error("modVmPasswd failed! Caused by "
+						+ commandResult.getOutput() + " |"
+						+ commandResult.getError());
+				result.setMessage(commandResult.toString());
+				loller.error(LolLogUtil.MOD_VM_PASSWD, "mod vm password failed! Caused by " + commandResult.toString(), rpcExtra);
+				throw new RpcException(commandResult.toString());
+			} else {
+				result.setMessage(commandResult.toString());
+				logger.info("mod vm password success! ");
+				loller.info(LolLogUtil.MOD_VM_PASSWD, "mod vm password success! " + commandResult.toString(), rpcExtra);
+			}
+		} catch (IOException e) {
+			logger.error(e.getMessage());
+			result.setMessage(e.getMessage());
+			loller.error(LolLogUtil.MOD_VM_PASSWD, "mod vm password failed! Caused by " + e.getMessage(), rpcExtra);
+			throw new RpcException("IOException",e);
+		}
+		return result;
+	}
+	
+	/**
+	 * 获取镜像模板的Md5sum值
+	 * @param routingKey 
+	 * @return strMd5sum 镜像模板的Md5sum值
+	 * @throws RpcException
+	 * @throws IOException
+	 * @author hgm
+	 */
+	public String getImgMd5sum(String routingKey, String imageDirectory, RpcExtra rpcExtra) throws RpcException {
+		logger.info("准备计算image的md5值！！");
+		String strMd5sum = "";
+		
+		try {
+			String imagePath = NFSUtil.DEFAULT_NFS_SRV_PATH + imageDirectory;
+			logger.info("get " + imagePath + " md5sum value.");
+			CommandResult commandResult = new VolumeManager().getImgMd5sum(imagePath);
+			if (!handleError(commandResult)) {
+				logger.error("get img-md5sum failed! Caused by "
+						+ commandResult.getOutput() + " |"
+						+ commandResult.getError());
+				strMd5sum = commandResult.toString();
+				loller.error(LolLogUtil.GET_IMG_MD5SUM, "Get img-md5sum failed! Caused by " + commandResult.toString(), rpcExtra);
+				throw new RpcException(commandResult.toString());
+			} else {
+				//由于md5sum的计算结果形式是 ：md5sum值    imagePath,所以要对只取计算结果的前32位即可
+				strMd5sum = commandResult.getOutput().substring(0, 32);
+				logger.info("image md5sum value is " + strMd5sum);
+				loller.info(LolLogUtil.GET_IMG_MD5SUM, "Get img-md5sum success! " + commandResult.toString(), rpcExtra);
+			}
+		} catch (IOException e) {
+			logger.error(e.getMessage());
+			loller.error(LolLogUtil.GET_IMG_MD5SUM, "Get img-md5sum failed! Caused by " + e.getMessage(), rpcExtra);
+			throw new RpcException("IOException",e);
+		}
+		return strMd5sum;
+	}
+	
+	/**
+	 * 获取镜像模板的Md5sum值
+	 * @param routingKey 
+	 * @return strMd5sum 镜像模板的Md5sum值
+	 * @throws RpcException
+	 * @throws IOException
+	 * @author hgm
+	 */
+	public String gainImgMd5sum(String routingKey, VmVolume volume, VmImage image, RpcExtra rpcExtra) throws RpcException {
+		String strMd5sum = "";
+		try {
+			logger.info("start convert image format...");
+			convertImgFormat(routingKey, volume.getVolumeType().toString(), volume.getVolumeUuid(), image.getUuid(), rpcExtra); // 相当于一次备份操作
+			logger.info("convert image format finished and success!");
+			
+			String imgDir = FileSystemUtil.getImgDir(image.getUuid());
+			String imgRelativePath = Conf.VOLUME_PREFIX + imgDir+image.getUuid()+Conf.VOLUME_SUFFIX;
+			
+			String imageAbsolutePath = NFSUtil.DEFAULT_NFS_SRV_PATH + imgRelativePath;
+			logger.info("start get " + imageAbsolutePath + " md5sum value.");
+			// 执行shell命令，拿到md5的值
+			CommandResult commandResult = new VolumeManager().getImgMd5sum(imageAbsolutePath);
+			if (!handleError(commandResult)) {
+				logger.error("get img-md5sum failed! Caused by "
+						+ commandResult.getOutput() + " |"
+						+ commandResult.getError());
+				strMd5sum = commandResult.toString();
+				loller.error(LolLogUtil.GET_IMG_MD5SUM, "Get img-md5sum failed! Caused by " + commandResult.toString(), rpcExtra);
+				throw new RpcException(commandResult.toString());
+			} else {
+				//由于md5sum的计算结果形式是 ：md5sum值    imagePath,所以要对只取计算结果的前32位即可
+				strMd5sum = commandResult.getOutput().substring(0, 32);
+				logger.info("image md5sum value is " + strMd5sum);
+				loller.info(LolLogUtil.GET_IMG_MD5SUM, "Get img-md5sum success! " + commandResult.toString(), rpcExtra);
+			}
+		} catch (IOException e) {
+			logger.error(e.getMessage());
+			loller.error(LolLogUtil.GET_IMG_MD5SUM, "Get img-md5sum failed! Caused by " + e.getMessage(), rpcExtra);
+			throw new RpcException("IOException",e);
+		}
+		return strMd5sum;
+	}
+
+	/**
+	 * Description 通过绝对路径删除一个image
+	 * @param path
+	 * @return
+	 * @throws IOException
+	 * @author GongLingpu
+	 */
+	public boolean deleteImage(String routingkey,String path) throws IOException {
+		path = Conf.IMG_SERVER_PATH+path;
+		logger.info("delete Image path :"+path);
+		File f = new File(path);
+		DataOutputStream dos;
+		dos = new DataOutputStream(new FileOutputStream(f));
+		dos.close();
+		if (f.exists()) {
+			logger.info(f.getAbsoluteFile());
+			if (!f.delete()) {
+				logger.error("delete image error: "+path);
+			} else {
+				logger.info("delete done!");
+			}
+		}
+		return false;
+	}
+
+	public String KeepAlive(String routingkey) throws Exception {
+		
+		logger.info(String.format("---------------------keepalive-------------------"));
+		logger.info(String.format("---------------------"+routingkey+":success-------------------"));
+		
+		return "success";
+	}
+}

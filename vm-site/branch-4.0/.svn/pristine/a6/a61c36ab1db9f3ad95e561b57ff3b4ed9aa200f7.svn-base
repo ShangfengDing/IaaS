@@ -1,0 +1,299 @@
+package com.appcloud.vm.action.vm;
+
+import aliyun.openapi.client.AliInstanceClient;
+import appcloud.openapi.client.InstanceClient;
+import appcloud.openapi.response.BaseResponse;
+import com.aliyuncs.ecs.model.v20140526.DeleteInstanceResponse;
+import com.aliyuncs.ecs.model.v20140526.RebootInstanceResponse;
+import com.aliyuncs.ecs.model.v20140526.StartInstanceResponse;
+import com.aliyuncs.ecs.model.v20140526.StopInstanceResponse;
+import com.aliyuncs.exceptions.ClientException;
+import com.appcloud.vm.action.BaseAction;
+import com.appcloud.vm.common.Log;
+import com.appcloud.vm.fe.common.Constants;
+import com.appcloud.vm.fe.manager.AppkeyManager;
+import com.appcloud.vm.fe.model.Appkey;
+import com.appcloud.vm.fe.util.OpenClientFactory;
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import org.apache.log4j.Logger;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class VmOperateAction extends BaseAction {
+	private static final long serialVersionUID = 1L;
+	private Logger logger = Logger.getLogger(VmOperateAction.class);
+	private InstanceClient instanceClient = OpenClientFactory.getInstanceClient();
+	private AliInstanceClient aliInstanceClient = OpenClientFactory.getAliInstanceClient();
+	private Integer userId = this.getSessionUserID();
+	private String instanceId;
+	private String userEmail;
+	private String appname;
+	private String regionId;
+	private String operation;
+	private String result;
+	private String imageId; //ISO安装时需要imageId
+	private AppkeyManager appkeyManager = new AppkeyManager();
+	private Appkey appkey;
+	
+	private final static String FORCE_FRESH = "刷新";
+	private final static String START = "start";
+	private final static String STOP = "stop";
+	private final static String REBOOT = "reboot";
+	private final static String SUSPEND = "suspend";
+	private final static String RESUME = "resume";
+	private final static String DELETE = "delete";
+	private final static String FORCE_STOP = "forceStop";
+	private final static String FORCE_DELETE = "强制删除";
+	private final static String DETACH_ISO = "isoDetach";
+	private final static String ISO_BOOT = "isoBoot";//iso启动
+	private final static String RESET = "reset";
+	private final static String YUNHAI = Constants.YUN_HAI;
+	private final static String ALIYUN = Constants.ALI_YUN;
+
+	/**
+	 * Modify By Rain
+	 * 修改provider为appname
+	 * @return
+	 */
+
+	public String execute(){
+		appkey = appkeyManager.getAppkeyByUserIdAndAppName(userId,appname.trim());
+		switch (appkey.getProvider()) {
+		case Constants.YUN_HAI:
+			OperateYunhaiInstance(appkey);
+			break;
+		case Constants.ALI_YUN:
+			OperateAliyunInstance(appkey);
+			break;
+		case Constants.AMAZON:
+			OperateAmazonInstance(appkey);
+			break;
+		default:
+			break;
+		}
+
+		//根据result插入日志
+        Map<String, String> mapLog = new HashMap<>();
+        mapLog.put("userId", userId.toString());
+        mapLog.put("device", "vm");
+        mapLog.put("deviceId", instanceId);
+        mapLog.put("provider", appkey.getProvider());
+        mapLog.put("operateType", operation);
+        mapLog.put("result", result);
+		if (result=="success") {
+		    Log.INFO(mapLog, appkey, regionId);
+		}else {
+            Log.ERROR(mapLog, appkey, regionId);
+		}
+
+		return SUCCESS;
+	}
+
+	/**
+	 * 对云海的操作
+	 * result 将错误信息返回到前端，成功则是"success"
+	 */
+	public void OperateYunhaiInstance(Appkey appkey){
+		BaseResponse baseResponse = null;
+		if(operation.equals(REBOOT)){
+			baseResponse = instanceClient.RebootInstance(regionId.trim(), instanceId, appkey.getAppkeyId(),
+					appkey.getAppkeySecret(), null);
+			if(baseResponse.getMessage()==null){
+				result = "success";
+			}else{
+				result = baseResponse.getMessage();
+			}
+		}else if(operation.equals(STOP)){
+			baseResponse = instanceClient.StopInstance(regionId.trim(), instanceId, null, appkey.getAppkeyId(),
+					appkey.getAppkeySecret(), null);
+			logger.info("stop");
+			if(baseResponse.getMessage()==null){
+				result = "success";
+			}else{
+				result = baseResponse.getMessage();
+			}
+		}else if(operation.equals(START)){
+			baseResponse = instanceClient.StartInstance(regionId.trim(), instanceId, appkey.getAppkeyId(),
+					appkey.getAppkeySecret(), null);
+			logger.info("start");
+			if(baseResponse.getMessage()==null){
+				result = "success";
+			}else{
+				result = baseResponse.getMessage();
+			}
+		}else if(operation.equals(SUSPEND)){
+			baseResponse = instanceClient.SuspendInstance(regionId.trim(), instanceId, appkey.getAppkeyId(),
+					appkey.getAppkeySecret(), null);
+			logger.info("suspend");
+			if(baseResponse.getMessage()==null){
+				result = "success";
+			}else{
+				result = baseResponse.getMessage();
+			}
+		}else if(operation.equals(RESUME)){
+			baseResponse = instanceClient.ResumeInstance(regionId.trim(), instanceId, appkey.getAppkeyId(),
+					appkey.getAppkeySecret(), null);
+			logger.info("resume");
+			if(baseResponse.getMessage()==null){
+				result = "success";
+			}else{
+				result = baseResponse.getMessage();
+			}
+		}else if(operation.equals(RESET)){
+			baseResponse = instanceClient.ResetInstance(regionId.trim(), instanceId, appkey.getAppkeyId(),
+					appkey.getAppkeySecret(), null);
+			logger.info("reset");
+			if(baseResponse.getMessage()==null){
+				result = "success";
+			}else{
+				result = baseResponse.getMessage();
+			}
+		}else if(operation.equals(DELETE)){
+			baseResponse = instanceClient.DeleteInstance(regionId.trim(), instanceId, null, appkey.getAppkeyId(),
+					appkey.getAppkeySecret(), null);
+			logger.info("delete");
+			if(baseResponse.getMessage()==null){
+				result = "success";
+			}else{
+				result = baseResponse.getMessage();
+			}
+		}else if(operation.equals(FORCE_STOP)){
+			baseResponse = instanceClient.StopInstance(regionId.trim(), instanceId, true, appkey.getAppkeyId(),
+					appkey.getAppkeySecret(), null);
+			logger.info("forceStop");
+			if(baseResponse.getMessage()==null){
+				result = "success";
+			}else{
+				result = baseResponse.getMessage();
+			}
+		}else if(operation.equals(DETACH_ISO)){
+			baseResponse = instanceClient.IsoDetach(regionId.trim(), instanceId, appkey.getAppkeyId(),
+					appkey.getAppkeySecret(), null);
+			logger.info("isoDetach");
+			if(baseResponse.getMessage()==null){
+				result = "success";
+			}else{
+				result = baseResponse.getMessage();
+			}
+		} else if (operation.equals(ISO_BOOT)) {
+			baseResponse = instanceClient.IsoBoot(regionId.trim(), instanceId, imageId, appkey.getAppkeyId(),
+					appkey.getAppkeySecret(), null);
+			logger.info("isoDetach");
+			if(baseResponse.getMessage()==null){
+				result = "success";
+			}else{
+				result = baseResponse.getMessage();
+			}
+		}
+		logger.info(ReflectionToStringBuilder.toString(baseResponse));
+	}
+
+	/**
+	 * 阿里云的操作,启动、停止、删除、重启
+	 * try/catch 将阿里云的错误信息捕捉返回到前端，成功则是"success"
+	 */
+	public void OperateAliyunInstance(Appkey appkey){
+		logger.info(toString());
+		if(operation.equals(REBOOT)){
+			RebootInstanceResponse rebootResponse;
+			try {
+				rebootResponse = aliInstanceClient.RebootInstance(regionId.trim(), instanceId, appkey.getAppkeyId(), 
+						appkey.getAppkeySecret(), null);
+				result = "success";
+			} catch (ClientException e) {
+				// TODO Auto-generated catch block
+				result = e.getErrMsg();
+			}
+		}else if(operation.equals(STOP)){
+			StopInstanceResponse stopInstanceResponse;
+			try {
+				stopInstanceResponse = aliInstanceClient.StopInstance(regionId.trim(), instanceId, appkey.getAppkeyId(),
+						appkey.getAppkeySecret(), null);
+				result = "success";
+			} catch (ClientException e) {
+				// TODO Auto-generated catch block
+				result = e.getErrMsg();
+			}
+		}else if(operation.equals(START)){
+			StartInstanceResponse startResponse;
+			try {
+				startResponse = aliInstanceClient.StartInstance(regionId.trim(), instanceId, appkey.getAppkeyId(),
+						appkey.getAppkeySecret(), null);
+				result = "success";
+			} catch (ClientException e) {
+				// TODO Auto-generated catch block
+				result = e.getErrMsg();
+			}
+		}else if(operation.equals(DELETE)){
+			DeleteInstanceResponse deleteResponse;
+			try {
+				deleteResponse = aliInstanceClient.DeleteInstance(regionId.trim(), instanceId, appkey.getAppkeyId(),
+						appkey.getAppkeySecret(), null);
+				result = "success";
+			} catch (ClientException e) {
+				// TODO Auto-generated catch block
+				result = e.getErrMsg();
+			}
+		}
+	}
+
+	public void OperateAmazonInstance(Appkey appkey){}
+
+	public String getInstanceId() {
+		return instanceId;
+	}
+
+	public void setInstanceId(String instanceId) {
+		this.instanceId = instanceId;
+	}
+
+	public String getUserEmail() {
+		return userEmail;
+	}
+
+	public void setUserEmail(String userEmail) {
+		this.userEmail = userEmail;
+	}
+
+    public String getAppname() {
+        return appname;
+    }
+
+    public void setAppname(String appname) {
+        this.appname = appname;
+    }
+
+    public String getOperation() {
+		return operation;
+	}
+
+	public void setOperation(String operation) {
+		this.operation = operation;
+	}
+
+	public String getRegionId() {
+		return regionId;
+	}
+
+	public void setRegionId(String regionId) {
+		this.regionId = regionId;
+	}
+
+	public String getResult() {
+		return result;
+	}
+
+	public void setResult(String result) {
+		this.result = result;
+	}
+
+	@Override
+	public String toString() {
+		return "VmOperateAction [instanceId=" + instanceId + ", userEmail="
+				+ userEmail + ", appname=" + appname + ", regionId="
+				+ regionId + ", operation=" + operation + ", result=" + result
+				+ "]";
+	}
+	
+}

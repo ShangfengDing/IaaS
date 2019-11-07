@@ -1,0 +1,20 @@
+package appcloud.distributed.util;
+
+/**
+ * Created by Idan on 2018/1/19.
+ */
+public class NumUtil {
+
+    /**
+     * 是否为空
+     * @param lo
+     * @return
+     */
+    public static Boolean isEmpty(Long lo) {
+        return (lo==null)||(lo==0);
+    }
+
+    public static Boolean isNotEmpty(Long lo) {
+        return (lo==null)||(lo==0);
+    }
+}

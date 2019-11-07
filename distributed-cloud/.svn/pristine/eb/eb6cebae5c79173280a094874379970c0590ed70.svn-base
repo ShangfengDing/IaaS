@@ -1,0 +1,39 @@
+package com.distributed.common.entity;
+
+import lombok.Data;
+
+import java.sql.Timestamp;
+
+/**
+ * Created by Idan on 2017/12/7.
+ */
+
+@Data
+public class InstanceBackInfo {
+
+
+    private Integer id;
+    private String backUuid;
+    private Integer userId;
+    private String imageUuid;
+    private String instanceType;
+    private Integer securityGroupId;
+    private String displayName;
+    private String displayDescription;
+    private String password;
+    private String priVmMac;
+    private String pubVmMac;
+    private String instanceChargeType;
+    private String instanceChargeLength;
+    private String internetChargeType;
+    private Integer maxBandwidth;
+    private String systemDiskCategory;
+    private String systemDiskSize;
+    private String expirationDay;
+    private String appkeyId;
+    private String appkeySecret;
+    private Timestamp createTime;
+    private String regionId;
+    private String zoneId;
+
+}

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
+        "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+    <!-- 防火墙 -->
+    <package name="fw" namespace="/fw" extends="default">
+        <action name="fwlist" class="com.appcloud.vm.action.fw.FwListAction" method="firstPage">
+            <!--<interceptor-ref name="CheckUserPermission"></interceptor-ref>-->
+            <result name="success">/fw/fwlist.jsp</result>
+        </action>
+        <action name="fwlistbyregionid"   class="com.appcloud.vm.action.fw.FwListAction" method="queryYunHaiFwListByReginId"/>
+        <action name="aliyunfwlistbyregionid" class="com.appcloud.vm.action.fw.FwListAction" method="queryAliYunFwListByRegionId"/>
+        <action name="rulelist" class="com.appcloud.vm.action.fw.RuleListAction" method="execute">
+        </action>
+        <action name="fwlistDiv" class="com.appcloud.vm.action.fw.FwListAction" method="fwGetDivPage">
+            <!-- <interceptor-ref name="CheckUserPermission"></interceptor-ref> -->
+            <result name="success">/fw/fwDivPage.jsp</result>
+        </action>
+        <action name="newfw" class="com.appcloud.vm.action.fw.FwOperateAction" method="createSecurityGroup">
+            <!--<interceptor-ref name="CheckUserPermission"></interceptor-ref>-->
+        </action>
+        <action name="modfw" class="com.appcloud.vm.action.fw.FwOperateAction" method="updateSecurityGroup">
+            <!--<interceptor-ref name="CheckUserPermission"></interceptor-ref>-->
+        </action>
+        <action name="delfw" class="com.appcloud.vm.action.fw.FwOperateAction" method="deleteSecurityGroup">
+            <!--<interceptor-ref name="CheckUserPermission"></interceptor-ref>-->
+        </action>
+        <action name="newrule" class="com.appcloud.vm.action.fw.FwRuleOperateAction" method="newSecurityGroupRule">
+            <!--<interceptor-ref name="CheckUserPermission"></interceptor-ref>-->
+        </action>
+        <action name="delrule" class="com.appcloud.vm.action.fw.FwRuleOperateAction" method="deleteSecurityGroupRule">
+            <!--<interceptor-ref name="CheckUserPermission"></interceptor-ref>-->
+        </action>
+    </package>
+</struts>

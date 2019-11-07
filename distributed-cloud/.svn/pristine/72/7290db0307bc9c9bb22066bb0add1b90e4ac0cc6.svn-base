@@ -1,0 +1,28 @@
+package appcloud.distributed.process.operate;
+
+import appcloud.distributed.configmanager.RouteInfo;
+
+/**
+ * Created by Idan on 2017/12/17.
+ */
+public interface BrokeDownOperate {
+
+    /**
+     * 宕机的快照在本地
+     */
+    public Boolean dealImageBack(String regionId, String dataCenterUuid);
+
+    /**
+     * 更新自己的注册表
+     * 1. 根据宕机是否是master结点
+     */
+    public Boolean updateRegister(RouteInfo downBrokerInfo, RouteInfo newMasterInfo, boolean masterAlive);
+
+    /**
+     * 备份的数据在宕机上
+     * 1. 更新虚拟机主用的状态，表示没有备份结点
+     * 2. 查看新的备份中心，将原有镜像备份到新的数据中心
+     */
+    public Boolean updateImgBack(String dataCenterUuid, String hostUuid);
+
+}

@@ -1,0 +1,127 @@
+package appcloud.core.sdk.profile;
+
+import java.util.List;
+
+import appcloud.core.sdk.auth.Credential;
+import appcloud.core.sdk.auth.ICredentialProvider;
+import appcloud.core.sdk.exceptions.ClientException;
+import appcloud.core.sdk.http.FormatType;
+import appcloud.core.sdk.regions.Endpoint;
+import appcloud.core.sdk.regions.IEndpointsProvider;
+import appcloud.core.sdk.regions.InternalEndpointsParser;
+
+public class DefaultProfile implements YhaiClientProfile{
+
+	private static DefaultProfile profile = null;
+	private static List<Endpoint> endpoints = null;
+
+	private Credential credential = null;
+	private String regionId = null;
+	private String zoneId = null;
+	private FormatType acceptFormat = null;
+	private IEndpointsProvider iendpoints = null;
+	private ICredentialProvider icredential = null;
+
+	private DefaultProfile() {
+		this.iendpoints = new InternalEndpointsParser();
+	}
+
+	private DefaultProfile(String regionId) {
+		this.iendpoints = new InternalEndpointsParser();
+		this.regionId = regionId;
+	}
+	
+	private DefaultProfile(String regionId, Credential credential) {
+		this.iendpoints = new InternalEndpointsParser();
+		this.credential = credential;
+		this.regionId = regionId;
+	}
+
+	private DefaultProfile(ICredentialProvider iCredential) {
+		this.icredential = iCredential;
+		this.iendpoints = new InternalEndpointsParser();
+	}
+
+	private DefaultProfile(String regionId,String zoneId) {
+		this.iendpoints = new InternalEndpointsParser();
+		this.regionId = regionId;
+		this.zoneId = zoneId;
+	}
+
+	private DefaultProfile(String region, ICredentialProvider icredential) {
+		regionId = region;
+		this.icredential = icredential;
+		this.iendpoints = new InternalEndpointsParser();
+	}
+
+	private DefaultProfile(ICredentialProvider icredential, String region, FormatType format) {
+		regionId = region;
+		acceptFormat = format;
+		this.icredential = icredential;
+		this.iendpoints = new InternalEndpointsParser();
+	}
+
+	public synchronized static DefaultProfile getProfile() {
+		if(null == profile) {
+			profile = new DefaultProfile();
+		}
+		return profile;
+	}
+
+	public synchronized static DefaultProfile getProfile(String regionId, ICredentialProvider icredential) {
+		profile = new DefaultProfile(regionId, icredential);
+		return profile;
+	}
+
+	public synchronized static DefaultProfile getProfile(String regionId, String appkeyId, String appkeySecret) {
+		Credential credential = new Credential(appkeyId, appkeySecret);
+		profile = new DefaultProfile(regionId, credential);
+		return profile;
+	}
+	
+	public synchronized static DefaultProfile getProfile(String regionId) {
+		profile = new DefaultProfile(regionId);
+		return profile;
+	}
+
+	public synchronized static DefaultProfile getProfile(String regionId, String zoneId) {
+		profile = new DefaultProfile(regionId,zoneId);
+		return profile;
+	}
+
+	@Override
+	public synchronized String getRegionId() {
+		// TODO Auto-generated method stub
+		return regionId;
+	}
+
+	@Override
+	public synchronized String getZoneId() {
+		// TODO Auto-generated method stub
+		return zoneId;
+	}
+
+	@Override
+	public synchronized FormatType getFormat() {
+		// TODO Auto-generated method stub
+		return acceptFormat;
+	}
+
+	@Override
+	public synchronized Credential getCredential() {
+		// TODO Auto-generated method stub
+		if(null == credential && null != icredential) {
+			credential = icredential.fresh();
+		}
+		return credential;
+	}
+
+	@Override
+	public synchronized List<Endpoint> getEndpoints() throws ClientException {
+		// TODO Auto-generated method stub
+		if(null == endpoints) {
+			endpoints = iendpoints.getEndpoints();
+		}
+		return endpoints;
+	}
+}

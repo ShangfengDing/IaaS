@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<body version="0.0">
+<requests>
+    <request type="startapp">
+        <properties name="app">
+            <property name="appId" value="###UUID###" />
+            <property name="type" value="VM" />
+            <property name="uuid" value="###UUID###" />
+        </properties>
+        <properties name="gc">
+            <property name="config" value="###CONFIG###" />
+            <property name="mac" value="###MAC###" />
+            <property name="ip" value="###IP###" />
+        </properties>
+    </request>
+</requests>
+</body>

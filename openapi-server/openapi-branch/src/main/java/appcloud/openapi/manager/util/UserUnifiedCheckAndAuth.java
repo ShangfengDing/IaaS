@@ -1,0 +1,112 @@
+package appcloud.openapi.manager.util;
+
+import appcloud.openapi.check.CommonParamsCheck;
+import appcloud.openapi.check.impl.*;
+import appcloud.openapi.constant.ActionConstants;
+import appcloud.openapi.constant.Constants;
+import appcloud.openapi.constant.HttpConstants;
+import appcloud.openapi.manager.CommonManager;
+import appcloud.openapi.manager.impl.CommonManagerImpl;
+
+import org.apache.log4j.Logger;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * 检查
+ * Created by zrain on 2016/11/16.
+ */
+public class UserUnifiedCheckAndAuth {
+    /**
+     * 该类主要用于在对管理员具体操作前进行统一的认证鉴权管理，主要检查请求参数的合理性和有效性
+     */
+    private CommonManager commonManager = CommonManagerImpl.getInstance();
+    private CommonParamsCheck commonParamsCheck = CommonParamsCheckImpl.getInstance();
+    private AccountParamsCheckImpl accountParamsCheck = AccountParamsCheckImpl.getInstance();
+    private AccountOperateCheckImpl accountOperateCheck = AccountOperateCheckImpl.getInstance();
+    private final Logger logger = Logger.getLogger(UserUnifiedCheckAndAuth.class);
+
+    /**
+     * @param paramsMap  接口请求参数及其参数值
+     * @param defaultParamsMap  除请求参数外，含有默认值的参数及其参数值，这些默认值不参与签名认证检查
+     * @return
+     */
+    public Map<String, String>  userCheckAndAuth(Map<String, String> paramsMap, Map<String, String> defaultParamsMap) {
+        Map<String, String> resultMap = new HashMap<String, String>();
+        try {
+            resultMap = commonParamsCheck.checkCommonParams(paramsMap);
+            if(null==resultMap || null==resultMap.get(Constants.HTTP_CODE) ||
+                    !resultMap.get(Constants.HTTP_CODE).equals(HttpConstants.STATUS_OK)) {
+                logger.warn("The request common params was not authenticated successfully!");
+                return resultMap;
+            }
+
+            //检查接口自身参数
+            switch(paramsMap.get(Constants.ACTION)) {
+                case ActionConstants.USER_CREATE:
+                    resultMap = accountParamsCheck.checkCreateUser(paramsMap);
+                    break;
+                case ActionConstants.GROUP_CREATE:
+                    resultMap = accountParamsCheck.checkCreateGroup(paramsMap);
+                    break;
+                case ActionConstants.USER_CREATE_FOR_DIS:
+                    resultMap = accountParamsCheck.checkCreateUser(paramsMap);
+                    break;
+                default :
+                    resultMap = null;
+                    break;
+            }
+            if(null==resultMap || null==resultMap.get(Constants.HTTP_CODE) ||
+                    !resultMap.get(Constants.HTTP_CODE).equals(HttpConstants.STATUS_OK)) {
+                logger.warn("The request speical params was not authenticated successfully!");
+                return resultMap;
+            }
+            //签名认证
+            resultMap = commonManager.getAuthenticate(paramsMap);
+            if(null==resultMap || null==resultMap.get(Constants.HTTP_CODE) ||
+                    !resultMap.get(Constants.HTTP_CODE).equals(HttpConstants.STATUS_OK)) {
+                logger.warn("The request signature was not authenticated successfully!");
+                return resultMap;
+            }
+            /**
+             */
+            if(null!=defaultParamsMap && !defaultParamsMap.isEmpty()) {
+                logger.info("Transfer default params to paramsMap.");
+                for(Map.Entry<String, String> entry : defaultParamsMap.entrySet()) {
+                    paramsMap.put(entry.getKey(), entry.getValue());
+                }
+                logger.info("Transfer default params successfully.");
+            }
+            switch(paramsMap.get(Constants.ACTION)) {
+                case ActionConstants.USER_CREATE :
+                    resultMap = accountOperateCheck.checkCreateUser(paramsMap);
+                    break;
+                case ActionConstants.GROUP_CREATE:
+                    resultMap = accountOperateCheck.checkCreateGroup(paramsMap);
+                    break;
+                case ActionConstants.USER_CREATE_FOR_DIS :
+                    resultMap = accountOperateCheck.checkCreateUserForDis(paramsMap);
+                    break;
+                default :
+                    resultMap = null;
+                    break;
+            }
+            if(null==resultMap || null==resultMap.get(Constants.HTTP_CODE) ||
+                    !resultMap.get(Constants.HTTP_CODE).equals(HttpConstants.STATUS_OK)) {
+                logger.warn("Check the operate instance permission is failed!");
+                return resultMap;
+            }
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            logger.error(e.getMessage(),e);
+            resultMap.put(Constants.ERRORCODE, Constants.INTERNAL_ERROR);
+            resultMap.put(Constants.ERRORMESSAGE,"The request processing has failed due to some unknown error.");
+            resultMap.put(Constants.HTTP_CODE, HttpConstants.STATUS_INTERNAL_SERVER_ERROR+"");
+            return resultMap;
+        }
+        logger.info("Check the params and the operation permission successfully, and result is OK!");
+        resultMap.put(Constants.HTTP_CODE, HttpConstants.STATUS_OK);
+        return resultMap;
+    }
+}

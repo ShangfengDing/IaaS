@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+          "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"       
+          "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+	<!-- 快照 -->
+    <package name="shot" namespace="/shot" extends="default">
+       	<action name="shot" class="com.appcloud.vm.action.shot.ShotListAction" method="shotlist">
+          <!--   <interceptor-ref name="CheckUserPermission"></interceptor-ref> -->
+            <result name="yunhai">/shot/yunhai/yunhai_shot_list.jsp</result>
+            <result name="aliyun">/shot/aliyun/aliyun_shot_list.jsp</result>
+            <result name="query_no_data">/template/_query_no_data.jsp</result>
+       	</action>
+		<action name="newshot" class="com.appcloud.vm.action.shot.NewShotAction">
+            <!-- <interceptor-ref name="CheckUserPermission"></interceptor-ref> -->
+            <result name="success" type="json"></result>
+        </action>
+		<action name="shotoperate" class="com.appcloud.vm.action.shot.ShotOperateAction">
+            <!-- <interceptor-ref name="CheckUserPermission"></interceptor-ref> -->
+            <result name="success" type="json"></result>
+        </action>
+    </package>
+</struts>

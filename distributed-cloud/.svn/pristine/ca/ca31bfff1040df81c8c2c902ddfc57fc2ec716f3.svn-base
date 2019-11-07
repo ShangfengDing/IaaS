@@ -1,0 +1,39 @@
+package com.distributed.dbproxy.service;
+
+import com.distributed.common.entity.InstanceBackInfo;
+import com.distributed.common.service.db.VmInstanceInfoService;
+import com.distributed.dbproxy.sql.basic.distribution.InstanceBackInfoEntity;
+import com.distributed.dbproxy.sql.repository.distribution.InstanceBackInfoDao;
+import com.distributed.common.utils.EntityReflectUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
+/**
+ * Created by Idan on 2017/12/17.
+ */
+public class VmInstanceInfoServiceImpl implements VmInstanceInfoService {
+
+    private static final Logger logger = LoggerFactory.getLogger(VmInstanceInfoServiceImpl.class);
+
+    @Autowired
+    private InstanceBackInfoDao instanceBackInfoDao;
+
+    @Override
+    public InstanceBackInfo findByUuid(String uuid) {
+        InstanceBackInfoEntity entity = null;
+        try {
+            entity = instanceBackInfoDao.findByBackupUuid(uuid);
+            if (entity == null) {
+                logger.info("the instanceinfo not exist, uuid: "+ uuid);
+                return null;
+            }
+            InstanceBackInfo result = new InstanceBackInfo();
+            EntityReflectUtil.converJavaBean(result, entity);
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+}

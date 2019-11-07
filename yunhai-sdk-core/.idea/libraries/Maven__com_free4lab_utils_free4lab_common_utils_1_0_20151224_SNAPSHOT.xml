@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.free4lab.utils:free4lab-common-utils:1.0.20151224-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/free4lab/utils/free4lab-common-utils/1.0.20151224-SNAPSHOT/free4lab-common-utils-1.0.20151224-20161124.024654-11.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/free4lab/utils/free4lab-common-utils/1.0.20151224-SNAPSHOT/free4lab-common-utils-1.0.20151224-20161124.024654-11-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/free4lab/utils/free4lab-common-utils/1.0.20151224-SNAPSHOT/free4lab-common-utils-1.0.20151224-20161124.024654-11-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

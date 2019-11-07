@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans     
+        http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+        http://www.springframework.org/schema/task
+        http://www.springframework.org/schema/task/spring-task-3.0.xsd
+        http://www.springframework.org/schema/util
+        http://www.springframework.org/schema/util/spring-util-3.0.xsd">
+
+<!-- resources -->
+	<bean id="acAggregateResource"  class="appcloud.api.resources.AcAggregateResource">
+		<property name="acAggregateManager" ref="acAggregateManager" />
+	</bean>
+	<bean id="acGroupResource"  class="appcloud.api.resources.AcGroupResource">
+		<property name="acGroupManager" ref="acGroupManager" />
+	</bean>
+	<bean id="acHostResource"  class="appcloud.api.resources.AcHostResource">
+		<property name="acHostManager" ref="acHostManager" />
+	</bean>
+	<bean id="acMessageLogResource"  class="appcloud.api.resources.AcMessageLogResource">
+		<property name="acMessageLogManager" ref="acMessageLogManager" />
+	</bean>
+	<bean id="acServiceResource"  class="appcloud.api.resources.AcServiceResource">
+		<property name="acServiceManager" ref="acServiceManager" />
+	</bean>
+	<bean id="acUserResource"  class="appcloud.api.resources.AcUserResource">
+		<property name="acUserManager" ref="acUserManager" />
+	</bean>
+	<bean id="acVlanResource"  class="appcloud.api.resources.AcVlanResource">
+		<property name="acVlanManager" ref="acVlanManager" />
+	</bean>
+	<bean id="addressPoolResource"  class="appcloud.api.resources.AddressPoolResource">
+		<property name="addressPoolManager" ref="addressPoolManager" />
+	</bean>
+	<bean id="availabilityZoneResource"  class="appcloud.api.resources.AvailabilityZoneResource">
+		<property name="acAggregateManager" ref="acAggregateManager" />
+	</bean>
+	<bean id="backupResource"  class="appcloud.api.resources.BackupResource">
+		<property name="volumeManager" ref="volumeManager" />
+	</bean>
+	<bean id="aggregateResource"  class="appcloud.api.resources.AggregateResource">
+		<property name="aggregateManager" ref="aggregateManager" />
+	</bean>
+	<bean id="flavorResource"  class="appcloud.api.resources.FlavorResource">
+		<property name="flavorManager" ref="flavorManager" />
+	</bean>
+	<bean id="hostResource"  class="appcloud.api.resources.HostResource">
+		<property name="hostManager" ref="hostManager" />
+	</bean>
+	<bean id="hypervisorResource"  class="appcloud.api.resources.HypervisorResource">
+		<property name="hypervisorManager" ref="hypervisorManager" />
+	</bean>
+	<bean id="imageResource"  class="appcloud.api.resources.ImageResource">
+		<property name="imageManager" ref="imageManager" />
+	</bean>
+	<bean id="ruleResource"  class="appcloud.api.resources.RuleResource">
+		<property name="securityGroupManager" ref="securityGroupManager" />
+	</bean>
+	<bean id="securityGroupResource"  class="appcloud.api.resources.SecurityGroupResource">
+		<property name="securityGroupManager" ref="securityGroupManager" />
+	</bean>
+	<bean id="serverResource"  class="appcloud.api.resources.ServerResource">
+		<property name="serverManager" ref="serverManager" />
+	</bean>
+	<bean id="snapshotResource"  class="appcloud.api.resources.SnapshotResource">
+		<property name="snapshotManager" ref="snapshotManager" />
+	</bean>
+	<bean id="volumeAttachmentResource"  class="appcloud.api.resources.VolumeAttachmentResource">
+		<property name="volumeAttachmentManager" ref="volumeAttachmentManager" />
+	</bean>
+	<bean id="volumeResource"  class="appcloud.api.resources.VolumeResource">
+		<property name="volumeManager" ref="volumeManager" />
+	</bean>
+	
+	
+<!-- all fake -->
+<bean id="acAggregateManager" class="appcloud.api.manager.fake.FakeAcAggregateManager" scope="singleton" lazy-init="true" /> 
+	<bean id="acGroupManager" class="appcloud.api.manager.fake.FakeAcGroupManager" factory-method="getInstance" scope="singleton" lazy-init="true" /> 
+    <bean id="acHostManager" class="appcloud.api.manager.fake.FakeAcHostManager" scope="singleton" lazy-init="true" /> 
+	<bean id="acMessageLogManager" class="appcloud.api.manager.fake.FakeAcMessageLogManager" scope="singleton" lazy-init="true" /> 
+	<bean id="acServiceManager" class="appcloud.api.manager.fake.FakeAcServiceManager" scope="singleton" lazy-init="true" /> 
+	<bean id="acUserManager" class="appcloud.api.manager.fake.FakeAcUserManager" scope="singleton" lazy-init="true" /> 
+	<bean id="acVlanManager" class="appcloud.api.manager.fake.FakeAcVlanManager" scope="singleton" lazy-init="true" /> 
+	<bean id="addressPoolManager" class="appcloud.api.manager.fake.FakeAddressPoolManager" scope="singleton" lazy-init="true" />
+    <bean id="aggregateManager" class="appcloud.api.manager.fake.FakeAggregateManager" scope="singleton" lazy-init="true" />
+    <bean id="flavorManager" class="appcloud.api.manager.fake.FakeFlavorManager" scope="singleton" lazy-init="true" />
+    <bean id="hostManager" class="appcloud.api.manager.fake.FakeHostManager" scope="singleton" lazy-init="true" /> 
+    <bean id="hypervisorManager" class="appcloud.api.manager.fake.FakeHypervisorManeger" scope="singleton" lazy-init="true" />
+    <bean id="imageManager" class="appcloud.api.manager.fake.FakeImageManager" scope="singleton" lazy-init="true" />
+    <bean id="securityGroupManager" class="appcloud.api.manager.fake.FakeSecurityGroupManager" scope="singleton" lazy-init="true" />
+    <bean id="serverManager" class="appcloud.api.manager.fake.FakeServerManager" scope="singleton" lazy-init="true" />
+    <bean id="snapshotManager" class="appcloud.api.manager.fake.FakeSnapshotManager" scope="singleton" lazy-init="true" /> 
+    <bean id="volumeAttachmentManager" class="appcloud.api.manager.fake.FakeVolumeAttachmentManager" scope="singleton" lazy-init="true" />
+    <bean id="volumeManager" class="appcloud.api.manager.fake.FakeVolumeManager"  scope="singleton" lazy-init="true" />
+
+</beans>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+          "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"       
+          "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+    <!-- 权限组管理 -->
+    <package name="group" namespace="/group" extends="default">
+        <!--获取所有权限组  -->
+        <action name="acGroupList" class="appcloud.admin.action.group.AcGroupListAction">
+        	<result name="success">/group/acgroupmanage.jsp</result>
+        </action>
+        
+        <!--准备添加新的权限组  -->
+        <action name="preNewAcGroup" class="appcloud.admin.action.group.PreNewAcGroupAction">
+        	<result name="success">/group/newacgroup.jsp</result>
+        </action>
+        
+        <!--添加新的权限组  -->
+        <action name="newAcGroup" class="appcloud.admin.action.group.NewAcGroupAction">
+        	<result type="json"></result>
+        </action>
+        
+        <!--删除权限组  -->
+        <action name="delAcGroup" class="appcloud.admin.action.group.DelAcGroupAction">
+        	<result type="json"></result>
+        </action>
+        
+        <!--准备修改权限组  -->
+        <action name="showAcGroup" class="appcloud.admin.action.group.ShowAcGroupAction">
+        	<result name="success">/group/showacgroup.jsp</result>
+        </action>
+        
+        <!--修改权限组  -->
+        <action name="updateAcGroup" class="appcloud.admin.action.group.UpdateAcGroupAction">
+        	<result name="success" type="json"></result>
+        </action>	
+        
+    </package>
+</struts>

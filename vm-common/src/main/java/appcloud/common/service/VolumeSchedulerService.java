@@ -1,0 +1,315 @@
+package appcloud.common.service;
+
+import java.io.IOException;
+import java.util.List;
+
+import appcloud.common.exception.IllegalRpcArgumentException;
+import appcloud.common.model.*;
+import appcloud.common.model.VmImage.VmImageOSTypeEnum;
+import appcloud.common.model.VmVolume.VmVolumeUsageTypeEnum;
+import appcloud.rpc.ampq.annotation.RPCTimeout;
+import appcloud.rpc.tools.RpcException;
+
+/**
+ * by default, all operation need corresponding vm shutdown
+ * @author wangchao
+ *
+ */
+public interface VolumeSchedulerService {
+
+	/**
+	 * Define a volume, immediately return.
+	 * @param usagetype SYSTEM, DATA, NETWORK, ISO
+	 * @param userId  volume belongs to this user (>0的整数值)
+	 * @param size    volume size (>0的整数值，单位GB)
+	 * @param zone    the zone the volume belongs to （非空） 
+	 * 
+	 * @param imageUUID   image to inherit, null for brand new volume (非空的UUID字符串) 
+	 * @param host    designate the host to palace the volume, null to automatically select the host when creating 
+	 * @return a newly defined volume, not ready to be used0
+	 * @throws RpcException
+	 */
+	public VmVolume defineVolume(VmVolumeUsageTypeEnum usagetype, Integer userId, int size, VmZone zone, String imageUUID, Host host, RpcExtra rpcExtra) throws RpcException;
+
+	public VmVolume defineVolumeOnImageBack(VmVolumeUsageTypeEnum usagetype, Integer userId, int size, VmZone zone, String imageBackUUID, Host host, RpcExtra rpcExtra) throws RpcException;
+
+	/**
+	 *
+	 * 在实际操作之前首先利用当前磁盘正在使用的镜像（除了uuid和存储位置，描述信息，名字不一样，其余属性都一样）在imageback库中创建一条记录，状态为defined
+	 * @param volumeUuid
+	 * @param displayname
+	 * @param rpcExtra
+	 * @return
+	 * @throws RpcException
+	 */
+	public VmImageBack defineVolumeImageBack(String volumeUuid, String displayname,String des,RpcExtra rpcExtra) throws RpcException;
+	
+	/**
+	 * select a host in a zone
+	 * @param zone         the zone the volume should be in （非空） 
+	 * @param size         the size needed by the volume, in GB (>0的整数值，单位GB)
+	 * @param exhost       if not null,select a host near the exhost, but not the host
+	 * @return 选出的HOST节点
+	 * @throws RpcException
+	 */
+	public List<Host> selectHost(Cluster cluster, int size, Host exhost, RpcExtra rpcExtra) throws RpcException;
+	
+	/**
+	 * really make the volume. 
+	 * if host not set, select here.
+	 * if the baseImage is an iso, will not create multiple physical volume
+	 * @param volume （非空）
+	 *				volume instance to create.
+	 *				required fields are: uuid, size, name , host
+	 * @return	{@link VmVolume} if volume were successfully created and ready to be used.
+	 *          status,providerLocation will be updated
+	 * @throws RpcException
+	 */
+	@RPCTimeout(timeout = 1200)
+	public VmVolume createVolume(String volumeUUID, RpcExtra rpcExtra) throws RpcException;
+
+	@RPCTimeout(timeout = 1200)
+	public VmVolume createDataVolume(String volumeUUID, RpcExtra rpcExtra) throws RpcException;
+
+	@RPCTimeout(timeout = 1200)
+	public VmVolume createVolumeOnImageBack(String volumeUUID, VmImageBack imageBack, RpcExtra rpcExtra) throws RpcException;
+
+
+	@RPCTimeout(timeout = 1200)
+	public VmImageBack createVolumeImageBack(String volumeUUID, RpcExtra rpcExtra)
+			throws RpcException;
+
+	@RPCTimeout(timeout = 120)
+	public VmVolume revertVolume(String volumeUUID, RpcExtra rpcExtra) throws RpcException;
+	
+	/**
+	 * mark the volume deleted
+	 * @param volumeUUID （非空UUID字符串）
+	 * @return {@link VmVolume}
+	 * @throws RpcException
+	 */
+	public VmVolume deleteVolume(String volumeUUID, RpcExtra rpcExtra) throws RpcException;
+	
+	/**
+	 * remove the volume from disk
+	 * @param volumeUUID （非空UUID字符串）
+	 * @throws RpcException
+	 */
+	public void destroyVolume(String volumeUUID, RpcExtra rpcExtra) throws RpcException ;
+
+
+	public void destroyVolumeImageBack(String volumeUUID, RpcExtra rpcExtra) throws RpcException ;
+
+	/**
+	 * 更改Volume大小
+	 * @param volumeUUID （非空UUID字符串）
+	 * @param size       (>0的整数值，单位GB)
+	 * @return {@link VmVolume}
+	 * @throws RpcException
+	 */
+	public VmVolume resizeVolume(String volumeUUID,Integer size, RpcExtra rpcExtra) throws RpcException;
+	
+	/**
+	 * after define a new volume, copy an old volume to dest Volume
+	 * @param srcVolumeUUID （非空UUID字符串）
+	 * @param destVolumeUUID （非空UUID字符串）
+	 * @return 目标 {@link VmVolume}
+	 * @throws RpcException
+	 */
+	@RPCTimeout(timeout = 120)
+	public VmVolume cloneVolume(String srcVolumeUUID, String destVolumeUUID, RpcExtra rpcExtra) throws RpcException;
+	
+	/**
+	 * move the volume to another volume storage pool
+	 * @param volumeUUID （非空UUID字符串）
+	 * @param host （非空）
+	 * @return {@link VmVolume}
+	 * @throws RpcException
+	 */
+	@RPCTimeout(timeout = 120)
+	public VmVolume moveVolume(String volumeUUID,Host host, RpcExtra rpcExtra) throws RpcException;
+	
+	/**
+	 * 定义一个新snapshot
+	 * @param volumeUUID snapshot从属的VmVolume（非空UUID字符串）
+	 * @param name 名称（非空字符串）
+	 * @param displayDescription 描述（非空字符串）
+	 * @return {@link VmSnapshot}
+	 * @throws RpcException
+	 */
+	public VmSnapshot defineSnapshot(String volumeUUID,String name,String displayDescription, RpcExtra rpcExtra) throws RpcException;
+	
+	/**
+	 * 在实际Volume上创建一个快照
+	 * @param volumeUUID snapshot从属的VmVolume（非空UUID字符串）
+	 * @param snapshotId ID（大于0）
+	 * @return {@link VmSnapshot}
+	 * @throws RpcException
+	 */
+	public VmSnapshot createSnapshot(String volumeUUID,Integer snapshotId, RpcExtra rpcExtra) throws RpcException;
+	
+	/**
+	 * 删除快照
+	 * @param volumeUUID snapshot从属的VmVolume（非空UUID字符串）
+	 * @param snapshotId ID（大于0）
+	 * @return {@link VmSnapshot}
+	 * @throws RpcException
+	 */
+	public VmSnapshot deleteSnapshot(String volumeUUID ,Integer snapshotId, RpcExtra rpcExtra) throws RpcException;
+	
+	/**
+	 * 应用快照到Volume
+	 * @param volumeUUID snapshot从属的VmVolume（非空UUID字符串）
+	 * @param snapshot
+	 * @return {@link VmSnapshot}
+	 * @throws RpcException
+	 */
+	public VmSnapshot applySnapshot(String volumeUUID,Integer snapshotId, RpcExtra rpcExtra) throws RpcException;
+	/**
+	 * 发布模板镜像前首先将要发布的镜像和母镜像（如果没有也没关系）进行整合，并将其放到新镜像的目录下
+	 * @param volumeUUID 所要发布镜像的volumeUUID
+	 * @param image 新镜像
+	 * @return {@link VmVolume}
+	 * @throws RpcException
+	 */
+	public VmVolume convertImgFormat(String volumeUUID, VmImage image, final RpcExtra rpcExtra) 
+			throws RpcException;
+	/**
+	 * 上传镜像到镜像服务器上
+	 * @param volumeUUID  所要发布镜像的volumeUUID
+	 * @param vmImage  要上传的镜像
+	 * @return {@link VmVolume} 更新状态后的镜像
+	 * @throws RpcException
+	 */
+	@RPCTimeout(timeout = 3000)
+	public VmImage uploadImage(String volumeUUID, VmImage image, final RpcExtra rpcExtra) throws RpcException;
+
+	/**
+	 * 授权镜像，将源镜像复制到所有的imageServer上
+	 * @param sourceDir
+	 * @param image
+	 * @param rpcExtra
+	 * @return
+	 * @throws RpcException
+	 */
+	@RPCTimeout(timeout = 3000)
+	public VmImage authorizeImage(String sourceDir, VmImage image, final RpcExtra rpcExtra) throws RpcException;
+
+	/**
+	 * 发布的镜像上传成功后，删除当前镜像文件 
+	 * @param volumeUUID  所要发布镜像的volumeUUID
+	 * @param image  上传的镜像
+	 * @return {@link VmVolume} 
+	 * @throws RpcException
+	 */
+	public void deleteImageVolume(String volumeUUID, VmImage image, final RpcExtra rpcExtra) throws RpcException;
+	
+	/**
+	 * 更新镜像大小和状态 
+	 * @param volumeUUID  所要发布镜像的volumeUUID
+	 * @param newImages  所要更新的镜像
+	 * @param status 所要更新的镜像状态
+	 * @throws RpcException
+	 */
+	@RPCTimeout(timeout = 3000)
+	public void updateImage(List<VmImage> newImages, String volumeUUID, VmImage.VmImageStatusEnum status, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException;
+	
+	/**
+	 * publish the volume to image
+	 * 
+	 * @param volumeUUID snapshot从属的VmVolume（非空UUID字符串）
+	 * @param image an already defined image （非空）
+	 * @return {@link VmSnapshot}
+	 * @throws RpcException
+	 */
+	/*@RPCTimeout(timeout = 1200)
+	public VmImage publishImage(String volumeUUID, VmImage image, RpcExtra rpcExtra) throws RpcException;*/
+	/**
+	 * publish the volume to image
+	 * 
+	 * @param volumeUUID snapshot从属的VmVolume（非空UUID字符串）
+	 * @param image an already defined image （非空）
+	 * @param clusterId  在clusterId的集群上发布镜像模板
+	 * @return {@link VmSnapshot}
+	 * @throws RpcException
+	 */
+	@RPCTimeout(timeout = 3000)
+	public VmImage  publishImage(String volumeUUID, VmImage image, Integer clusterId, RpcExtra rpcExtra) throws RpcException;
+
+	/**
+	 * mofify vm hostname
+	 * @param volumeUUID
+	 * @param newHostName
+	 * @param OSType
+	 * @param rpcExtra
+	 * @return
+	 * @throws RpcException
+	 */
+	@RPCTimeout(timeout = 100)
+	public VmVolume modVmHostName(String volumeUUID, String newHostName, VmImageOSTypeEnum OSType, RpcExtra rpcExtra) throws RpcException;
+	
+	/**
+	 * modify the virtual machine's password
+	 * @param volumeUUID   volume's uuid
+	 * @param name   virtual machine's owner
+	 * @param newPasswd   new password //not used now
+	 * @param rpcExtra
+	 * @return
+	 * @throws RpcException
+	 */
+	@RPCTimeout(timeout = 100)
+	public VmVolume modVmPasswd(String volumeUUID, String name, String newPasswd, VmImageOSTypeEnum OSType, RpcExtra rpcExtra) throws RpcException;
+	
+	/**
+	  *获取某个群组中可以发布镜像的集群id，判断条件是所要发布的镜像是否已经存在于该集群上
+	  *@param imageGroupIdList 镜像所在的所有群组Id
+	  *@param groupIdList  镜像所要发布的群组id
+	  *@param  rpcExtra
+	  *@return clusterIds  镜像还未存在的集群Id
+	  *@author hgm
+	  */
+	 public List<Integer> gainClusterIdList( List<Integer> imageGroupIdList, List<Integer> groupIdList, RpcExtra rpcExtra) throws RpcException;
+	
+	/**
+	 *根据群组Id获取这些群组对应的集群集合元素的字符串
+	 *@param groupIdList 群组Id的list
+	 *@return strClusterIds  群组集合中元素连接起来的字符串
+	 *@author hgm
+	 */
+	public String strClusterIds(List<Integer> groupIdList, RpcExtra rpcExtra) throws RpcException;
+	
+	/**
+	 *返回所要发布的模板镜像的md5值
+	 *@param volumeUuid  镜像的volumeuuid
+	 *@param image  所要上传的镜像
+	 *@param  rpcExtra
+	 *@return imageMd5sum   镜像的md5sum值
+	 *@author hgm
+	 */
+	@RPCTimeout(timeout = 2400)
+	 public String gainImageMd5sum(String volumeUUID, VmImage image, RpcExtra rpcExtra) throws RpcException;
+	
+	/**
+	 *返回所要发布的模板镜像所在的群组ID，判断依据就是所要发布的镜像模板的md5值
+	 *@param routingkey
+	 *@param imageMd5sum   镜像模板的md5sum值
+	 *@param  rpcExtra
+	 *@return groupIds   镜像所在的所有的群组Id
+	 *@author hgm
+	 */
+	@RPCTimeout(timeout = 1200)
+	 public List<Integer> gainImageGroupIds(String imageMd5sum, RpcExtra rpcExtra) throws RpcException ;
+		
+	/**
+	 * Description 
+	 * @param path
+	 * @return
+	 * @throws IOException
+	 * @author GongLingpu
+	 */
+	@RPCTimeout(timeout = 1200)
+	public boolean deleteImageOnServer(String imageUuid,String path) throws IOException;
+	
+	@RPCTimeout(timeout = 5)
+	public String KeepAlive() throws Exception ;
+}

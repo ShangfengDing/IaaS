@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<tip adminport="1986">
+	<components>
+		<component id="default" scope="singleton" lib="appcloud.rpc.tip.ServerComponent">
+		</component>
+	</components>
+	<servers>
+		<server port="9099" ipv4="0.0.0.0" socktype="stream">
+			<handler name="default" serviceid="default" />
+		</server>
+	</servers>
+</tip>

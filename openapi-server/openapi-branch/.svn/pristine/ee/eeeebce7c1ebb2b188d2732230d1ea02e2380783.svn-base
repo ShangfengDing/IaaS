@@ -1,0 +1,232 @@
+package appcloud.openapi.operate.impl;
+
+import appcloud.api.beans.Image;
+import appcloud.api.constant.ImageMetadata;
+import appcloud.api.exception.OperationFailedException;
+import appcloud.common.constant.RoutingKeys;
+import appcloud.common.model.RpcExtra;
+import appcloud.common.model.VmImage;
+import appcloud.common.model.VmUser;
+import appcloud.common.proxy.VmImageProxy;
+import appcloud.common.proxy.VmUserProxy;
+import appcloud.common.service.ResourceSchedulerService;
+import appcloud.common.util.ConnectionFactory;
+import appcloud.common.util.LolLogUtil;
+import appcloud.common.util.UuidUtil;
+import appcloud.common.util.query.QueryObject;
+import appcloud.openapi.constant.Constants;
+import appcloud.openapi.constant.HttpConstants;
+import appcloud.openapi.constant.ResultConstants;
+import appcloud.openapi.datatype.ImageDetailItem;
+import appcloud.openapi.datatype.ImageDetailSet;
+import appcloud.openapi.manager.util.BeansGenerator;
+import appcloud.openapi.manager.util.DealException;
+import appcloud.openapi.operate.ImageOperate;
+import appcloud.rpc.tools.RpcException;
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Component
+public class ImageOperateImpl implements ImageOperate{
+    private static Logger logger;
+    private VmImageProxy imageProxy;
+    private ResourceSchedulerService scheduler;
+    private BeansGenerator generator = BeansGenerator.getInstance();
+    private  VmUserProxy vmUserProxy;
+    private static ImageOperateImpl imageOperateImpl = new ImageOperateImpl();
+    public ImageOperateImpl getInstance()
+    {
+    	return imageOperateImpl;
+    }
+    public ImageOperateImpl()
+    {
+    	super();
+    	scheduler = (ResourceSchedulerService) ConnectionFactory
+    			.getAMQPService(ResourceSchedulerService.class,
+    					RoutingKeys.RESOUCE_SCHEDULER);
+    	vmUserProxy = (VmUserProxy)ConnectionFactory.getTipProxy(VmUserProxy.class, 
+                appcloud.common.constant.ConnectionConfigs.DB_PROXY_ADDRESS);
+    	imageProxy = (VmImageProxy) ConnectionFactory.getTipProxy(VmImageProxy.class,
+                appcloud.common.constant.ConnectionConfigs.DB_PROXY_ADDRESS);
+    	logger = Logger.getLogger(ImageOperateImpl.class);
+    }
+    
+    @Override
+    public Map<String, String> createImage(String appKeyId, Image newImage, String transactionId) throws Exception {
+        VmUser user = vmUserProxy.getByAppKeyId(appKeyId);
+        HashMap<String, String> metadata = newImage.metadata;
+        Integer userId = user.getUserId();
+        String serverUuid = metadata.get(ImageMetadata.SERVER_ID);
+        String volumeUuid = metadata.get(ImageMetadata.VOLUME_ID);
+        String displayName = metadata.get(ImageMetadata.DISPLAY_NAME);
+        String displayDescription = metadata.get(ImageMetadata.DISPLAY_DESCRIPTION);
+        String software = metadata.get(ImageMetadata.SOFTWARE);
+        String account = metadata.get(ImageMetadata.ACCOUNT);
+        String groupIdList = metadata.get(ImageMetadata.GROUP_ID_LIST);
+        String distribution = "";
+        RpcExtra rpcExtra = new RpcExtra(transactionId, userId.toString());
+        if(newImage.distribution != null)
+            distribution = newImage.distribution;
+        String uuid = "";    //镜像发布成功后返回的镜像uuid
+        Map<String, String> resultMap = new HashMap<String, String>();
+        try {
+            /*uuid = scheduler.createImage(userId, serverUuid, volumeUuid, displayName, displayDescription, isPublic, distribution, rpcExtra);*/
+            logger.info("account : " + account);
+            logger.info("displayName : " + displayName);
+
+            uuid = scheduler.createImage(userId, serverUuid, volumeUuid,account,displayName,displayDescription, groupIdList, distribution, software, rpcExtra);
+            logger.info("return uuid : " + uuid);
+            VmImage vmImage = imageProxy.getByUuid(uuid);
+            logger.info(String.format("IMAGE created successfully, uuid is %s", uuid));
+            generator.VPIToImage(vmImage, true);
+            resultMap.put(Constants.HTTP_CODE, HttpConstants.STATUS_OK+"");
+            resultMap.put(Constants.IMAGE_UUID, uuid);
+        } catch(RpcException e) {
+            DealException.isRSTimeoutException(e, LolLogUtil.CREATE_IMG, rpcExtra);
+            resultMap.put(Constants.ERRORCODE, Constants.INTERNAL_ERROR);
+            resultMap.put(Constants.ERRORMESSAGE,"The request processing has failed due to RPC exception.");
+            resultMap.put(Constants.HTTP_CODE, HttpConstants.STATUS_INTERNAL_SERVER_ERROR+"");
+        }
+        return resultMap;
+    }
+
+    @Override
+    public Map<String, String> authorizeImage( VmImage imageToDel, String transactionId) throws Exception {
+        Map<String, String> resultMap = new HashMap<String, String>();
+
+        String imageUuid = imageToDel.getUuid();
+        String uuid = UuidUtil.getRandomUuid();
+        imageToDel.setId(null);
+        imageToDel.setUuid(uuid);
+        imageToDel.setType(Constants.IMAGE_GROUP);
+
+        RpcExtra rpcExtra = new RpcExtra(transactionId, imageToDel.getUserId().toString());
+        try {
+//            imageProxy.save(imageToDel);
+            String result = scheduler.authorizeImage(imageToDel,rpcExtra);
+            logger.info(String.format("authorize the image for all of the group", imageUuid));
+            resultMap.put(Constants.HTTP_CODE, HttpConstants.STATUS_OK+"");
+        } catch (Exception e) {
+            e.printStackTrace();
+            resultMap.put(Constants.ERRORCODE, Constants.INTERNAL_ERROR);
+            resultMap.put(Constants.ERRORMESSAGE,"authorize the image failed.");
+            resultMap.put(Constants.HTTP_CODE, HttpConstants.STATUS_INTERNAL_SERVER_ERROR+"");
+        }
+
+        return resultMap;
+    }
+
+    @Override
+    public Map<String, String> deleteImage(String appKeyId, VmImage imageToDel, String transactionId) throws Exception {
+        Map<String, String> resultMap = new HashMap<String, String>();
+        VmUser user = vmUserProxy.getByAppKeyId(appKeyId);
+        Integer userId = user.getUserId();
+        RpcExtra rpcExtra = new RpcExtra(transactionId, userId.toString());
+        String imageUuid = imageToDel.getUuid();
+        String groupId = imageToDel.getGroupId().toString();
+        boolean ok = false;
+        try {
+            ok = scheduler.deleteImage(imageUuid, groupId,rpcExtra);
+            if(ok){
+                logger.info(String.format("IMAGE deleted successfully, uuid is %s", imageUuid));
+                resultMap.put(Constants.HTTP_CODE, HttpConstants.STATUS_OK+"");
+            }else {
+                logger.info(String.format("delete IMAGE failed, uuid is %s", imageUuid));
+                resultMap.put(Constants.ERRORCODE, Constants.INTERNAL_ERROR);
+                resultMap.put(Constants.ERRORMESSAGE,"The request processing has failed due to RPC exception.");
+                resultMap.put(Constants.HTTP_CODE, HttpConstants.STATUS_INTERNAL_SERVER_ERROR+"");
+                throw new OperationFailedException("delete image failed");
+            }
+        } catch(RpcException e) {
+            resultMap.put(Constants.ERRORCODE, Constants.INTERNAL_ERROR);
+            resultMap.put(Constants.ERRORMESSAGE,"The request processing has failed due to RPC exception.");
+            resultMap.put(Constants.HTTP_CODE, HttpConstants.STATUS_INTERNAL_SERVER_ERROR+"");
+        }
+        return resultMap;
+    }
+
+
+    @Override
+    public Map<String, String> updateImage(Image imageToUpdate, String transactionId) throws Exception {
+        Map<String, String> resultMap = new HashMap<String, String>();
+        RpcExtra rpcExtra = new RpcExtra(transactionId, imageToUpdate.tenantId);
+        HashMap<String, String> metadata = imageToUpdate.metadata;
+        String displayName = metadata.get(ImageMetadata.DISPLAY_NAME);
+        String displayDescription = metadata.get(ImageMetadata.DISPLAY_DESCRIPTION);
+        /*Boolean isPublic = Boolean.valueOf(metadata.get(ImageMetadata.IS_PUBLIC));*/
+        String groupIdList = metadata.get(ImageMetadata.GROUP_ID_LIST);
+        String account = metadata.get(ImageMetadata.ACCOUNT);
+        String software = metadata.get(ImageMetadata.SOFTWARE);
+        String imageUuid = imageToUpdate.id;
+        try {
+            /*scheduler.updateImage(imageId, displayName, displayDescription, isPublic, rpcExtra);*/
+            scheduler.updateImage(imageUuid, displayName, displayDescription, account, software, groupIdList, rpcExtra);
+            logger.info(String.format("IMAGE updated successfully, uuid is %s", imageUuid));
+            VmImage vmImage = imageProxy.getByUuid(imageUuid);
+            generator.VPIToImage(vmImage, true);
+            resultMap.put(Constants.HTTP_CODE, HttpConstants.STATUS_OK+"");
+        } catch(RpcException e) {
+            DealException.isRSTimeoutException(e, LolLogUtil.UPDATE_IMAGE, rpcExtra);
+            resultMap.put(Constants.ERRORCODE, Constants.INTERNAL_ERROR);
+            resultMap.put(Constants.ERRORMESSAGE,"The request processing has failed due to RPC exception.");
+            resultMap.put(Constants.HTTP_CODE, HttpConstants.STATUS_INTERNAL_SERVER_ERROR+"");
+        }
+        
+        return resultMap;
+    }
+
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Map<String, Object> getImageList(QueryObject<VmImage> query, Map<String, String> paramsMap, boolean detailed, String transactionId) throws Exception {
+        Map<String, Object> resultMap = new HashMap<String, Object>();
+        /**
+         * 首先根据页码和每页总数获取实例  (with metadata, network)
+         * 注：由于searchAll的page参数是从0开始的，所以此处应该对传进来的PageNumber参数进行减1处理
+         */
+        String type = paramsMap.get(Constants.TYPE);
+        List<VmImage> images = null;
+        //TODO 当type未all时，比较麻烦
+        images = (List<VmImage>) imageProxy.searchAll(query, Integer.parseInt(paramsMap.get(Constants.PAGE_NUMBER))-1,
+                Integer.parseInt(paramsMap.get(Constants.PAGE_SIZE)));
+        Long totalcount = imageProxy.countSearch(query);
+        resultMap.put(ResultConstants.TOTAL_COUNT,totalcount);
+        List<Image> imgs = new ArrayList<Image>();
+        List<ImageDetailItem> imageDetailItems = new ArrayList<ImageDetailItem>();
+        if(null==transactionId || transactionId.length()<1) {
+            logger.info("RequestId is null or is error!");
+            resultMap.put(Constants.ERRORCODE, Constants.INTERNAL_ERROR);
+            resultMap.put(Constants.ERRORMESSAGE,"The request processing has failed due to some unknown error.");
+            resultMap.put(Constants.HTTP_CODE, HttpConstants.STATUS_INTERNAL_SERVER_ERROR+"");
+            return resultMap;
+        }
+        for (VmImage image : images) {
+            ImageDetailItem tmp = generator.VmImageToImageDetailItem(image);
+            imageDetailItems.add(tmp);
+        }
+        
+        resultMap.put(Constants.HTTP_CODE, HttpConstants.STATUS_OK);
+        resultMap.put(ResultConstants.PAGE_NUMBER, Integer.parseInt(paramsMap.get(Constants.PAGE_NUMBER)));
+        resultMap.put(ResultConstants.PAGE_SIZE, Integer.parseInt(paramsMap.get(Constants.PAGE_SIZE)));
+        resultMap.put(ResultConstants.IMAGE_DETAIL_SET, new ImageDetailSet(imageDetailItems));
+        logger.info("show Image detail successfully");
+        return resultMap;
+    }
+
+
+    @Override
+    public Map<String, Object> getImageDetail(VmImage imageToShow, String transactionId) {
+        Map<String, Object> resultMap = new HashMap<String, Object>();
+        Image image =  generator.VPIToImage(imageToShow, true);
+        ImageDetailItem imageDetailItem = generator.ImageToImageDetailItem(image);
+        logger.info("show Image detail successfully");
+        resultMap.put(Constants.HTTP_CODE, HttpConstants.STATUS_OK);
+        resultMap.put(ResultConstants.IMAGE_DETAIL_ITEM, imageDetailItem);
+        return resultMap;
+    }
+}

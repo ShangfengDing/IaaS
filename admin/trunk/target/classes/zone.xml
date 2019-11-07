@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+          "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"       
+          "http://struts.apache.org/dtds/struts-2.0.dtd">
+<!-- 
+  - This file is included by the struts.xml file as an example
+  - of how to break up the configuration file into multiple files.
+-->
+<struts>
+  <package name="zone" namespace="/zone" extends="system">
+    <!-- 数据中心 -->
+
+	<!-- 节点管理 -->
+	<action name="host" class="appcloud.admin.action.system.HostAction">
+		<result>/system/zone/searchhost.jsp</result>
+	</action>
+	<action name="prehosttocluster" class="appcloud.admin.action.system.PreHostToClusterAction">
+		<result>/system/zone/hosttocluster.jsp</result>
+	</action>
+	<action name="hosttocluster" class="appcloud.admin.action.system.HostOperateAction" method="hostToCluster">
+		<result type="json"></result>
+	</action>
+	<action name="startservice" class="appcloud.admin.action.system.HostOperateAction" method="startService">
+		<result type="json"></result>
+	</action>
+	<action name="stopservice" class="appcloud.admin.action.system.HostOperateAction" method="stopService">
+		<result type="json"></result>
+	</action>
+	<action name="hostmonitor" class="appcloud.admin.action.system.HostMonitorAction">
+		<result type="json"></result>
+	</action>
+	<action name="searchhost" class="appcloud.admin.action.system.SearchHostAction">
+		<result type="json"></result>
+	</action>
+	
+	<!-- 集群管理 -->
+	<action name="cluster" class="appcloud.admin.action.system.ClusterAction">
+		<result>/system/zone/cluster.jsp</result>
+	</action>
+	<action name="prenewcluster" class="appcloud.admin.action.system.PreNewClusterAction">
+		<result>/system/zone/newcluster.jsp</result>
+	</action>
+	<action name="newcluster" class="appcloud.admin.action.system.NewClusterAction">
+		<result type="json"></result>
+	</action>
+	
+	<action name="zone" class="appcloud.admin.action.system.ZoneAction">
+		<result>/system/zone/zone.jsp</result>
+	</action>
+	
+	<action name="newzone" class="appcloud.admin.action.system.NewZoneAction">
+        <result type="json"></result>
+    </action>
+	
+	<action name="editzone" class="appcloud.admin.action.system.EditZoneAction">
+        <result type="json"></result>
+    </action>
+	
+	<!-- 虚拟机搜索 -->
+	<action name="gethostbycid" class="appcloud.admin.action.system.HostByCidAction">
+        <result type="json"></result>
+    </action>
+	<action name="getclusterandhostbyzid" class="appcloud.admin.action.system.ClusterAndHostByZidAction">
+        <result type="json"></result>
+    </action>
+  </package>
+</struts>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+    <timestamp key="byDay" datePattern="yyyyMMdd"/>
+    <!-- Output to Console -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
+            </pattern>
+        </layout>
+    </appender>
+    
+    <!-- Output to File -->
+    <appender name="FileHtml" class="ch.qos.logback.core.FileAppender">
+        <file>../logs/tip-${byDay}.log.html</file>
+        <layout class="ch.qos.logback.classic.html.HTMLLayout">
+            <pattern>%date%level%thread%10logger%file%line%msg</pattern>
+        </layout>
+    </appender>
+    
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">  
+        <file>../logs/tip.log</file>  
+   
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">  
+            <FileNamePattern>../logs/tip.%i.log.zip</FileNamePattern>  
+            <MinIndex>1</MinIndex>  
+            <MaxIndex>5</MaxIndex>  
+        </rollingPolicy>  
+   
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">  
+            <MaxFileSize>5MB</MaxFileSize>  
+        </triggeringPolicy>  
+   
+        <layout class="ch.qos.logback.classic.PatternLayout">  
+            <Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>  
+        </layout>  
+    </appender>
+    <root level="error">
+        <appender-ref ref="FILE" />
+        <appender-ref ref="FileHtml" />
+        <appender-ref ref="STDOUT" />
+    </root>
+</configuration>

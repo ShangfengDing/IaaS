@@ -1,0 +1,510 @@
+package com.appcloud.vm.action.vm;
+
+import aliyun.openapi.client.AliImageClient;
+import aliyun.openapi.client.AliInstanceClient;
+import aliyun.openapi.client.AliRegionClient;
+import appcloud.openapi.client.ImageClient;
+import appcloud.openapi.client.InstanceClient;
+import appcloud.openapi.client.RegionClient;
+import appcloud.openapi.datatype.ImageDetailItem;
+import appcloud.openapi.datatype.InstanceAttributes;
+import appcloud.openapi.datatype.RegionItem;
+import appcloud.openapi.response.DescribeInstancesResponse;
+import com.aliyuncs.ecs.model.v20140526.DescribeImagesResponse.Image;
+import com.aliyuncs.ecs.model.v20140526.DescribeInstancesResponse.Instance;
+import com.aliyuncs.ecs.model.v20140526.DescribeRegionsResponse.Region;
+import com.appcloud.vm.action.BaseAction;
+import com.appcloud.vm.common.CompareDate;
+import com.appcloud.vm.fe.common.Constants;
+import com.appcloud.vm.fe.common.TransformAttribute;
+import com.appcloud.vm.fe.entity.InstanceStatus;
+import com.appcloud.vm.fe.entity.Provider;
+import com.appcloud.vm.fe.entity.RegionId;
+import com.appcloud.vm.fe.manager.AppkeyManager;
+import com.appcloud.vm.fe.model.Appkey;
+import com.appcloud.vm.fe.util.OpenClientFactory;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.log4j.Logger;
+
+import java.util.*;
+
+public class VmListAction extends BaseAction {
+    /**
+     *  Modify By Rain
+     *  修改provider为appname，修改列表获取方式
+     */
+    private static final long serialVersionUID = 1L;
+    private Logger logger = Logger.getLogger(VmListAction.class);
+    private InstanceClient instanceClient = OpenClientFactory
+            .getInstanceClient();
+    private RegionClient regionClient = OpenClientFactory.getRegionClient();
+    private ImageClient imageClient = OpenClientFactory.getImageClient();
+    private AliRegionClient aliRegionClient = OpenClientFactory
+            .getAliRegionClient();
+    private AliInstanceClient aliInstanceClient = OpenClientFactory
+            .getAliInstanceClient();
+    private AliImageClient aliImageClient = OpenClientFactory
+            .getAliImageClient();
+    private Integer userId = this.getSessionUserID();
+
+    private AppkeyManager appkeyManager = new AppkeyManager();
+    private List<InstanceStatus> servers = new ArrayList<InstanceStatus>();
+    private HashMap<Integer, String> zoneIdNameMap = new HashMap<Integer, String>();
+    private HashMap<String, String> statusMap = new HashMap<String, String>();
+    private TransformAttribute transform = new TransformAttribute();
+
+    private Date nowDate = new Date();
+    private CompareDate compareDate = new CompareDate();
+    private double TotalCount;// 实例总个数
+    private static String totalPage = "1";// 实例总的页数
+    private Integer PageSize = 10;
+    private String clickPage = "1";
+    private String souType = "all";
+    private String result = "0";// resule值为0：成功，1：参数传入出错，2：搜索名称出错或参数不匹配
+    private String appname = "";
+    private List<Provider> providers = new ArrayList<Provider>();// 用户可选的云提供商s
+    private List<RegionId> regions = new ArrayList<RegionId>();  //返回给前端的该云提供商的regions，供用户选择
+    private String region; //用户选择的region
+    private String zone =com.appcloud.vm.common.Constants.ZONE_ID;
+    private boolean flag = true; //true表示change了提供商，false表示没有
+
+    // 搜索云海传递的参数
+    private static String skeyword = null;
+    private static String sappname = null;    //改版后没有用上
+    private static String sregionId = null;        //云海、阿里共用
+    private static String szoneId =com.appcloud.vm.common.Constants.ZONE_ID;
+    private static String sStatus = null;
+
+    //搜索阿里云传递的参数
+    private static String alicontent = null;
+    private static String aliinstanceType = null;
+    private static String aliinstanceStatus = null;
+
+    public String vmGetDivPage() {
+        selectVmlist();
+        return SUCCESS;
+    }
+
+    /**
+     * 根据appname 和 regionId 得到页面jsp
+     * @return
+     */
+    public String selectVmlist() {
+        Appkey appkey = appkeyManager.getAppkeyByUserIdAndAppName(userId, appname.trim());
+        switch (appkey.getProvider()) {
+            case Constants.YUN_HAI:
+                addYunhaiInstance(appkey, servers);
+                break;
+            case Constants.ALI_YUN:
+                addAliyunInstance(appkey, servers);
+                break;
+            case Constants.AMAZON:
+                addAmazonInstance(appkey, servers);
+                break;
+            default:
+                break;
+        }
+        Integer total = (int) Math.ceil(TotalCount / PageSize);  //向上取整
+        totalPage = total.toString();
+
+        logger.info("TCount:"+TotalCount+"TotalPage:" + totalPage + "获得所有server成功");
+        if (servers == null) {
+            return SUCCESS;
+        }
+        zoneIdNameMap.put(null, "");
+        return SUCCESS;
+    }
+
+    // 查询云海的云主机列表
+    public void addYunhaiInstance(Appkey appkey, List<InstanceStatus> servers) {
+        if (region != null) {
+            DescribeInstancesResponse instanceList = null;
+            // 再加判断是否云海加载满
+            switch (souType) {
+                case "all":
+                    instanceList = instanceClient.DescribeInstances(
+                            region, zone, null, null, null,
+                            null, null, null, null, null, clickPage,
+                            PageSize.toString(), appkey.getAppkeyId(),
+                            appkey.getAppkeySecret(), null);
+                    logger.info(ReflectionToStringBuilder.toString(instanceList));
+                    if (null != instanceList.getErrorCode()) {
+                        result = "1";
+                    };
+                    break;
+                case "active":
+                    instanceList = instanceClient.DescribeInstances(
+                            region, zone, null, null, null,
+                            null, null, null, "ACTIVE", null, clickPage,
+                            PageSize.toString(), appkey.getAppkeyId(),
+                            appkey.getAppkeySecret(), null);
+                    if (null != instanceList.getErrorCode()) {
+                        result = "1";
+                    };
+                    break;
+                case "expiring": // 过期时查询50条直接全部显示
+                    instanceList = instanceClient.DescribeInstances(
+                            region, zone, null, null, null,
+                            null, null, null, null, null, null, "50",
+                            appkey.getAppkeyId(), appkey.getAppkeySecret(), null);
+                    break;
+                case "keyword":
+                    instanceList = instanceClient.DescribeInstances(region,
+                            szoneId, null, null, null, null, null, skeyword,
+                            sStatus, null, clickPage, PageSize.toString(),
+                            appkey.getAppkeyId(), appkey.getAppkeySecret(), null);
+                    if (instanceList.getTotalCount() == 0) {
+                        result = "2";
+                    };
+                    break;
+                default:
+                    break;
+            }
+            if (instanceList != null) {
+                TotalCount = instanceList.getTotalCount();
+
+                List<InstanceAttributes> instances = instanceList
+                        .getInstances();
+                Map<String, String> imageMap = new HashMap<String, String>();
+                for (InstanceAttributes instance : instances) {
+                    if (!imageMap.containsKey(instance.getImageId())
+                            && !StringUtils.isEmpty(instance.getImageId())) {
+                        try {
+                            ImageDetailItem imageItem = imageClient
+                                    .GetImageDetail(region,zone,
+                                            instance.getImageId(),
+                                            appkey.getAppkeyId(),
+                                            appkey.getAppkeySecret(), null)
+                                    .getImageDetailItem();
+                            imageMap.put(instance.getImageId(),
+                                    imageItem.getDistribution());
+                        } catch (Exception e) {
+                            logger.warn("imageItem is null");
+                            imageMap.put(instance.getImageId(), null);
+                        }
+                    }
+                    // 过期日期
+                    Integer expiring = 0;
+                    String expiredTime = null;
+                    if (null != instance.getExpiredTime()) {
+                        expiring = compareDate.compare_date(nowDate,
+                                instance.getExpiredTime());
+                        expiredTime = instance.getExpiredTime().substring(2,
+                                instance.getExpiredTime().length() - 3);
+                        if ("expiring".equals(souType)) {// 区分是否是过期搜索
+                            if (expiring == 1) {
+                                servers.add(new InstanceStatus(
+                                        instance.getInstanceId(),
+                                        instance.getInstanceName(),
+                                        Constants.YUN_HAI,
+                                        transform.transformProvider(Constants.YUN_HAI),
+                                        appkey.getAppname(),
+                                        region, transform.transformRegion(region),
+                                        transform.transformZone(instance.getZoneId()), 
+                                        instance.getStatus(), 
+                                        transform.transformStatus(instance.getStatus()), 
+                                        imageMap.get(instance.getImageId()),
+                                        instance.getVcpus(), 
+                                        instance.getMemoryMb(), 0, instance.getPublicIpAddress(), 
+                                        instance.getPrivateIpAddress(),
+                                        instance.getInstanceChargeType(),
+                                        expiredTime, null,expiring));
+                            }
+                        } else {
+                            servers.add(new InstanceStatus(
+                                    instance.getInstanceId(),
+                                    instance.getInstanceName(),
+                                    Constants.YUN_HAI,
+                                    transform.transformProvider(Constants.YUN_HAI),
+                                    appkey.getAppname(),
+                                    region, transform.transformRegion(region),
+                                    transform.transformZone(instance
+                                            .getZoneId()),
+                                    instance.getStatus(), transform
+                                    .transformStatus(instance
+                                            .getStatus()), imageMap
+                                    .get(instance.getImageId()),
+                                    instance.getVcpus(),
+                                    instance.getMemoryMb(), 0, instance
+                                    .getPublicIpAddress(), instance
+                                    .getPrivateIpAddress(), instance
+                                    .getInstanceChargeType(),
+                                    expiredTime, null,
+                                    expiring));
+                        }
+                    }
+                }
+            }
+        } else {
+            result = "1";
+        }
+
+    }
+
+    // 查询阿里云的云主机列表
+    public void addAliyunInstance(Appkey appkey, List<InstanceStatus> servers) {
+        if (region != null) {
+            List<Instance> instanceList = new ArrayList<Instance>();
+            switch (souType) {
+                case "all":
+                    instanceList = aliInstanceClient.DescribeInstances(
+                            region, null, null, null, null, null,
+                            null, null, null, null, clickPage, PageSize.toString(),
+                            appkey.getAppkeyId(), appkey.getAppkeySecret(),
+                            null).getInstances();
+                    logger.info(ToStringBuilder.reflectionToString(instanceList)
+                            + ";" + clickPage);
+                    break;
+                case "instance-id":
+                    instanceList = aliInstanceClient.DescribeInstances(
+                            region, null, "[\"" + alicontent + "\"]", null, null, null,
+                            null, null, aliinstanceStatus, null, clickPage, PageSize.toString(),
+                            appkey.getAppkeyId(),
+                            appkey.getAppkeySecret(), null)
+                            .getInstances();
+                    break;
+                case "instance-name":
+                    instanceList = aliInstanceClient.DescribeInstances(
+                            region, null, null, null, null, null,
+                            null, alicontent, aliinstanceStatus, null, clickPage, PageSize.toString(),
+                            appkey.getAppkeyId(),
+                            appkey.getAppkeySecret(), null)
+                            .getInstances();
+                    break;
+                case "public-ip":
+                    instanceList = aliInstanceClient.DescribeInstances(
+                            region, null, null, null, null, "[\"" + alicontent + "\"]",
+                            null, null, aliinstanceStatus, null, clickPage, PageSize.toString(),
+                            appkey.getAppkeyId(),
+                            appkey.getAppkeySecret(), null)
+                            .getInstances();
+                    break;
+                case "private-ip":
+                    instanceList = aliInstanceClient.DescribeInstances(
+                            region, null, null, null, "[\"" + alicontent + "\"]", null,
+                            null, null, aliinstanceStatus, null, clickPage, PageSize.toString(),
+                            appkey.getAppkeyId(),
+                            appkey.getAppkeySecret(), null)
+                            .getInstances();
+                    break;
+                default:
+                    break;
+            }
+            logger.info("获取云主机成功，instanceSize = " + instanceList.size());
+            TotalCount += instanceList.size();
+
+			/* if (valSize) { */// 大于的时候才会获取阿里云主机
+            Map<String, String> imageMap = new HashMap<String, String>();
+            for (Instance instance : instanceList) {
+                if (!imageMap.containsKey(instance.getImageId())) {
+                    logger.info("image is:" + instance.getImageId());
+                    List<Image> imageList = aliImageClient.DescribeImages(
+                            region, instance.getImageId(),
+                            null, null, null, null, null, null, null, null,
+                            null, appkey.getAppkeyId(),
+                            appkey.getAppkeySecret(), null)
+                            .getImages();
+                    logger.info("image result is:" + imageList.size());
+                    if (null != imageList && imageList.size() > 0)
+                        imageMap.put(instance.getImageId(), imageList.get(0)
+                                .getOSName());
+                    else
+                        imageMap.put(instance.getImageId(), null);
+                }
+                // 阿里云的云主机状态表示是大写，所以在此要进行转换
+                Integer expiring = 0;
+                String expiredTime = null;
+                if (null != instance.getExpiredTime()) {
+                    expiring = compareDate.compare_date(nowDate,
+                            instance.getExpiredTime());
+                    expiredTime = instance.getExpiredTime().substring(2,
+                            instance.getExpiredTime().length() - 3);
+                }
+                String aliStatus = instance.getStatus().toString()
+                        .toLowerCase();
+                logger.info(aliStatus);
+                servers.add(new InstanceStatus(instance.getInstanceId(),
+                        instance.getInstanceName(), Constants.ALI_YUN,
+                        transform.transformProvider(Constants.ALI_YUN),appkey.getAppname(),
+                        region, transform.transformRegion(region),
+                        transform.transformZone(instance.getZoneId()),
+                        aliStatus, transform.transformStatus(aliStatus),
+                        imageMap.get(instance.getImageId()), instance.getCpu(),
+                        instance.getMemory(), instance.getInternetMaxBandwidthOut(),
+                        instance.getPublicIpAddress().isEmpty() ? null : instance.getPublicIpAddress().get(0),
+                        instance.getInnerIpAddress().get(0),
+                        instance.getInstanceChargeType(),
+                        instance.getExpiredTime(), null,
+                        expiring));
+                logger.info(servers);
+            }
+            /* } */
+
+        }
+    }
+
+    public String getRegion() {
+        return region;
+    }
+
+    public void setRegion(String region) {
+        this.region = region;
+    }
+
+    public void addAmazonInstance(Appkey appkey, List<InstanceStatus> servers) {
+    }
+
+    public List<InstanceStatus> getServers() {
+        return servers;
+    }
+
+    public HashMap<Integer, String> getZoneIdNameMap() {
+        return zoneIdNameMap;
+    }
+
+    public HashMap<String, String> getStatusMap() {
+        return statusMap;
+    }
+
+    public void setStatusMap(HashMap<String, String> statusMap) {
+        this.statusMap = statusMap;
+    }
+
+    public double getTotalCount() {
+        return TotalCount;
+    }
+
+    public void setTotalCount(double totalCount) {
+        TotalCount = totalCount;
+    }
+
+    public String getClickPage() {
+        return clickPage;
+    }
+
+    public void setClickPage(String clickPage) {
+        this.clickPage = clickPage;
+    }
+
+    public String getResult() {
+        return result;
+    }
+
+    public void setResult(String result) {
+        this.result = result;
+    }
+
+    public String getTotalPage() {
+        return totalPage;
+    }
+
+    public void setTotalPage(String totalPage) {
+        this.totalPage = totalPage;
+    }
+
+    public String getSouType() {
+        return souType;
+    }
+
+    public void setSouType(String souType) {
+        this.souType = souType;
+    }
+
+    public String getSkeyword() {
+        return skeyword;
+    }
+
+    public void setSkeyword(String skeyword) {
+        this.skeyword = skeyword;
+    }
+
+    public String getSregionId() {
+        return sregionId;
+    }
+
+    public void setSregionId(String sregionId) {
+        this.sregionId = sregionId;
+    }
+
+    public String getSzoneId() {
+        return szoneId;
+    }
+
+    public void setSzoneId(String szoneId) {
+        this.szoneId = szoneId;
+    }
+
+    public String getsStatus() {
+        return sStatus;
+    }
+
+    public void setsStatus(String sStatus) {
+        this.sStatus = sStatus;
+    }
+
+    public List<Provider> getProviders() {
+        return providers;
+    }
+
+    public void setProviders(List<Provider> providers) {
+        this.providers = providers;
+    }
+
+    public List<RegionId> getRegions() {
+        return regions;
+    }
+
+    public void setRegions(List<RegionId> regions) {
+        this.regions = regions;
+    }
+
+    public boolean isFlag() {
+        return flag;
+    }
+
+    public void setFlag(boolean flag) {
+        this.flag = flag;
+    }
+
+    public String getAlicontent() {
+        return alicontent;
+    }
+
+    public void setAlicontent(String alicontent) {
+        VmListAction.alicontent = alicontent;
+    }
+
+    public String getAliinstanceType() {
+        return aliinstanceType;
+    }
+
+    public void setAliinstanceType(String aliinstanceType) {
+        VmListAction.aliinstanceType = aliinstanceType;
+    }
+
+    public String getAliinstanceStatus() {
+        return aliinstanceStatus;
+    }
+
+    public void setAliinstanceStatus(String aliinstanceStatus) {
+        VmListAction.aliinstanceStatus = aliinstanceStatus;
+    }
+
+    public String getAppname() {
+        return appname;
+    }
+
+    public void setAppname(String appname) {
+        this.appname = appname;
+    }
+
+    public static String getSappname() {
+        return sappname;
+    }
+
+    public static void setSappname(String sappname) {
+        VmListAction.sappname = sappname;
+    }
+}

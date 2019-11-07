@@ -1,0 +1,15 @@
+# To change this template, choose Tools | Templates
+# and open the template in the editor.
+
+vmConnectStr=qemu:///system
+
+debug=true
+
+#default xml properties
+libvirtType = hvm
+defaultNetwork = bridge
+privateBridge = br0
+publicBridge = br1
+port22Action = accept
+filterRefName = clean-traffic
+monitorInterval = 30000

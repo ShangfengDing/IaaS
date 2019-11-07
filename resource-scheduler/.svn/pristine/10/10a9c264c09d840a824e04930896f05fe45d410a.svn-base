@@ -1,0 +1,11 @@
+// Update time: ###UPDATETIME###
+package ###PACKAGE###;
+
+###IMPORTS###;
+
+public class ###CLASS### implements ###INTERFACE###{
+	
+###METHODS###
+}
+
+this is test

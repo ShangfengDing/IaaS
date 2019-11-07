@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+          "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"       
+          "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+	<!-- 硬盘 -->
+    <package name="hd" namespace="/hd" extends="default">
+    	<!-- 查询硬盘的相关规格 -->
+		<action name="getNewHdInfo" class="com.appcloud.vm.action.hd.PreNewHdAction" method="hdGetInfo">
+            <!-- <interceptor-ref name="CheckUserPermission"></interceptor-ref> -->
+            <result type="json">
+            	<param name="root">result</param>
+            </result>
+       </action> 
+       <action name="cluster" class="com.appcloud.vm.action.vm.ClusterAction">
+    		<result type="json"></result>
+    	</action>
+       <action name="newhd" class="com.appcloud.vm.action.hd.NewHdAction">
+         <!--    <interceptor-ref name="CheckUserPermission"></interceptor-ref> -->
+            <result type="json"></result>
+       </action> 
+	   <action name="hdprice" class="com.appcloud.vm.action.hd.HdPriceAction">
+            <interceptor-ref name="CheckUserPermission"></interceptor-ref>
+            <result type="json"></result>
+       </action> 
+       <action name="hd_list" class="com.appcloud.vm.action.hd.HdListAction" method="hdGetHdList">
+            <result name="yunhai">/hd/yunhai/yunhai_hd_list.jsp</result>
+           <result name="aliyun">/hd/aliyun/aliyun_hd_list.jsp</result>
+           <result name="query_no_data">/template/_query_no_data.jsp</result>
+       </action>
+       <action name="hddetail" class="com.appcloud.vm.action.hd.HdDetailAction">
+           <!--  <interceptor-ref name="CheckUserPermission"></interceptor-ref> -->
+           <result>/hd/hddetail.jsp</result>
+       </action>
+       <action name="hdlistbyuid" class="com.appcloud.vm.action.hd.HdListByUidAction">
+            <interceptor-ref name="CheckUserPermission"></interceptor-ref>
+            <result type="json"></result>
+       </action>
+       <action name="showattachhd" class="com.appcloud.vm.action.hd.ShowAttachHdAction">
+            <!-- <interceptor-ref name="CheckUserPermission"></interceptor-ref> -->
+            <result type="json"></result>
+       </action>
+       <action name="hdoperate" class="com.appcloud.vm.action.hd.HdOperateAction">
+            <!-- <interceptor-ref name="CheckUserPermission"></interceptor-ref> -->
+            <result type="json"></result>
+       </action>
+       <action name="hdstatus" class="com.appcloud.vm.action.hd.HdStatusAction">
+             <!-- <interceptor-ref name="CheckUserPermission"></interceptor-ref> -->
+             <result type="json"></result>
+       </action>
+       <action name="renewhd" class="com.appcloud.vm.action.hd.ReNewHdAction">
+            <interceptor-ref name="CheckUserPermission"></interceptor-ref>
+            <result type="json"></result>
+       </action>
+       <action name="renewhdpayment" class="com.appcloud.vm.action.hd.ReNewHdPaymentAction">
+            <interceptor-ref name="CheckUserPermission"></interceptor-ref>
+            <result type="json"></result>
+       </action>
+    </package>
+</struts>

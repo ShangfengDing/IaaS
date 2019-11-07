@@ -1,0 +1,82 @@
+package appcloud.distributed.helper;
+
+import appcloud.distributed.annotation.Operate;
+import com.distributed.common.utils.ClassUtil;
+
+import java.lang.annotation.Annotation;
+import java.util.HashSet;
+import java.util.Set;
+
+/**
+ * Created by Idan on 2018/1/6.
+ */
+public class ClassHelper {
+    private static final Set<Class<?>> CLASS_SET;
+
+    static {
+        //TODO 包名等需要改成配置文件
+        String backPackage = "appcloud.distributed.process.operate";
+        CLASS_SET = ClassUtil.getClassSet(backPackage);
+    }
+
+    /**
+     * 获得包名下所有的类
+     * @return
+     */
+    public static Set<Class<?>> getClassSet() {
+        return CLASS_SET;
+    }
+
+    /**
+     * 获得包名下所有的service类
+     * @return
+     */
+    public static Set<Class<?>> getOperateClassSet() {
+        Set<Class<?>> classSet = new HashSet<>();
+        for (Class<?> cls: CLASS_SET) {
+            if (cls.isAnnotationPresent(Operate.class)) {
+                classSet.add(cls);
+            }
+        }
+        return classSet;
+    }
+
+
+    /**
+     * 获得包名下所有的bean类
+     * @return
+     */
+    public static Set<Class<?>> getBeanClassSet() {
+        Set<Class<?>> classSet = new HashSet<>();
+        classSet.addAll(getOperateClassSet());
+        return classSet;
+    }
+
+    /**
+     * 获得应用包下某父类(或接口)的所有子类接口
+     */
+    public static Set<Class<?>> getClassSetBySuper(Class<?> superClass) {
+        Set<Class<?>> classSet = new HashSet<>();
+        for (Class<?> cls: CLASS_SET) {
+            if (superClass.isAssignableFrom(cls) && !superClass.equals(cls)) {
+                classSet.add(cls);
+            }
+        }
+
+        return classSet;
+    }
+
+    /**
+     * 获取某应用包下带有某注解的所有类
+     */
+    public static Set<Class<?>> getClassSetByAnnotation(Class<? extends Annotation> annotationClass) {
+        Set<Class<?>> classSet = new HashSet<>();
+        for (Class<?> cls : CLASS_SET) {
+            if (cls.isAnnotationPresent(annotationClass)) {
+                classSet.add(cls);
+            }
+        }
+
+        return classSet;
+    }
+}

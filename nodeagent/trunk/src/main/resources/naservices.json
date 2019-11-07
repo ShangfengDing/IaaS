@@ -1,0 +1,79 @@
+{
+"dbproxy":
+{
+	"name":"dbproxy",
+	"mainClass":"appcloud.dbproxy.ProxyServer",
+	"classpath":"exec/dbproxy",
+	"monitorPort":"9001"
+},
+"volume-scheduler":
+{
+	"name":"volume-scheduler",
+	"mainClass":"appcloud.vs.VolumeSchedulerServer",
+	"classpath":"exec/volume-scheduler",
+	"monitorPort":"9031"
+},
+"volume-provider":
+{
+	"name":"volume-provider",
+	"mainClass":"appcloud.vp.VolumeProviderServer",
+	"classpath":"exec/volume-provider",
+	"monitorPort":"9032"
+},
+"vm-scheduler":
+{
+	"name":"vm-scheduler",
+	"mainClass":"appcloud.vmscheduler.VMSchedulerServer",
+	"classpath":"exec/vm-scheduler",
+	"monitorPort":"9011"
+},
+"vm-controller":
+{
+	"name":"vm-controller",
+	"mainClass":"appcloud.vmcontroller.VMControllerServer",
+	"classpath":"exec/vm-controller",
+	"monitorPort":"9012"
+},
+"image-server":
+{
+	"name":"image-server",
+	"mainClass":"appcloud.imageserver.impl.ImageServerManage",
+	"classpath":"exec/image-server",
+	"monitorPort":"9021"
+},
+"resource-scheduler":
+{
+	"name":"resource-scheduler",
+	"mainClass":"appcloud.resourcescheduler.ResourceScheduler",
+	"classpath":"exec/resource-scheduler",
+	"monitorPort":"9009"
+},
+"network-provider":
+{
+	"name":"network-provider",
+	"mainClass":"appcloud.netprovider.service.NetProviderServer",
+	"classpath":"exec/network-provider",
+	"monitorPort":"9033"
+},
+"dhcp-controller":
+{
+	"name":"dhcp-controller",
+	"mainClass":"appcloud.netprovider.service.DHCPControllerServer",
+	"classpath":"exec/dhcp-controller",
+	"monitorPort":"9034"
+},
+"lol-server":
+{
+	"name":"lol-server",
+	"mainClass":"com.free4lab.lol.LolLogProviderServer",
+	"classpath":"exec/lol-server",
+	"monitorPort":"9042"
+},
+"flow-controller":
+{
+	"name":"flow-controller",
+	"mainClass":"appcloud.flowcontroller.service.FlowControllerServer",
+	"classpath":"exec/flow-controller",
+	"monitorPort":"9036"
+}
+}

@@ -1,0 +1,92 @@
+package appcloud.distributed.helper;
+
+import appcloud.distributed.annotation.SynMethod;
+import appcloud.distributed.configmanager.Handler;
+import appcloud.distributed.configmanager.Request;
+import appcloud.distributed.util.StringUtil;
+import com.distributed.common.utils.ArrayUtil;
+import com.distributed.common.utils.CollectionUtil;
+import com.distributed.common.utils.ReflectionUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Created by Idan on 2018/1/15.
+ */
+public class VersionHelper {
+
+    private static final Logger logger = LoggerFactory.getLogger(VersionHelper.class);
+    private static final Map<Request, Handler> ASYN_MAP = new HashMap<>();
+    private static final Map<Class<?>, Object> BEAN_MAP = BeanHelper.getBeanMap();
+
+    /**
+     * 根据SynMethod注解，获取需要同步的方法与实例
+     */
+    static {
+        Set<Class<?>> classSet = ClassHelper.getOperateClassSet();
+        if (!CollectionUtil.isEmpty(classSet)) {
+            for (Class<?> operateClass : classSet) {
+                Method[] methods = operateClass.getDeclaredMethods();
+                for (Method method: methods) {
+                    if (method.isAnnotationPresent(SynMethod.class)){
+                        SynMethod asynMethod = method.getAnnotation(SynMethod.class);
+                        String[] values = asynMethod.value();
+                        for (String value: values) {
+                            logger.info("synmethod 注解的值是; "+value);
+                            String[] asynValues = StringUtil.split(value, " ");
+                            if (ArrayUtil.isNotEmpty(asynValues) && asynValues.length == 2) {
+                                String requestPath = asynValues[0];
+                                String requestMethod = asynValues[1];
+                                Request request = new Request(requestPath, requestMethod);
+                                Handler handler = null;
+                                try {
+                                    Class<?> clazz = ReflectionUtil.getClass(requestPath);
+                                    handler = setHandler(clazz, requestMethod);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                                ASYN_MAP.put(request, handler);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 根据requestPath和requestMethod拿到方法
+     * @param requestClass
+     * @param requestMethod
+     * @return
+     */
+    public static Handler setHandler(Class<?> requestClass, String requestMethod) {
+        Object instance = BEAN_MAP.get(requestClass);
+        Method[] methods = requestClass.getDeclaredMethods();
+        Handler handler = null;
+        for (Method method:methods) {
+            if (requestMethod.equals(method.getName())) {
+                handler = new Handler(requestClass, method,instance);
+            }
+        }
+        return handler;
+    }
+
+
+    /**
+     * 根据路径和方法拿到handler
+     * @param requestPath
+     * @param requestMethod
+     * @return
+     */
+    public static Handler getHandler(String requestPath, String requestMethod) {
+        Request request = new Request(requestPath, requestMethod);
+        return ASYN_MAP.get(request);
+    }
+
+}

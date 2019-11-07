@@ -1,0 +1,202 @@
+package com.appcloud.vm.fe.util;
+
+import aliyun.openapi.client.AliCommonClient;
+import aliyun.openapi.client.AliImageClient;
+import aliyun.openapi.client.AliInstanceClient;
+import aliyun.openapi.client.AliRegionClient;
+import aliyun.openapi.client.AliSecurityGroupClient;
+import aliyun.openapi.client.AliSnapshotClient;
+import aliyun.openapi.client.AliVolumeClient;
+import appcloud.openapi.client.*;
+
+//单例模式取得各个client
+public class OpenClientFactory {
+
+	private static volatile CommonClient commonClient = null;
+	private static volatile InstanceClient instanceClient = null;
+	private static volatile RegionClient regionClient = null;
+	private static volatile ImageClient imageClient = null;
+	private static volatile VolumeClient volumeClient = null;
+	private static volatile SnapshotClient snapshotClient = null;
+	private static volatile SecurityGroupClient securityGroupClient = null;
+	private static volatile OperateLogClient operateLogClient = null;
+	private static volatile AccountClient accountClient = null;
+
+	private static volatile AliRegionClient aliRegionClient = null;
+	private static volatile AliInstanceClient aliInstanceClient = null;
+	private static volatile AliImageClient aliImageClient = null;
+	private static volatile AliVolumeClient aliVolumeClient = null;
+	private static volatile AliSecurityGroupClient aliSecurityGroupClient = null;
+	private static volatile AliSnapshotClient aliSnapshotClient = null;
+	private static volatile AliCommonClient aliCommonClient = null;
+	
+	public OpenClientFactory() {}
+	
+	public static CommonClient getCommonClient() {
+		if (commonClient == null) {
+			synchronized (OpenClientFactory.class) {
+				if (commonClient == null) {
+					commonClient = new CommonClient();
+				}
+			}
+		}
+		return commonClient;
+	}
+	public static SecurityGroupClient getSecurityGroupClient() {
+		if (securityGroupClient == null) {
+			synchronized (OpenClientFactory.class) {
+				if (securityGroupClient == null) {
+					securityGroupClient = new SecurityGroupClient();
+				}
+			}
+		}
+		return securityGroupClient;
+	}
+	public static OperateLogClient getOperateLogClient() {
+		if (operateLogClient == null) {
+			synchronized (OpenClientFactory.class) {
+				if (operateLogClient == null) {
+					operateLogClient = new OperateLogClient();
+				}
+			}
+		}
+		return operateLogClient;
+	}
+	public static InstanceClient getInstanceClient() {
+		if (instanceClient == null) {
+			synchronized (OpenClientFactory.class) {
+				if (instanceClient == null) {
+					instanceClient = new InstanceClient();
+				}
+			}
+		}
+		return instanceClient;
+	}
+	public static RegionClient getRegionClient() {
+		if (regionClient == null) {
+			synchronized (OpenClientFactory.class) {
+				if (regionClient == null) {
+					regionClient = new RegionClient();
+				}
+			}
+		}
+		return regionClient;
+	}
+	public static ImageClient getImageClient() {
+		if (imageClient == null) {
+			synchronized (OpenClientFactory.class) {
+				if (imageClient == null) {
+					imageClient = new ImageClient();
+				}
+			}
+		}
+		return imageClient;
+	}
+	public static VolumeClient getVolumeClient() {
+		if (volumeClient == null) {
+			synchronized (OpenClientFactory.class) {
+				if (volumeClient == null) {
+					volumeClient = new VolumeClient();
+				}
+			}
+		}
+		return volumeClient;
+	}
+
+	public static SnapshotClient getSnapshotClient(){
+		if(snapshotClient == null){
+			synchronized (OpenClientFactory.class) {
+				if(snapshotClient == null){
+					snapshotClient = new SnapshotClient();
+				}
+			}
+		}
+		return snapshotClient;
+	}
+
+	public static AccountClient getAccountClient() {
+		if (accountClient == null) {
+			synchronized (OpenClientFactory.class) {
+				if (accountClient == null) {
+					accountClient = new AccountClient();
+				}
+			}
+		}
+		return accountClient;
+	}
+
+	public static AliRegionClient getAliRegionClient() {
+		if (aliRegionClient == null) {
+			synchronized (OpenClientFactory.class) {
+				if (aliRegionClient == null) {
+					aliRegionClient = new AliRegionClient();
+				}
+			}
+		}
+		return aliRegionClient;
+	}
+	public static AliInstanceClient getAliInstanceClient() {
+		if (aliInstanceClient == null) {
+			synchronized (OpenClientFactory.class) {
+				if (aliInstanceClient == null) {
+					aliInstanceClient = new AliInstanceClient();
+				}
+			}
+		}
+		return aliInstanceClient;
+	}
+	public static AliImageClient getAliImageClient() {
+		if (aliImageClient == null) {
+			synchronized (OpenClientFactory.class) {
+				if (aliImageClient == null) {
+					aliImageClient = new AliImageClient();
+				}
+			}
+		}
+		return aliImageClient;
+	}
+	
+	public static AliVolumeClient getAliVolumeClient() {
+		if (aliVolumeClient == null) {
+			synchronized (OpenClientFactory.class) {
+				if (aliVolumeClient == null) {
+					aliVolumeClient = new AliVolumeClient();
+				}
+			}
+		}
+		return aliVolumeClient;
+	}
+	
+	public static AliSnapshotClient getAliSnapshotClient() {
+		if (aliSnapshotClient == null) {
+			synchronized (OpenClientFactory.class) {
+				if (aliSnapshotClient == null) {
+					aliSnapshotClient = new AliSnapshotClient();
+				}
+			}
+		}
+		return aliSnapshotClient;
+	}
+	
+	public static AliSecurityGroupClient getAliSecurityGroupClient() {
+		if (aliSecurityGroupClient == null) {
+			synchronized (OpenClientFactory.class) {
+				if (aliSecurityGroupClient == null) {
+					aliSecurityGroupClient = new AliSecurityGroupClient();
+				}
+			}
+		}
+		return aliSecurityGroupClient;
+	}
+	
+	public static AliCommonClient getAliCommonClient() {
+		if (aliCommonClient == null) {
+			synchronized (OpenClientFactory.class) {
+				if (aliCommonClient == null) {
+					aliCommonClient = new AliCommonClient();
+				}
+			}
+		}
+		return aliCommonClient;
+	}
+}

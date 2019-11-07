@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+          "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"       
+          "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+    <package name="log" namespace="/log" extends="default">
+    	<action name="searchlog" class="com.appcloud.vm.action.log.SearchLogAction">
+            <interceptor-ref name="CheckUserPermission"></interceptor-ref>
+            <result type="json"></result>
+       	</action> 
+       	
+       	<action name="queryAdmin" class="com.appcloud.vm.action.log.QueryAdminAction">
+            <interceptor-ref name="CheckUserPermission"></interceptor-ref>
+       		<result type="json"></result>
+       	</action>
+       	<action name="addUserToEnterprise" class="com.appcloud.vm.action.log.AddUserToEnterpriseAction">
+       		<interceptor-ref name="CheckUserPermission"></interceptor-ref>
+       		<result type="json"></result>
+       	</action>
+       	<action name="removeUser" class="com.appcloud.vm.action.log.RemoveUserFromEnterprise">
+       		<interceptor-ref name="CheckUserPermission"></interceptor-ref>
+       		<result type="json"></result>
+       	</action>
+       	<action name="deleteInvitation" class="com.appcloud.vm.action.log.DeleteInvitationAction">
+       		<result type="json"></result>
+       	</action>
+		<action name="info" class="com.appcloud.vm.action.sum.SumAction" method="addAllServiceNum">
+			<!-- <interceptor-ref name="CheckUserPermission"></interceptor-ref> -->
+			<result>/log/info.jsp</result>
+		</action>
+    </package>
+</struts>

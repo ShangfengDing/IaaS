@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Struts2Diagram version="2.0">
+  <package name="app" location="10,10" size="280,140">
+    <action name="" location="0,0" size="0,0">
+      <result name="success">
+        <resourceEdge source="success" routing="0" target="appverify.jsp" />
+      </result>
+    </action>
+    <action name="enmanage" location="0,0" size="0,0">
+      <result name="success">
+        <resourceEdge source="success" routing="0" target="enmanage.jsp" />
+      </result>
+    </action>
+    <action name="updprice" location="0,0" size="0,0">
+      <result name="success" />
+    </action>
+  </package>
+  <webResource name="appverify.jsp" path="appverify.jsp" location="100,205" size="150,55" />
+  <webResource name="enmanage.jsp" path="/app/enmanage.jsp" location="0,0" size="0,0" />
+</Struts2Diagram>
+

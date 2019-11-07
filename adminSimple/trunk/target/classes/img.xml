@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+          "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"       
+          "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+    <!-- image -->
+    <package name="img" namespace="/img" extends="default">
+        <action name="imglist" class="appcloud.admin.action.img.ImgListAction">
+            <result name="success">/system/img.jsp</result>
+        </action>
+        <!-- 搜索全平台，没有邮箱 -->
+        <action name="imgList" class="appcloud.admin.action.img.ImgListAction">
+            <result name="success">/system/imglist.jsp</result>
+        </action>
+        <action name="modimg" class="appcloud.admin.action.img.ModImgAction">
+            <result type="redirect">imglist?type=${type}</result>
+        </action>
+        <action name="delimg" class="appcloud.admin.action.img.DelImgAction">
+            <result name="success" type="json"></result>
+        </action>
+        <action name="relimg" class="appcloud.admin.action.img.RelImgAction">
+            <result name="success" type="json"></result>
+        </action>
+        <action name="countimg" class="appcloud.admin.action.img.ImgListAction" method="countimg">
+            <result type="json"></result>
+        </action>
+    </package>
+</struts>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+          "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"       
+          "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+    <!-- vm -->
+    <package name="vm" namespace="/vm" extends="default">
+        <action name="vmlist" class="appcloud.admin.action.vm.VmListAction">
+            <result name="success">/vm/vm.jsp</result>
+        </action>
+        <action name="vmdetail" class="appcloud.admin.action.vm.VmDetailAction">
+            <result>/vm/vmdetail.jsp</result>
+       	</action>
+       	<action name="premigrateserver" class="appcloud.admin.action.vm.MigrateServerAction">
+            <result>/vm/migrateServer.jsp</result>
+       	</action>
+       	<action name="hostsload" class="appcloud.admin.action.vm.HostsLoadAction">
+            <result type="json"></result>
+       	</action>
+       	<action name="migrateserver" class="appcloud.admin.action.vm.MigrateServerAction"
+       		method="migrateServer">
+            <result type="json"></result>
+       	</action>
+       	<!-- 在线迁移，上面为离线迁移 -->
+       	<action name="onlineMigrateserver" class="appcloud.admin.action.vm.MigrateServerAction"
+       		method="onlineMigrateServer">
+            <result type="json"></result>
+       	</action>
+		<action name="vmbrief" class="appcloud.admin.action.vm.VmDetailAction">
+             <result type="json"></result>
+       	</action>
+       	<action name="vmoperate" class="appcloud.admin.action.vm.VmOperateAction">
+            <result type="json"></result>
+       	</action>
+		<action name="presearchvm" class="appcloud.admin.action.vm.PreSearchVmAction">
+            <result name="success">/vm/manage.jsp</result>
+        </action>
+		<action name="searchvm" class="appcloud.admin.action.vm.SearchVmAction">
+            <result type="json"></result>
+        </action>
+		<action name="modvmpasswd" class="appcloud.admin.action.vm.VmModPasswd">
+            <result type="json"></result>
+        </action>
+        <!-- 导出Excel表 -->
+        <action name="vmexcel" class="appcloud.admin.action.vm.ExportVmExcelAction">  
+            <result name="excel" type="stream">  
+                <param name="contentType">application/vnd.ms-excel;charset=ISO8859-1</param>  
+                <param name="inputName">excelStream</param>  
+                <param name="contentDisposition">attachment;filename=${fileName}</param> 
+                <param name="bufferSize">4096</param>  
+            </result>  
+        </action>  
+        
+        <action name="prenewflavor" class="appcloud.admin.action.vm.PreNewFlavorAction">
+            <result>/vm/newflavor.jsp</result>
+       	</action>
+       	<action name="newflavor" class="appcloud.admin.action.vm.NewFlavorAction">
+            <result name="success" type="json"></result>
+       	</action>
+       	<action name="recoverNetwork" class="appcloud.admin.action.vm.NewFlavorAction"  method="recoverNetwork">
+            <result type="json"></result>
+       	</action>
+       	
+       	
+    </package>
+</struts>

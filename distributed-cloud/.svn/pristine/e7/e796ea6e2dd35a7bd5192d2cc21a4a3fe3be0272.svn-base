@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.free4lab</groupId>
+        <artifactId>distributed-cloud</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <groupId>com.free4lab.distributed-cloud</groupId>
+    <artifactId>appcloud-distributed-controller</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <dependencies>
+
+        <!--netty-->
+        <dependency>
+            <groupId>com.free4lab.distributed-cloud</groupId>
+            <artifactId>netty-remoting</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.free4lab.distributed-cloud</groupId>
+            <artifactId>common</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jsch</artifactId>
+            <version>0.1.46</version>
+        </dependency>
+
+        <!-- openapi client -->
+        <dependency>
+            <groupId>appcloud.vm.fe</groupId>
+            <artifactId>common</artifactId>
+            <version>3.5.0-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.appcloud.enabler.mail</groupId>
+                    <artifactId>sdk</artifactId>
+                </exclusion>
+                <!--<exclusion>-->
+                    <!--<groupId>com.free4lab.utils</groupId>-->
+                    <!--<artifactId>free4lab-common-utils</artifactId>-->
+                <!--</exclusion>-->
+                <exclusion>
+                    <groupId>appcloud</groupId>
+                    <artifactId>api-client</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <finalName>distributed-controller</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>
+                                ${project.build.directory}/java-lib
+                            </outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

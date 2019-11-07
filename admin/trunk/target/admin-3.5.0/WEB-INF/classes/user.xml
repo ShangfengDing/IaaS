@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+          "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"       
+          "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+    <!-- 用户管理 -->
+    <package name="user" namespace="/user" extends="default">
+        <action name="userlist" class="appcloud.admin.action.user.UserListAction">
+            <result>/user/userlist.jsp</result>
+        </action>
+		<action name="usermanage" class="appcloud.admin.action.user.UserManageAction">
+            <result type="json"></result>
+        </action>
+        <action name="getgroups" class="appcloud.admin.action.group.AcGroupListAction">
+        	<result type="json"></result>
+        </action>
+        
+        <!--充值action  -->
+        <!--  <action name="userBalance" class="appcloud.admin.action.user.UserBalanceAction">
+        	<result type="json"></result>
+        </action>-->
+        
+        <!--修改权限前的准备action  -->
+        <action name="preChangeAuthority" class="appcloud.admin.action.user.PreChangeAuthorityAction">
+        	 <result name="success">/user/changeauthority.jsp</result>
+        </action>
+        
+        <!--修改权限action  -->
+        <action name="changeAuthority" class="appcloud.admin.action.user.ChangeAuthorityAction">
+        	<result type="json"></result>
+        </action>
+        
+        <!--冻结或解冻用户action  -->
+        <action name="changeStatus" class="appcloud.admin.action.user.ChangeStatusAction">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="showEnterprise" class="appcloud.admin.action.user.ShowEnterpriseAction">
+        	<result name="success">/user/showenterprise.jsp</result>
+        </action>
+    </package>
+</struts>

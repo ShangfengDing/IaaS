@@ -1,0 +1,53 @@
+
+import appcloud.netty.remoting.remote.NettyRemotingServer;
+import com.distributed.common.rpc.RPCServiceServer;
+import com.distributed.dbproxy.constant.Constants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+/**
+ *
+ * @author Idan
+ * @date 2017/12/7
+ *
+ */
+public class DbProxyApplication extends RPCServiceServer{
+
+    private static final Logger logger = LoggerFactory.getLogger(DbProxyApplication.class);
+
+    private static ApplicationContext context;
+
+    public DbProxyApplication() {
+        super(new NettyRemotingServer(Constants.SERVER_PORT),0, null);
+    }
+
+    private void initialize() {
+        context = new ClassPathXmlApplicationContext("spring/applicationContext.xml");
+    }
+
+    @Override
+    public void start() {
+        logger.info("rpc server start……");
+        super.start();
+    }
+
+    public static ApplicationContext getContext() {
+        return context;
+    }
+
+    public static void main (String args[]) {
+        DbProxyApplication application = new DbProxyApplication();
+        application.initialize();
+        application.start();
+
+//        VmBackupDao vmBackupDao = (VmBackupDao) DbProxyApplication.getContext().getBean("vmBackupDao");
+//        VmBackEntity entity = vmBackupDao.findByUuid("a7cda4141a2d4fa99384c96f70372053");
+//        System.out.println(entity.toString());
+//
+//        VmImageBackDao imageBackDao = (VmImageBackDao) DbProxyApplication.getContext().getBean("vmImageBackDao");
+//        VmImageBackEntity imageBackEntity = imageBackDao.findOne(7);
+//        System.out.println(imageBackEntity.toString());
+    }
+}

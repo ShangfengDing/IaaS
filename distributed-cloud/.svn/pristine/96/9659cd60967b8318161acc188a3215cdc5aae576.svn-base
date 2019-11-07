@@ -1,0 +1,217 @@
+package appcloud.distributed.configmanager;
+
+
+import appcloud.distributed.common.Constants;
+import appcloud.distributed.helper.VersionHelper;
+import appcloud.distributed.util.FileUtil;
+import appcloud.distributed.util.VersionUtil;
+import com.distributed.common.utils.JsonUtil;
+import com.distributed.common.utils.ModelUtil;
+import com.distributed.common.utils.ReflectionUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.*;
+
+/**
+ * Created by Idan on 2018/1/14.
+ * 1. 部分存在内存里
+ * 2. 如果满了则会存在日志文件中
+ * //TODO 并发问题的考虑
+ */
+public class VersionInfoManager {
+    private static final Logger logger = LoggerFactory.getLogger(VersionInfoManager.class);
+
+    private static final BlockingQueue<VersionInfo> versionQueue = new LinkedBlockingDeque<VersionInfo>();
+
+    private static VersionInfoManager versionInfoManager = new VersionInfoManager();
+
+    public static VersionInfoManager getInstance() {
+        return versionInfoManager;
+    }
+
+    /**
+     * 初始化日志，可以继承后自定义一些属性
+     */
+    protected void init() {}
+
+    /**
+     * 添加日志，只添加一条SynInfo，或者多条日志
+     */
+    public VersionInfo addOne(SynInfo synInfo) {
+        List<SynInfo> synInfos = new ArrayList<SynInfo>();
+        synInfos.add(synInfo);
+        VersionInfo result = add(synInfos);
+        return result;
+    }
+
+    public VersionInfo add(List<SynInfo> synInfos) {
+        VersionInfo latestInfo = getLatest();
+        long version;
+        if (latestInfo == null) {
+            version = VersionUtil.getNewVersion(null);
+        } else {
+            version = VersionUtil.getNewVersion(latestInfo.getVersionNum());
+        }
+
+        // 如果队列满了，将会store到日志中
+        VersionInfo newInfo = new VersionInfo(version, synInfos);
+        versionQueue.offer(newInfo);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if (versionQueue.size() >= Constants.VERSION_QUEUE_SIZE) {
+                    VersionInfo storeInfo = getLatest();
+                    storeVersionToLog(storeInfo);
+                }
+            }
+        }).start();
+        return newInfo;
+    }
+
+    /**
+     * 修改版本日志
+     */
+    public Boolean modify() {
+        return false;
+    }
+
+    /**
+     * 删除日志
+     */
+    public Boolean remove(String version) {
+        return false;
+    }
+
+    /**
+     * 全部清除
+     */
+    public void clear() {
+        versionQueue.clear();
+    }
+
+    /**
+     * 获取最新的版本
+     */
+    public VersionInfo getLatest() {
+        VersionInfo info = versionQueue.element();
+        return info;
+    }
+
+    public Long getLatestVersionNum() {
+        VersionInfo info = getLatest();
+        if (ModelUtil.isEmpty(info)) {
+            return null;
+        } else {
+            return info.getVersionNum();
+        }
+    }
+
+    /**
+     * 两个日志之间的比较
+     * 能够根据VersionInfo判断，也可以根据Version判断
+     * getAllByNum能根据相差几个版本拿到list
+     */
+    public List<VersionInfo> getAllByNum(Integer diffNum) {
+        List<VersionInfo> versionInfoList = new ArrayList<>();
+        if (diffNum <= Constants.VERSION_QUEUE_SIZE) {
+            int vNum = 0;
+            for (VersionInfo versionInfo : versionQueue) {
+                if (vNum < diffNum) {
+                    versionInfoList.add(versionInfo);
+                    vNum++;
+                } else {
+                    break;
+                }
+            }
+        } else {
+            int leaveNum = diffNum - Constants.VERSION_QUEUE_SIZE;
+            for (VersionInfo versionInfo : versionQueue) {
+                versionInfoList.add(versionInfo);
+            }
+            String filePath = Constants.VERSION_PATH + File.separator + Constants.VERSION_FILE_NAME;
+            List<String> versions = FileUtil.getLines(filePath, leaveNum);
+            for (String version : versions) {
+                VersionInfo versionInfo = JsonUtil.jackJsonToObject(version, VersionInfo.class);
+                versionInfoList.add(versionInfo);
+            }
+        }
+        return versionInfoList;
+    }
+
+    public List<VersionInfo> getByInfo(VersionInfo info) {
+        Integer num = compare(info);
+        return getAllByNum(num);
+    }
+
+    public List<VersionInfo> getByVersion(Long versionNum, Long selfVersionNum) {
+        Integer num = VersionUtil.compare(versionNum, selfVersionNum);
+        return getAllByNum(num);
+    }
+
+    public Integer compare(VersionInfo info) {
+        VersionInfo latestInfo = getLatest();
+        Long versionNum = info.getVersionNum();
+        Long latestVersionNum = latestInfo.getVersionNum();
+        Boolean rs = VersionUtil.isEqual(versionNum, latestVersionNum);
+        if (rs) {
+            return 0;
+        } else {
+            Integer num = VersionUtil.compare(versionNum, latestVersionNum);
+            return num;
+        }
+    }
+
+    /**
+     * 6. 存在日志文件中
+     */
+    public void storeVersionToLog(VersionInfo versionInfo) {
+        //TODO 存储文件
+        String value = JsonUtil.jacksonToString(versionInfo);
+        Boolean rs = FileUtil.store(value, Constants.VERSION_PATH, Constants.VERSION_FILE_NAME);
+        logger.info(versionInfo.toString());
+    }
+
+    /**
+     * 7. 获得存储文件中的日志
+     * // TODO 暂时不管
+     */
+    public List<VersionInfo> getVersionByLog() {
+        // 从日志文件中读取
+        return null;
+    }
+
+    /**
+     * 8. 根据version执行同步操作
+     */
+    public Boolean synInfo(VersionInfo versionInfo) {
+        List<VersionInfo> tempList = new ArrayList<>();
+        tempList.add(versionInfo);
+        return synInfo(tempList);
+    }
+
+    public Boolean synInfo(List<VersionInfo> versionInfos) {
+        for (VersionInfo versionInfo : versionInfos) {
+            List<SynInfo> synInfoList = versionInfo.getSynInfos();
+            logger.info("开始同步恢复本地的数据……");
+            for (SynInfo info : synInfoList) {
+                recoveryByInfo(info);
+            }
+            logger.info("同步恢复本地的数据结束……");
+        }
+        return true;
+    }
+
+    public Object recoveryByInfo(SynInfo synInfo) {
+        String requestPath = synInfo.getService();
+        String requestMethod = synInfo.getMethod();
+        Handler handler = VersionHelper.getHandler(requestPath, requestMethod);
+        Object[] args = synInfo.getArgs();
+        Object result = ReflectionUtil.invokeMethod(handler.getInstance(), handler.getMethod(), args);
+        return result;
+    }
+
+}

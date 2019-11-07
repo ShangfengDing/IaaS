@@ -1,0 +1,438 @@
+/**
+ * File: ResourceSchedulerImplTest.java
+ * Author: weed
+ * Create Time: 2013-5-6
+ */
+package appcloud.resourcescheduler.stub;
+
+import static org.junit.Assert.*;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import appcloud.common.model.VmIpSegMent;
+import appcloud.common.service.ResourceSchedulerService;
+import appcloud.resourcescheduler.common.ConnectionManager;
+import appcloud.resourcescheduler.impl.ResourceSchedulerImpl;
+import appcloud.rpc.tools.RpcException;
+
+/**
+ * @author weed
+ *
+ */
+public class ResourceSchedulerTest {
+	
+	static ResourceSchedulerService service = null;
+	static String vmUuid = null;
+	static String volumeUuid = null;
+	static String snapshotUuid = null;
+	static Integer aggregateId = null;
+	static Integer sgId = null;
+	static Integer sgRuleId = null;
+	static String backUpUuid = null;
+
+	@BeforeClass
+	public static void setUpBeforeClass() throws Exception {
+		ConnectionManager.initialize(ConnectionManager.TYPE.TEST);
+		assertNotNull(ConnectionManager.getInstance());
+		service = new ResourceSchedulerImpl();
+	}
+
+	@AfterClass
+	public static void tearDownAfterClass() throws Exception {
+	}
+
+	@Before
+	public void setUp() throws Exception {
+	}
+
+	@After
+	public void tearDown() throws Exception {
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#createVM(java.lang.String, java.lang.String, java.lang.String, java.lang.Integer, java.lang.Integer, java.lang.Integer, java.util.Map)}.
+	 */
+	@Test
+	public void testCreateVMStringStringStringIntegerIntegerIntegerMapOfStringString() {
+		try {
+			vmUuid = service.createVM("testVM", "125", "testImage", 0, 0, 0, new ArrayList<Integer> (),null, null,new HashMap<String, String>(), null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#startVM(java.lang.String)}.
+	 */
+	@Test
+	public void testStartVM() {
+		try {
+			service.startVM(vmUuid, null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#stopVM(java.lang.String)}.
+	 */
+	@Test
+	public void testStopVM() {
+		try {
+			service.stopVM(vmUuid, null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#resumeVM(java.lang.String)}.
+	 */
+	@Test
+	public void testResumeVM() {
+		try {
+			service.resumeVM(vmUuid, null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#rebootVM(java.lang.String)}.
+	 */
+	@Test
+	public void testRebootVM() {
+		try {
+			service.rebootVM(vmUuid, null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#rebuildVM(java.lang.String, java.lang.String, java.lang.String, java.lang.Integer, java.lang.Integer, java.util.Map)}.
+	 */
+	@Test
+	public void testRebuildVM() {
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#suspendVM(java.lang.String)}.
+	 */
+	@Test
+	public void testSuspendVM() {
+		try {
+			service.suspendVM(vmUuid, null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#forceDeleteVM(java.lang.String)}.
+	 */
+	@Test
+	public void testForceDeleteVM() {
+		try {
+			service.forceDeleteVM(vmUuid, null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#terminateVM(java.lang.String)}.
+	 */
+	@Test
+	public void testTerminateVM() {
+		try {
+			service.terminateVM(vmUuid, null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#createVolume(java.lang.Integer, java.lang.Integer, java.lang.String, java.lang.String, java.lang.String, java.lang.Integer, java.lang.String, java.util.Map)}.
+	 */
+	@Test
+	public void testCreateVolume() {
+		try {
+			volumeUuid = service.createVolume(125, 0, new ArrayList<Integer>(), "testVolumeName", "testVolumeDisplayName", "testVolumeDiscription", 20, "QCOW2", new HashMap<String, String>(), null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#attachVolume(java.lang.String, java.lang.String)}.
+	 */
+	@Test
+	public void testAttachVolume() {
+		try {
+			service.attachVolume(volumeUuid, vmUuid, null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#detachVolume(java.lang.String, java.lang.String)}.
+	 */
+	@Test
+	public void testDetachVolume() {
+		try {
+			service.detachVolume(volumeUuid, vmUuid, null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#updateVolume(java.lang.String, java.lang.String, java.lang.String)}.
+	 */
+	@Test
+	public void testUpdateVolume() {
+		try {
+			service.updateVolume(volumeUuid, "newTestVolumeDisplayName", "newTestVolumeDiscription", null,null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#createSnapshot(java.lang.String, java.lang.String, java.lang.String, java.lang.Boolean)}.
+	 */
+	@Test
+	public void testCreateSnapshot() {
+		try {
+			snapshotUuid = service.createSnapshot("testSnapshotDisplayName", "testSnapshotdisplayDescription", volumeUuid, true, null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#deleteSnapshot(java.lang.String)}.
+	 */
+	@Test
+	public void testDeleteSnapshot() {
+		try {
+			service.deleteSnapshot(snapshotUuid, null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#revertSnapshot(java.lang.String)}.
+	 */
+	@Test
+	public void testRevertSnapshot() {
+		try {
+			service.revertSnapshot(snapshotUuid, null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#updateSnapshot(java.lang.String, java.lang.String, java.lang.String)}.
+	 */
+	@Test
+	public void testUpdateSnapshot() {
+		try {
+			service.updateSnapshot(snapshotUuid, "newTestSnapshotDisplayName", "newTestSnapshotdisplayDescription", null, null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#createAggregate(java.lang.String, java.lang.Integer)}.
+	 */
+	@Test
+	public void testCreateAggregate() {
+		try {
+			aggregateId = service.createAggregate("testAggregate", 0, null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#addHostToAggregate(java.lang.String, java.lang.Integer)}.
+	 */
+	@Test
+	public void testAddHostToAggregate() {
+		try {
+			service.addHostToAggregate("testHost", aggregateId, null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#removeHostFromAggregate(java.lang.String, java.lang.Integer)}.
+	 */
+	@Test
+	public void testRemoveHostFromAggregate() {
+		try {
+			service.removeHostFromAggregate("testHost", aggregateId, null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#createFlavor(java.lang.String, java.lang.Integer, java.lang.Integer, java.lang.Integer)}.
+	 */
+	@Test
+	public void testCreateFlavor() {
+		try {
+			service.createFlavor("testFlavor", 2048, 20, 4, null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#createSecurityGroup(java.lang.String, java.lang.String, java.lang.String)}.
+	 */
+	@Test
+	public void testCreateSecurityGroup() {
+		try {
+			sgId = service.createSecurityGroup("125", "testSecurityGroupName", "testSecurityGroupDescription", null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#deleteSecurityGroup(java.lang.Integer)}.
+	 */
+	@Test
+	public void testDeleteSecurityGroup() {
+		try {
+			service.deleteSecurityGroup(sgId, null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#createSecurityGroupRule(java.lang.Integer, java.lang.Integer, java.lang.Integer, java.lang.String, java.lang.String)}.
+	 */
+	@Test
+	public void testCreateSecurityGroupRule() {
+		try {
+			sgRuleId = service.createSecurityGroupRule(sgId, 80, 90, "TCP", "", null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#deleteSecurityGroupRule(java.lang.Integer)}.
+	 */
+	@Test
+	public void testDeleteSecurityGroupRule() {
+		try {
+			service.deleteSecurityGroupRule(sgRuleId, null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#updateSecurityGroup(java.lang.Integer, java.lang.String, java.lang.String)}.
+	 */
+	@Test
+	public void testUpdateSecurityGroup() {
+		try {
+			service.updateSecurityGroup(sgId, "testNewSecurityGroupName", "testNewSecurityGroupDescription", null, null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#createIpSegment(java.lang.Integer, java.lang.Integer, appcloud.common.model.VmIpSegMent)}.
+	 */
+	@Test
+	public void testCreateIpSegment() {
+		try {
+			service.createIpSegment(0, 0, new VmIpSegMent(), null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#updateImage(java.lang.String, java.lang.String, java.lang.String, java.lang.Boolean)}.
+	 */
+	/*@Test
+	public void testUpdateImage() {
+		try {
+			service.updateImage("testImageUuid", "testImageName", "testImageDescription", true, null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}*/
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#createBackUp(java.lang.String, java.lang.String, java.lang.String, java.lang.Boolean)}.
+	 */
+	@Test
+	public void testCreateBackUp() {
+		try {
+			backUpUuid = service.createBackUp("testBackUpName", "testBackUpDescription", volumeUuid, true, null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#deleteBackUp(java.lang.String)}.
+	 */
+	@Test
+	public void testDeleteBackUp() {
+		try {
+			service.deleteBackUp(backUpUuid, null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#revertBackUp(java.lang.String)}.
+	 */
+	@Test
+	public void testRevertBackUp() {
+		try {
+			service.revertBackUp(backUpUuid, null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Test method for {@link appcloud.resourcescheduler.impl.ResourceSchedulerImpl#updateBackUp(java.lang.String, java.lang.String, java.lang.String)}.
+	 */
+	@Test
+	public void testUpdateBackUp() {
+		try {
+			service.updateBackUp(backUpUuid, "testNewBackUpName", "testNewBackUpDescription", null);
+		} catch (RpcException e) {
+			e.printStackTrace();
+		}
+	}
+
+}

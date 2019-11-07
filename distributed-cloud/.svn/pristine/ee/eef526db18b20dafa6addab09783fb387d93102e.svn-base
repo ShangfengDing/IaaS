@@ -1,0 +1,66 @@
+package com.distributed.common.constant;
+
+import com.distributed.common.utils.ConfigReader;
+import com.distributed.common.utils.ProxyUnit;
+import com.fasterxml.jackson.core.type.TypeReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * Created by Idan on 2017/12/12.
+ */
+public class Constants {
+    private static final Logger logger = LoggerFactory.getLogger(Constants.class);
+
+    /**
+     * 数据库服务的地址
+     */
+    public static final String DB_HOST = "127.0.0.1";
+    /**
+     * 数据库服务的端口
+     */
+    public static final Integer DB_PORT = 9001;
+
+    /**
+     * RPC服务器地址和端口
+     */
+    public static final String RPC_HOST = "127.0.0.1";
+    public static final Integer RPC_PORT = 8823;
+    public final static int REQUEST_WORKER_THREAD_NUMBER = 3;
+
+    /**
+     * rpc的接口与实现类
+     */
+    public static ConcurrentHashMap<String, String> serviceHashMap = new ConcurrentHashMap<String, String>();
+
+    static {
+        try {
+            TypeReference<List<ProxyUnit>> listType =  new TypeReference<List<ProxyUnit>>() {};
+            List<ProxyUnit> services = ConfigReader.readFromJson(Constants.class.getClassLoader().getResource("services.json"),listType);
+            for (ProxyUnit proxyUnit : services) {
+                logger.info(proxyUnit.toString());
+                System.out.println(proxyUnit.toString());
+                serviceHashMap.put(proxyUnit.getProxyClass(), proxyUnit.getImplClass());
+                logger.info("the routeInfo class loader finished...");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    public static void main (String args[]) {
+        try {
+            TypeReference<List<ProxyUnit>> listType =  new TypeReference<List<ProxyUnit>>() {};
+            List<ProxyUnit> services = ConfigReader.readFromJson(Constants.class.getClassLoader().getResource("dbservices.json"),listType);
+            for (ProxyUnit proxyUnit : services) {
+                System.out.println(proxyUnit.toString());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}

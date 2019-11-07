@@ -1,0 +1,13 @@
+package com.distributed.dbproxy.sql.repository.appcloud_front;
+
+import com.distributed.dbproxy.sql.basic.appcloud_front.AppkeyEntity;
+import org.springframework.data.repository.CrudRepository;
+
+import javax.transaction.Transactional;
+
+/**
+ * Created by Idan on 2017/12/21.
+ */
+@Transactional
+public interface AppkeyDao extends CrudRepository<AppkeyEntity, Integer> {
+}

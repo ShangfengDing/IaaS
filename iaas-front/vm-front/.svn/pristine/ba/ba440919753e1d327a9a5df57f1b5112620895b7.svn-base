@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+          "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"       
+          "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+	<!-- 备份相关 -->
+    <package name="backup" namespace="/backup" extends="default">
+       <action name="backup" class="com.appcloud.vm.action.backup.BackupListAction">
+            <interceptor-ref name="CheckUserPermission"></interceptor-ref>
+			<result>/backup/backup.jsp</result>
+       </action>
+       <action name="newbackup" class="com.appcloud.vm.action.backup.NewBackupAction">
+			<interceptor-ref name="CheckUserPermission"></interceptor-ref>
+            <result type="json"></result>
+       </action>
+       <action name="backupoperate" class="com.appcloud.vm.action.backup.BackupOperateAction">
+            <interceptor-ref name="CheckUserPermission"></interceptor-ref>
+            <result type="json"></result>
+       </action>
+    </package>
+</struts>

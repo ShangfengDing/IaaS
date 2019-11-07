@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+          "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"       
+          "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+    <package name="sum" namespace="/sum" extends="default">
+       <action name="sum" class="com.appcloud.vm.action.sum.SumAction" method="addAllServiceNum">
+            <!-- <interceptor-ref name="CheckUserPermission"></interceptor-ref> -->
+            <result>/sum/sum.jsp</result>
+       </action>
+       
+       <action name="updateSum" class="com.appcloud.vm.action.sum.SumAction">
+       		<result name="success" type="json"></result>
+       </action>                            
+    </package>
+</struts>

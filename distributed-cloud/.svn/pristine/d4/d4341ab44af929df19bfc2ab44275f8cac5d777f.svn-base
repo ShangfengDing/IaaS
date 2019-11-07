@@ -1,0 +1,27 @@
+package com.distributed.common.constant;
+
+/**
+ * Created by Idan on 2017/12/21.
+ */
+public class EnumConstants {
+
+    /**
+     * 存活的状态只有两种
+     */
+    public static enum SurvivalStatus {
+        ALIVE,
+        DEAD;
+
+        public String toString() {
+            switch (this) {
+                case ALIVE:
+                    return "ALIVE";
+                case DEAD:
+                    return "DEAD";
+                default:
+                    return "ALIVE";
+            }
+        }
+    }
+
+}

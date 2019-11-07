@@ -1,0 +1,18 @@
+[
+  {
+    "proxyClass":"com.distributed.common.service.db.VmBackupService",
+    "implClass":"com.distributed.dbproxy.service.VmBackupServiceImpl"
+  },
+  {
+    "proxyClass":"com.distributed.common.service.db.VmInstanceInfoService",
+    "implClass":"com.distributed.dbproxy.service.VmInstanceInfoServiceImpl"
+  },
+  {
+    "proxyClass":"com.distributed.common.service.db.VmImageBackService",
+    "implClass":"com.distributed.dbproxy.service.VmImageBackServiceImpl"
+  },
+  {
+    "proxyClass":"com.distributed.common.service.db.AccountService",
+    "implClass":"com.distributed.dbproxy.service.AccountServiceImpl"
+  }
+]

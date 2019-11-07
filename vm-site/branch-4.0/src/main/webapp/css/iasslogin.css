@@ -1,0 +1,88 @@
+@CHARSET "UTF-8";
+.iass-brand-img{
+		background-image: url(../images/logo1.png);
+		height: 30px;
+        width: 132px;
+	}
+	.iasshero{
+		background-image: url(../images/iasslogin.png);
+		background-position: center center;
+    	overflow: hidden;
+    	background-size: cover;
+    	height: 685px;
+    	position: relative;
+    	top: -70px;
+    	padding-top: 200px;
+	}
+	.bgwhite{
+		background:#fff
+	}
+	.bggray{
+		background:#eee
+	}
+	.cloudsrc{
+		background-position:center;
+		background-size: cover;
+	    background-repeat: no-repeat;
+	    height:550px;
+	    position: relative;
+	    background-image:url(../images/cloudsrc.png)
+	}
+	.sumsrc{
+		background-position: center;
+		background-size: cover;
+	    background-repeat: no-repeat;
+	    height:550px;
+	    position: relative;
+	    background-image:url(../images/cloudsum.png)"
+	}
+	.cloudcontrol{
+		background-position: center;
+		background-size: cover;
+	    background-repeat: no-repeat;
+	    height:550px;
+	    position: relative;
+	    background-image:url(../images/control.png)
+	}
+	.cloudopen{
+		background-position: center;
+		background-size: cover;
+	    background-repeat: no-repeat;
+	    height:550px;
+	    position: relative;
+	    background-image:url(../images/cloudopen.png)
+	}
+	.pmiddle{
+		vertical-align: middle;
+		height:550px;
+		padding:150px 0
+	}
+	.pull-right>.navbar-nav>li{
+	float:left;
+	}
+	.navbar-header {
+	    float: left;
+	}
+	.pull-right>.navbar-nav>li>a {
+	    padding-top: 15px;
+	    padding-bottom: 15px;
+	}
+	.no_margin_bottom{
+		margin-bottom:0px;
+	}
+	/* sum页的span */
+	.sum_span_blank{
+		padding-right: 8px;
+	}
+	/* appname的span样式 */
+	.selectspan{
+		margin-right: 10px;
+		padding-top: 5px;
+		font-size: 18px;
+		float: left;
+	}
+	/* appname的cart样式，右侧居中 */
+	.rightmiddle{
+		float: right;
+		margin-top: 8px;
+	}

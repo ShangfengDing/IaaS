@@ -1,0 +1,27 @@
+import java.util.UUID;
+
+/**
+ * Created by lizhenhao on 2017/12/29.
+ */
+public class otherTest {
+
+    public static void main(String[] args) {
+        String uuid1 = "549F3503ABB9";
+        String uuid2 = "848F69E01087";
+        String uuid3 = "5254009AF31C";
+        String uuid4 = "F8BC124230C4";
+        String uuid5 = "F8BC124233DC";
+
+        String[] uuids = {"848F69E01087","549F3503ABB9","5254009AF31C","F8BC124230C4","F8BC124233DC"};
+        for (String s : uuids) {
+            System.out.println(s.hashCode());
+        }
+        String u = UUID.randomUUID().toString().replace("-", "");
+        System.out.println(u.hashCode());
+
+        String u1 = null;
+        u1.hashCode();
+
+//        AbstractQueuedSynchronizer
+    }
+}

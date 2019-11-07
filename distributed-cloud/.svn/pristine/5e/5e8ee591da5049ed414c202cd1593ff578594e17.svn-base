@@ -1,0 +1,84 @@
+package com.distributed.dbproxy.utils;
+
+import com.distributed.common.entity.query.QueryObject;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Created by Idan on 2017/12/25.
+ */
+public class SpecificationUtil<T> {
+
+    /**
+     * 根据map生城动态的查询语句
+     * //TODO 就是在这里指定的类型转换
+     * @param searchMap
+     * @return
+     */
+    public Specification<T> where(Map<String, QueryObject> searchMap) {
+        return new Specification<T>() {
+            @Override
+            public Predicate toPredicate(Root root, CriteriaQuery criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                List<Predicate> list = new ArrayList<>();
+                for (Map.Entry searchObjct: searchMap.entrySet()) {
+                    try {
+                        String key = (String) searchObjct.getKey();
+                        QueryObject value = (QueryObject) searchObjct.getValue();
+                        QueryObject.QueryType type = value.getQueryType();
+                        Class<?>[] clazzs = value.getClazzs();
+                        switch (type) {
+                            case EQUAL:
+                                list.add(criteriaBuilder.equal(root.get(key).as(clazzs[0]), value.getValue()));
+                                break;
+                            case NOT_EQUAL:
+                                list.add(criteriaBuilder.notEqual(root.get(key).as(clazzs[0]), value.getValue()));
+                                break;
+                            case BOTH_LIKE:
+                                list.add(criteriaBuilder.like(root.get(key).as(clazzs[0]), (String) value.getValue()[0]));
+                                break;
+                            case NOT_LIKE:
+                                list.add(criteriaBuilder.notLike(root.get(key).as(clazzs[0]), (String)value.getValue()[0]));
+                                break;
+                            case GREATER_THAN:
+                                list.add(criteriaBuilder.greaterThan(root.get(key).as(clazzs[0]), (String)value.getValue()[0]));
+                                break;
+                            case BETWEEN:
+                                list.add(criteriaBuilder.between(root.get(key).as(clazzs[0]), (String)value.getValue()[0], (String) value.getValue()[1]));
+                                break;
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return null;
+                    }
+                }
+                Predicate[] p = new Predicate[list.size()];
+                return criteriaBuilder.and(list.toArray(p));
+            }
+        };
+    }
+
+    /**
+     * 分页的条件
+     */
+    public Pageable page(Sort.Direction direction, String sortValue, Integer pageNum, Integer pageSize) {
+        Pageable pageable = null;
+        if (pageNum != null && direction == null) {
+            pageable = new PageRequest(pageNum-1, pageSize);
+        } else if (pageNum !=null && direction != null){
+            Sort sort = new Sort(direction, sortValue);
+            pageable = new PageRequest(pageNum-1, pageSize, sort);
+        }
+        return pageable;
+    }
+
+}

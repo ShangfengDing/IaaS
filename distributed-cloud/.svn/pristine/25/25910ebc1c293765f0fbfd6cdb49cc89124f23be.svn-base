@@ -1,0 +1,44 @@
+package appcloud.distributed.service;
+
+import appcloud.distributed.CloudController;
+import appcloud.distributed.CloudControllerClientWapper;
+import appcloud.distributed.configmanager.RouteInfo;
+import appcloud.distributed.configmanager.RouteInfoManager;
+import appcloud.distributed.util.FileUtil;
+import com.distributed.common.service.controller.ITransPort;
+
+/**
+ * Created by lizhenhao on 2018/1/5.
+ */
+public class ITransPortImpl implements ITransPort {
+
+    CloudController cloudController;
+    RouteInfoManager routeInfoManager;
+    CloudControllerClientWapper clientWapper;
+
+    public ITransPortImpl(CloudController cloudController) {
+        this.cloudController = cloudController;
+        this.routeInfoManager = cloudController.routeInfoManager;
+        this.clientWapper = cloudController.clientWapper;
+    }
+
+    /**
+     * 前端通过RPC调用此方法
+     * @param dataCenter
+     * @param filePath filePath必须是完整路径（NFS的路径）
+     * @param needToClean
+     */
+    public boolean transPortImageBack(String dataCenter, String filePath, String destAddress,boolean needToClean) {
+        /**
+         * 注意：如果镜像就在本地，这里也不判断，直接给本地发送请求。处理统一在process进行
+         */
+        if (FileUtil.checkBackLocation(filePath)) {
+            RouteInfo imageBackRouteInfo = routeInfoManager.getRouteInfo(dataCenter);
+            clientWapper.sendReadyToTransFileRequest(imageBackRouteInfo.getAddr(), destAddress, filePath, needToClean);
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}

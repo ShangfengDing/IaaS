@@ -1,0 +1,13 @@
+package appcloud.api.enums;
+public  enum AcModuleEnum {
+	
+	RESOURCE_SCHEDULER, VOLUME_SCHEDULER, VOLUME_PROVIDER, VM_SCHDULER, VM_CONTROLLER, IMAGE_SERVER,
+	NODE_AGENT, NODE_MONITOR, NETWORK_PROVIDER, DHCP_CONTROLLER, LOL_SERVER, API_SERVER, VM_FRONT, 
+	FLOW_CONTROLLER, VM_ADMIN, IAAS_CHECK, UN_KNOWN;
+	
+	public String toString() {
+		return super.toString().toLowerCase();
+	}
+	
+	
+}

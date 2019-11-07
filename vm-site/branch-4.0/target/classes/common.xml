@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
+        "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+    <!-- 防火墙 -->
+    <package name="common" namespace="/common" extends="json-default">
+        <action name="getRegionId" class="com.appcloud.vm.action.commom.RegionIdAction" method="execute"/>
+        <action name="getZoneList" class="com.appcloud.vm.action.commom.GetZoneListAction" method="execute"/>
+        <!-- 查询所有的AppName -->
+        <action name="getAppName" class="com.appcloud.vm.action.commom.AppNameAction" method="execute"></action>
+        <action name="queryLog" class="com.appcloud.vm.action.commom.QueryLogAction" method="searchLog">
+            <result type="json">
+                <param name="excludeNullProperties">true</param>
+            </result>
+        </action>
+    </package>
+</struts>

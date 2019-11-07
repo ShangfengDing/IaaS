@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+          "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"       
+          "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+    <package name="enterprise" namespace="/enterprise" extends="default">
+       <action name="newenterprise" class="com.appcloud.vm.action.enterprise.NewEnterpriseAction">
+            <interceptor-ref name="CheckUserPermission"></interceptor-ref>
+            <result type="json"></result>
+       </action>
+       <action name="quitenterprise" class="com.appcloud.vm.action.enterprise.QuitEnterpriseAction">
+            <!-- <interceptor-ref name="CheckUserPermission"></interceptor-ref> -->
+            <result type="json"></result>
+       </action>   
+       <action name="getenterprise" class="com.appcloud.vm.action.enterprise.GetEnterpriseAction">
+       	 	<interceptor-ref name="CheckUserPermission"></interceptor-ref>
+            <result name="success">changeinformation.jsp</result>
+       </action>
+        <action name="changeinformation" class="com.appcloud.vm.action.enterprise.ChangeInformationAction">
+            <interceptor-ref name="CheckUserPermission"></interceptor-ref>
+            <result type="json"></result>
+       </action> 
+       <action name="dealinvitation" class="com.appcloud.vm.action.enterprise.DealInvitationAction">
+       		<interceptor-ref name="CheckUserPermission"></interceptor-ref>
+            <result type="json"></result>
+       </action>
+       <action name="dissolveenterprise" class="com.appcloud.vm.action.enterprise.DissolveEnterpriseAction">
+       		<interceptor-ref name="CheckUserPermission"></interceptor-ref>
+            <result type="json"></result>
+       </action>
+    </package>
+</struts>

@@ -1,0 +1,278 @@
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
+        http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa.xsd"
+       default-lazy-init="true">
+
+    <!--第一步-->
+    <!--定义包扫描路径-->
+    <context:component-scan base-package="com.distributed.dbproxy"/>
+
+    <!-- 加载数据库配置文件 -->
+    <context:property-placeholder location="classpath:application.properties"/>
+
+    <!-- 共用 -->
+    <bean id="hibernateJpaVendorAdapter" class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+        <property name="database" value="MYSQL"/>
+        <property name="showSql" value="true"/>
+    </bean>
+
+    <!-- __________________________________________________________distribution数据库的分割线____________________________________________________________________________________ -->
+    <!--配置distribution数据库连接池Druid-->
+    <bean id="distributionDataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init"
+          destroy-method="close">
+        <!-- 数据库基本信息配置 -->
+        <property name="url" value="${distribution.jdbc.url}"/>
+        <property name="username" value="${distribution.jdbc.username}"/>
+        <property name="password" value="${distribution.jdbc.password}"/>
+        <property name="driverClassName" value="${distribution.jdbc.driver}"/>
+        <property name="filters" value="${filters}"/>
+        <!-- 最大并发连接数 -->
+        <property name="maxActive" value="${maxActive}"/>
+        <!-- 初始化连接数量 -->
+        <property name="initialSize" value="${initialSize}"/>
+        <!-- 配置获取连接等待超时的时间 -->
+        <property name="maxWait" value="${maxWait}"/>
+        <!-- 最小空闲连接数 -->
+        <property name="minIdle" value="${minIdle}"/>
+        <!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+        <property name="timeBetweenEvictionRunsMillis" value="${timeBetweenEvictionRunsMillis}"/>
+        <!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+        <property name="minEvictableIdleTimeMillis" value="${minEvictableIdleTimeMillis}"/>
+        <property name="validationQuery" value="SELECT 1"/>
+        <property name="testWhileIdle" value="${testWhileIdle}"/>
+        <property name="testOnBorrow" value="${testOnBorrow}"/>
+        <property name="testOnReturn" value="${testOnReturn}"/>
+        <property name="maxOpenPreparedStatements" value="${maxOpenPreparedStatements}"/>
+        <!-- 打开removeAbandoned功能 -->
+        <property name="removeAbandoned" value="${removeAbandoned}"/>
+        <!-- 1800秒，也就是30分钟 -->
+        <property name="removeAbandonedTimeout" value="${removeAbandonedTimeout}"/>
+        <!-- 关闭abanded连接时输出错误日志 -->
+        <property name="logAbandoned" value="${logAbandoned}"/>
+    </bean>
+
+    <!--第二步-->
+    <!--定义实体的工厂bean-->
+    <bean id="distributionEntityManagerFactory"
+          class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <property name="dataSource" ref="distributionDataSource"/>
+        <!--实体类位置-->
+        <property name="packagesToScan" value="com.distributed.dbproxy.sql.basic.distribution"/>
+        <!--&lt;!&ndash;持久化单元名&ndash;&gt;-->
+        <property name="persistenceUnitName" value="persistenceUnit"/>
+        <!--&lt;!&ndash;JPA提供者&ndash;&gt;-->
+        <!--<property name="persistenceProviderClass" value="org.hibernate.ejb.HibernatePersistence"/>-->
+        <property name="jpaVendorAdapter" ref="hibernateJpaVendorAdapter"/>
+        <!--&lt;!&ndash;JPA属性&ndash;&gt;-->
+        <property name="jpaProperties">
+            <props>
+                <!--配置方言-->
+                <prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
+                <!--激活查询日志功能-->
+                <prop key="hibernate.show_sql">true</prop>
+                <!--优雅地输出Sql-->
+                <prop key="hibernate.format_sql">true</prop>
+                <!--添加一条解释型标注-->
+                <prop key="hibernate.use_sql_comments">false</prop>
+                <!--配置如何根据java模型生成数据库表结构,常用update,validate-->
+                <prop key="hibernate.hbm2ddl.auto">none</prop>
+            </props>
+        </property>
+    </bean>
+
+    <!--第三步-->
+    <!--定义事务管理器-->
+    <bean id="distributionTransactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="dataSource" ref="distributionDataSource"/>
+        <property name="entityManagerFactory" ref="distributionEntityManagerFactory"/>
+    </bean>
+
+    <!--第四步-->
+    <!--定义repository接口的存放目录-->
+    <!--定义接口实现的后缀，通常用Impl-->
+    <!--定义实体工厂的引用-->
+    <!--定义事务管理器的引用-->
+    <jpa:repositories base-package="com.distributed.dbproxy.sql.repository.distribution"
+                      repository-impl-postfix="Impl"
+                      entity-manager-factory-ref="distributionEntityManagerFactory"
+                      transaction-manager-ref="distributionTransactionManager"/>
+
+    <!--第五步-->
+    <!--声明采用注解的方式申明事务-->
+    <tx:annotation-driven transaction-manager="distributionTransactionManager"/>
+
+    <!-- __________________________________________________________appcloud3.5数据库的分割线____________________________________________________________________________________ -->
+    <!--配置appcloud3.5数据库连接池Druid-->
+    <bean id="appcloudDataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init"
+          destroy-method="close">
+        <!-- 数据库基本信息配置 -->
+        <property name="url" value="${appcloud.jdbc.url}"/>
+        <property name="username" value="${appcloud.jdbc.username}"/>
+        <property name="password" value="${appcloud.jdbc.password}"/>
+        <property name="driverClassName" value="${appcloud.jdbc.driver}"/>
+        <property name="filters" value="${filters}"/>
+        <!-- 最大并发连接数 -->
+        <property name="maxActive" value="${maxActive}"/>
+        <!-- 初始化连接数量 -->
+        <property name="initialSize" value="${initialSize}"/>
+        <!-- 配置获取连接等待超时的时间 -->
+        <property name="maxWait" value="${maxWait}"/>
+        <!-- 最小空闲连接数 -->
+        <property name="minIdle" value="${minIdle}"/>
+        <!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+        <property name="timeBetweenEvictionRunsMillis" value="${timeBetweenEvictionRunsMillis}"/>
+        <!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+        <property name="minEvictableIdleTimeMillis" value="${minEvictableIdleTimeMillis}"/>
+        <property name="validationQuery" value="SELECT 1"/>
+        <property name="testWhileIdle" value="${testWhileIdle}"/>
+        <property name="testOnBorrow" value="${testOnBorrow}"/>
+        <property name="testOnReturn" value="${testOnReturn}"/>
+        <property name="maxOpenPreparedStatements" value="${maxOpenPreparedStatements}"/>
+        <!-- 打开removeAbandoned功能 -->
+        <property name="removeAbandoned" value="${removeAbandoned}"/>
+        <!-- 1800秒，也就是30分钟 -->
+        <property name="removeAbandonedTimeout" value="${removeAbandonedTimeout}"/>
+        <!-- 关闭abanded连接时输出错误日志 -->
+        <property name="logAbandoned" value="${logAbandoned}"/>
+    </bean>
+
+    <!--第二步-->
+    <!--定义实体的工厂bean-->
+    <bean id="appcloudEntityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <property name="dataSource" ref="appcloudDataSource"/>
+        <!--实体类位置-->
+        <property name="packagesToScan" value="com.distributed.dbproxy.sql.basic.appcloud"/>
+        <!--&lt;!&ndash;持久化单元名&ndash;&gt;-->
+        <property name="persistenceUnitName" value="persistenceUnit"/>
+        <!--&lt;!&ndash;JPA提供者&ndash;&gt;-->
+        <!--<property name="persistenceProviderClass" value="org.hibernate.ejb.HibernatePersistence"/>-->
+        <property name="jpaVendorAdapter" ref="hibernateJpaVendorAdapter"/>
+        <!--&lt;!&ndash;JPA属性&ndash;&gt;-->
+        <property name="jpaProperties">
+            <props>
+                <!--配置方言-->
+                <prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
+                <!--激活查询日志功能-->
+                <prop key="hibernate.show_sql">true</prop>
+                <!--优雅地输出Sql-->
+                <prop key="hibernate.format_sql">true</prop>
+                <!--添加一条解释型标注-->
+                <prop key="hibernate.use_sql_comments">false</prop>
+                <!--配置如何根据java模型生成数据库表结构,常用update,validate-->
+                <prop key="hibernate.hbm2ddl.auto">none</prop>
+            </props>
+        </property>
+    </bean>
+
+    <!--第三步-->
+    <!--定义事务管理器-->
+    <bean id="appcloudTransactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="dataSource" ref="appcloudDataSource"/>
+        <property name="entityManagerFactory" ref="appcloudEntityManagerFactory"/>
+    </bean>
+
+    <!--第四步-->
+    <!--定义repository接口的存放目录-->
+    <!--定义接口实现的后缀，通常用Impl-->
+    <!--定义实体工厂的引用-->
+    <!--定义事务管理器的引用-->
+    <jpa:repositories base-package="com.distributed.dbproxy.sql.repository.appcloud"
+                      repository-impl-postfix="Impl"
+                      entity-manager-factory-ref="appcloudEntityManagerFactory"
+                      transaction-manager-ref="appcloudTransactionManager"/>
+
+    <!--第五步-->
+    <!--声明采用注解的方式申明事务-->
+    <tx:annotation-driven transaction-manager="appcloudTransactionManager"/>
+
+    <!-- __________________________________________________________appcloud_front数据库的分割线____________________________________________________________________________________ -->
+    <!--配置appcloud3.5数据库连接池Druid-->
+    <bean id="appcloudFrontDataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init"
+          destroy-method="close">
+        <!-- 数据库基本信息配置 -->
+        <property name="url" value="${appcloud_front.jdbc.url}"/>
+        <property name="username" value="${appcloud_front.jdbc.username}"/>
+        <property name="password" value="${appcloud_front.jdbc.password}"/>
+        <property name="driverClassName" value="${appcloud_front.jdbc.driver}"/>
+        <property name="filters" value="${filters}"/>
+        <!-- 最大并发连接数 -->
+        <property name="maxActive" value="${maxActive}"/>
+        <!-- 初始化连接数量 -->
+        <property name="initialSize" value="${initialSize}"/>
+        <!-- 配置获取连接等待超时的时间 -->
+        <property name="maxWait" value="${maxWait}"/>
+        <!-- 最小空闲连接数 -->
+        <property name="minIdle" value="${minIdle}"/>
+        <!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+        <property name="timeBetweenEvictionRunsMillis" value="${timeBetweenEvictionRunsMillis}"/>
+        <!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+        <property name="minEvictableIdleTimeMillis" value="${minEvictableIdleTimeMillis}"/>
+        <property name="validationQuery" value="SELECT 1"/>
+        <property name="testWhileIdle" value="${testWhileIdle}"/>
+        <property name="testOnBorrow" value="${testOnBorrow}"/>
+        <property name="testOnReturn" value="${testOnReturn}"/>
+        <property name="maxOpenPreparedStatements" value="${maxOpenPreparedStatements}"/>
+        <!-- 打开removeAbandoned功能 -->
+        <property name="removeAbandoned" value="${removeAbandoned}"/>
+        <!-- 1800秒，也就是30分钟 -->
+        <property name="removeAbandonedTimeout" value="${removeAbandonedTimeout}"/>
+        <!-- 关闭abanded连接时输出错误日志 -->
+        <property name="logAbandoned" value="${logAbandoned}"/>
+    </bean>
+
+    <!--第二步-->
+    <!--定义实体的工厂bean-->
+    <bean id="appcloudFrontEntityManagerFactory"
+          class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <property name="dataSource" ref="appcloudFrontDataSource"/>
+        <!--实体类位置-->
+        <property name="packagesToScan" value="com.distributed.dbproxy.sql.basic.appcloud_front"/>
+        <!--&lt;!&ndash;持久化单元名&ndash;&gt;-->
+        <property name="persistenceUnitName" value="persistenceUnit"/>
+        <!--&lt;!&ndash;JPA提供者&ndash;&gt;-->
+        <!--<property name="persistenceProviderClass" value="org.hibernate.ejb.HibernatePersistence"/>-->
+        <property name="jpaVendorAdapter" ref="hibernateJpaVendorAdapter"/>
+        <!--&lt;!&ndash;JPA属性&ndash;&gt;-->
+        <property name="jpaProperties">
+            <props>
+                <!--配置方言-->
+                <prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
+                <!--激活查询日志功能-->
+                <prop key="hibernate.show_sql">true</prop>
+                <!--优雅地输出Sql-->
+                <prop key="hibernate.format_sql">true</prop>
+                <!--添加一条解释型标注-->
+                <prop key="hibernate.use_sql_comments">false</prop>
+                <!--配置如何根据java模型生成数据库表结构,常用update,validate-->
+                <prop key="hibernate.hbm2ddl.auto">none</prop>
+            </props>
+        </property>
+    </bean>
+
+    <!--第三步-->
+    <!--定义事务管理器-->
+    <bean id="appcloudFrontTransactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="dataSource" ref="appcloudFrontDataSource"/>
+        <property name="entityManagerFactory" ref="appcloudFrontEntityManagerFactory"/>
+    </bean>
+
+    <!--第四步-->
+    <!--定义repository接口的存放目录-->
+    <!--定义接口实现的后缀，通常用Impl-->
+    <!--定义实体工厂的引用-->
+    <!--定义事务管理器的引用-->
+    <jpa:repositories base-package="com.distributed.dbproxy.sql.repository.appcloud_front"
+                      repository-impl-postfix="Impl"
+                      entity-manager-factory-ref="appcloudFrontEntityManagerFactory"
+                      transaction-manager-ref="appcloudFrontTransactionManager"/>
+
+    <!--第五步-->
+    <!--声明采用注解的方式申明事务-->
+    <tx:annotation-driven transaction-manager="appcloudFrontTransactionManager"/>
+
+</beans>

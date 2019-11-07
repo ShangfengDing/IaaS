@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Struts2Diagram version="2.0">
+  <package name="sys" location="10,10" size="280,140">
+    <action name="" location="0,0" size="0,0">
+      <result name="success">
+        <resourceEdge source="success" routing="0" target="deviceinfo.jsp" />
+      </result>
+    </action>
+    <action name="admininfo" location="0,0" size="0,0">
+      <result name="success">
+        <resourceEdge source="success" routing="0" target="sysmem.jsp" />
+      </result>
+    </action>
+    <action name="admininfolist" location="0,0" size="0,0">
+      <result name="success">
+        <resourceEdge source="success" routing="0" target="sysmem.jsp" />
+      </result>
+    </action>
+    <action name="admininfoupdatepage" location="0,0" size="0,0">
+      <result name="success">
+        <resourceEdge source="success" routing="0" target="admininfoupdate.jsp" />
+      </result>
+    </action>
+    <action name="admininfoupdate" location="0,0" size="0,0">
+      <result name="success">
+        <resourceEdge source="success" routing="0" target="sysmem.jsp" />
+      </result>
+      <result name="input">
+        <resourceEdge source="input" routing="0" target="admininfoupdate.jsp" />
+      </result>
+    </action>
+    <action name="admininfodelete" location="0,0" size="0,0">
+      <result name="success">
+        <resourceEdge source="success" routing="0" target="sysmem.jsp" />
+      </result>
+    </action>
+    <action name="admininfoaddpage" location="0,0" size="0,0">
+      <result name="success">
+        <resourceEdge source="success" routing="0" target="admininfoadd.jsp" />
+      </result>
+    </action>
+    <action name="admininfoadd" location="0,0" size="0,0">
+      <result name="success">
+        <resourceEdge source="success" routing="0" target="sysmem.jsp" />
+      </result>
+      <result name="input">
+        <resourceEdge source="input" routing="0" target="admininfoadd.jsp" />
+      </result>
+    </action>
+    <action name="checkemail" location="0,0" size="0,0">
+      <result name="success" />
+    </action>
+    <action name="dblist" location="0,0" size="0,0">
+      <result name="success">
+        <resourceEdge source="success" routing="0" target="sysdb.jsp" />
+      </result>
+    </action>
+    <action name="invatationcodelist" location="0,0" size="0,0">
+      <result name="success" />
+    </action>
+    <action name="deviceinfo" location="0,0" size="0,0">
+      <result name="success">
+        <resourceEdge source="success" routing="0" target="deviceinfo.jsp" />
+      </result>
+    </action>
+    <action name="gcinfo" location="0,0" size="0,0">
+      <result name="success">
+        <resourceEdge source="success" routing="0" target="gcinfo.jsp" />
+      </result>
+    </action>
+  </package>
+  <webResource name="sysequip.jsp" path="sysequip.jsp" location="100,205" size="150,55" />
+  <webResource name="sysmem.jsp" path="/sys/sysmem.jsp" location="0,0" size="0,0" />
+  <webResource name="admininfoupdate.jsp" path="/sys/admininfoupdate.jsp" location="0,0" size="0,0" />
+  <webResource name="admininfoadd.jsp" path="/sys/admininfoadd.jsp" location="0,0" size="0,0" />
+  <webResource name="sysdb.jsp" path="sysdb.jsp" location="0,0" size="0,0" />
+  <webResource name="deviceinfo.jsp" path="deviceinfo.jsp" location="0,0" size="0,0" />
+  <webResource name="deviceinfo.jsp" path="/sys/deviceinfo.jsp" location="0,0" size="0,0" />
+  <webResource name="gcinfo.jsp" path="/sys/gcinfo.jsp" location="0,0" size="0,0" />
+</Struts2Diagram>
+

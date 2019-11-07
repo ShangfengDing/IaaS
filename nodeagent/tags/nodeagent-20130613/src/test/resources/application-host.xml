@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans     
+        http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+        http://www.springframework.org/schema/task
+        http://www.springframework.org/schema/task/spring-task-3.0.xsd
+        http://www.springframework.org/schema/util
+        http://www.springframework.org/schema/util/spring-util-3.0.xsd">
+
+    <bean id="hostUuid" class="java.lang.String" >
+    	<constructor-arg type="java.lang.String" value="b4c674b03f7311e2a25f0800200c9101"/>
+    </bean>
+    
+    
+    <bean id="host" class="appcloud.common.model.Host" scope="singleton" lazy-init="true">
+        <property name="uuid" ref="hostUuid" />
+        
+        <!-- 枚举类型 -->
+        <!-- enum('COMPUTE_NODE','FUNCTION_NODE') -->
+        <property name="type" value="#{T(appcloud.common.model.Host.$HostTypeEnum).COMPUTE_NODE}" />
+        
+        <!-- enum('HIGH_LOAD','NORMAL_LOAD','LOW_LOAD','CRASH') -->
+        <property name="status" value="#{T(appcloud.common.model.Host.$HostStatusEnum).LOW_LOAD}" />
+        
+        <property name="capability" value="j2ee"/>
+        <property name="location" value="PhysicalNode"/>
+       	<property name="clusterId" value="1"/>
+       	<property name="availabilityZoneId" value="1"/>
+       	<property name="agentAddr" value="192.168.0.1"/>
+       	<property name="scheduleTag" value="tag"/>
+       	<property name="extend" value=""/>
+       	<property name="name" value=""/>
+       	<property name="hypervisorType" value=""/>
+       	<property name="hypervisorVersion" value=""/>
+       	
+       	
+        <property name="j2eeInstanceNum" value="0" />
+        <property name="vmInstanceNum" value="0" />
+        <property name="ip" value="192.168.1.19"/>
+        <property name="networkMb" value="100" />
+        
+        <!-- 动态获取的属性 -->
+        <property name="os">
+            <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+                <property name="targetClass" value="appcloud.nodeagent.util.SystemUtils" />
+                <property name="targetMethod" value="getHostOS"></property>
+            </bean>
+        </property>
+
+        <property name="cpuMhz">
+            <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+                <property name="targetClass" value="appcloud.nodeagent.util.SystemUtils" />
+                <property name="targetMethod" value="getCpuHz"></property>
+            </bean>
+        </property>
+        
+        <property name="cpuCore">
+            <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+                <property name="targetClass" value="appcloud.nodeagent.util.SystemUtils" />
+                <property name="targetMethod" value="getCpuNum"></property>
+            </bean>
+        </property>
+        
+        <property name="memoryMb">
+            <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+                <property name="targetClass" value="appcloud.nodeagent.util.SystemUtils" />
+                <property name="targetMethod" value="getMaxMem"></property>
+            </bean>
+        </property>
+        
+        <property name="diskMb">
+            <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+                <property name="targetClass" value="appcloud.nodeagent.util.SystemUtils" />
+                <property name="targetMethod" value="getDiskCap"></property>
+            </bean>
+        </property>
+
+    </bean>
+</beans>

@@ -1,0 +1,210 @@
+package appcloud.core.sdk.common;
+
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import appcloud.core.sdk.auth.Credential;
+import appcloud.core.sdk.auth.ISignatureComposer;
+import appcloud.core.sdk.http.FormatType;
+import appcloud.core.sdk.http.HttpRequest;
+import appcloud.core.sdk.http.ProtocolType;
+import appcloud.core.sdk.regions.ProductDomain;
+import appcloud.core.sdk.utils.YhaiURLEncoder;
+
+public abstract class YhaiRequest extends HttpRequest {
+
+	/**
+	 * 引用该SDK应用的API的版本号，形式为日期形式：YYYY-MM-DD
+	 */
+	private String version = null;
+	/**
+	 * 引用该SDK的应用，如云海iaas的product是iaas
+	 */
+	private String product = null;
+	/**
+	 * 请求API的动作名称，如启动云主机为 StartInstance
+	 */
+	private String actionName = null;
+	/**
+	 * 请求API的区域Id
+	 */
+	private String regionId = null;
+	private String zoneId = null;
+	private String securityToken = null;
+	/**
+	 * 该请求对应的响应结果的显示方式
+	 */
+	private FormatType acceptFormat = null;
+	/**
+	 * 签名构造器
+	 */
+	protected ISignatureComposer composer = null;
+	/**
+	 * 用户邮箱
+	 */
+	protected String userEmail = null;
+	/**
+	 * 请求协议
+	 */
+	private ProtocolType protocol = ProtocolType.HTTP;
+	/**
+	 * 请求参数 Map
+	 */
+	private Map<String, String> queryParameters = new HashMap<String, String>();
+	/**
+	 * 引用SDK的应用对应的域名信息
+	 */
+	private Map<String, String> domainParameters = new HashMap<String, String>();
+
+	public YhaiRequest(String product) {
+		super(null);
+		this.headers.put("x-sdk-client", "Java/2.2.2");
+		this.product = product;
+	}
+
+	public YhaiRequest(String product, String version) {
+		super(null);
+		this.product = product;
+		this.setVersion(version);
+	}
+
+	/**
+	 *	构造请求URL，并进行UTF-8编码
+	 */
+	public static String concatQueryString(Map<String, String> parameters) throws UnsupportedEncodingException {
+		if(null == parameters) {
+			return null;
+		}
+		StringBuilder urlBuilder = new StringBuilder("");
+		for(Entry<String, String> entry : parameters.entrySet()) {
+			String key = entry.getKey();
+			String value = entry.getValue();
+			urlBuilder.append(YhaiURLEncoder.encode(key));
+			if(null != value) {
+				urlBuilder.append("=").append(YhaiURLEncoder.encode(value));
+			}
+			urlBuilder.append("&");
+		}
+		int strIndex = urlBuilder.length();
+		if(parameters.size() > 0) {
+			urlBuilder.deleteCharAt(strIndex - 1);
+		}
+		return urlBuilder.toString();
+	}
+
+	/**
+	 *	对http请求进行签名
+	 */
+	public abstract HttpRequest signRequest(Credential credential, FormatType format, ProductDomain domain)
+					throws InvalidKeyException, IllegalStateException, UnsupportedEncodingException, NoSuchAlgorithmException;
+
+	public String getVersion() {
+		return version;
+	}
+
+	public void setVersion(String version) {
+		this.version = version;
+	}
+
+	public String getActionName() {
+		return actionName;
+	}
+
+	public void setActionName(String actionName) {
+		this.actionName = actionName;
+	}
+
+	public Map<String, String> getQueryParameters() {
+		return queryParameters;
+	}
+
+	public <K> void putQueryParameters(String name, K value) {
+		setParameter(this.queryParameters, name, value);
+	}
+
+	protected void putQueryParameters(String name, String value) {
+		setParameter(this.queryParameters, name, value);
+	}
+
+	public Map<String, String> getDomainParameters() {
+		return Collections.unmodifiableMap(domainParameters);
+	}
+
+	protected void putDomainParameters(String name, Object value) {
+		setParameter(this.domainParameters, name, value);
+	}
+
+	protected void putDomainParameters(String name, String value) {
+		setParameter(this.domainParameters, name, value);
+	}
+
+	protected <K> void setParameter(Map<String, String> map, String name, K value) {
+		if(null == map || null == name || null ==value) {
+			return;
+		}
+		map.put(name, String.valueOf(value));
+	}
+
+	public FormatType getAcceptFormat() {
+		return acceptFormat;
+	}
+
+	public void setAcceptFormat(FormatType acceptFormat) {
+		this.acceptFormat = acceptFormat;
+		this.putHeaderParameter("Accept", FormatType.mapFormatToAccept(acceptFormat));
+	}
+
+	public String getSecurityToken() {
+		return securityToken;
+	}
+
+	public void setSecurityToken(String securityToken) {
+		this.securityToken = securityToken;
+	}
+
+	public ProtocolType getProtocol() {
+		return protocol;
+	}
+
+	public void setProtocol(ProtocolType protocol) {
+		this.protocol = protocol;
+	}
+
+	public String getRegionId() {
+		return regionId;
+	}
+
+	public void setRegionId(String regionId) {
+		this.regionId = regionId;
+	}
+
+	public String getZoneId() {
+		return zoneId;
+	}
+
+	public void setZoneId(String zoneId) {
+		this.zoneId = zoneId;
+	}
+
+	public String getUserEmail() {
+		return userEmail;
+	}
+
+	public void setUserEmail(String userEmail) {
+		setParameter(this.queryParameters, "UserEmail", userEmail);
+		this.userEmail = userEmail;
+	}
+
+	public String getProduct() {
+		return product;
+	}
+
+	public void setProduct(String product) {
+		this.product = product;
+	}
+}

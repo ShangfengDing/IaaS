@@ -1,0 +1,6 @@
+#volume scheduler properties
+MAX_SHARE_IMAGE_NUM = 10
+IMAGE_SPLIT_STRING = #@#
+IMAGE_UUID_SUFFIX = 1
+schedulerName = DiskFilter
+freeDisk = 100

@@ -1,0 +1,78 @@
+/**
+ * Created by rain on 2016/11/2.
+ */
+
+var page = 1;
+var souType = "all";  //active运行中的，expiring即将过期的
+
+// 获取到所有的appName
+$(function () {
+    $('#yun_search_panel').hide();
+    getAppname(changeAppname);        //changeAppName 是改变appname后引用的参数
+});
+
+//appName发生改变，将调用此函数
+function changeAppname() {
+    $('#yun_search_panel').removeClass('hidden');
+    $('#yun_search_panel').hide(1);
+    var appName = $('#appnamemenu').text();
+    $.ajax({
+        type: "POST",
+        url: "common/getRegionId",
+        data: {
+            appname: appName
+        },
+        success: function (data) {
+            $.fillTipBox({type: 'success', icon: 'glyphicon-ok-sign', content: '获取云主机列表成功'});
+            var appProviderEn = $('#appproviderEn').text();;//提供商
+            $('#selectRegion').html('');
+            for (var i in data) {
+                $regionItem = $("<option data-icon='glyphicon-map-marker' value='" + data[i].regionId + "'>" + data[i].localName + "</option>");
+                $('#selectRegion').append($regionItem);
+            }
+            searchShow();
+            changeRegion();
+        },
+        error:function () {
+            $.fillTipBox({type: 'danger', icon: 'glyphicon-alert', content: '获取云主机列表失败'});
+        }
+    });
+}
+
+//地域的select选择改变，将调用这个获得主机列表
+function changeRegion() {
+    var vmappname = $('#appnamemenu').text();
+    var appProviderEn = $('#appproviderEn').text();
+    vmshow(souType, false);
+}
+
+//搜索的toggle函数
+function exsearch() {
+    $('#yun_search_panel').slideToggle();
+}
+
+//决定是显示那个厂商的搜索panel
+function searchShow() {
+    var providerEn = $('#appproviderEn').text();
+    if (providerEn == 'aliyun') {
+        $('#yunhai-content').addClass('hidden');
+        $('#select-content').removeClass('hidden');
+    } else if(providerEn == "yunhai"){
+        $('#yunhai-content').removeClass('hidden');
+        $('#select-content').addClass('hidden');
+    }
+}
+
+//申请云主机,区分厂商
+function yunapply() {
+    var providerEn = $('#appproviderEn').text();
+    var vmappname = $('#appnamemenu').text();
+    switch (providerEn) {
+        case 'yunhai':
+            window.location.href="vm/newvm/newyunhaivm.jsp?appname="+vmappname;
+            break;
+        case 'aliyun':
+            window.location.href="vm/newvm/aliyun/newaliyunvm.jsp?appname="+vmappname;
+            break;
+    }
+}

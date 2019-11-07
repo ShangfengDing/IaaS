@@ -1,0 +1,130 @@
+<?xml version="1.0"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <artifactId>openapi</artifactId>
+    <groupId>openapi</groupId>
+    <version>1.0.20151020-SNAPSHOT</version>
+  </parent>
+  <groupId>com.free4lab.openapi.server</groupId>
+  <artifactId>openapi-server-2</artifactId>
+  <version>1.0.20151020-SNAPSHOT</version>
+  <packaging>war</packaging>
+  <name>openapi-server-2 Maven Webapp</name>
+  <url>http://maven.apache.org</url>
+  
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <spring.version>4.0.5.RELEASE</spring.version>
+  </properties>
+  
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+	   <groupId>com.free4lab.utils</groupId>
+	   <artifactId>free4lab-common-utils</artifactId>
+	   <version>1.0.20151224-SNAPSHOT</version>
+	   <exclusions>
+			<exclusion>
+				<groupId>hsqldb</groupId>
+           		<artifactId>hsqldb</artifactId>
+			</exclusion>
+			<exclusion>
+				<groupId>org.apache.struts</groupId>
+           		<artifactId>struts2-core</artifactId>
+			</exclusion>
+			<exclusion>
+				<groupId>org.springframework</groupId>
+           		<artifactId>spring</artifactId>
+			</exclusion>
+		</exclusions>
+	</dependency>
+
+
+	<dependency>
+		<groupId>yunhai-sdk-core</groupId>
+ 		<artifactId>yunhai-sdk-core</artifactId>
+  		<version>0.0.1-SNAPSHOT</version>
+  		<exclusions>
+  			<exclusion>
+				<groupId>log4j</groupId>
+	           	<artifactId>log4j</artifactId>
+			</exclusion>
+		</exclusions>
+	</dependency>
+	
+
+	<dependency>
+        <groupId>com.free4lab.openapi.common</groupId>
+  <artifactId>openapi-common</artifactId>
+  <version>1.0.20151020-SNAPSHOT</version>
+        <!-- <exclusions>
+			<exclusion>
+				<groupId>org.springframework</groupId>
+           		<artifactId>spring-asm</artifactId>
+			</exclusion>
+       </exclusions> -->
+    </dependency>
+    <dependency>
+        <groupId>appcloud</groupId>
+        <artifactId>api-common</artifactId>
+        <version>3.5.0-SNAPSHOT</version>
+        <exclusions>
+			<exclusion>
+				<groupId>org.springframework</groupId>
+           		<artifactId>spring-asm</artifactId>
+			</exclusion>
+       </exclusions>
+    </dependency>
+
+    <dependency>
+		<groupId>appcloud.vm.fe</groupId>
+		<artifactId>common</artifactId>
+		<version>4.0.0-SNAPSHOT</version>
+	</dependency>
+	<!-- spring -->
+	<dependency>
+		<groupId>org.springframework</groupId>
+		<artifactId>spring-context</artifactId>
+		<version>${spring.version}</version>
+		<exclusions>
+		    <exclusion>
+		      <artifactId>commons-logging</artifactId>
+		      <groupId>commons-logging</groupId>
+		    </exclusion>
+		 </exclusions>
+	</dependency>
+	<dependency>
+		<groupId>org.springframework</groupId>
+		<artifactId>spring-core</artifactId>
+		<version>${spring.version}</version>
+	</dependency>
+	<dependency>
+		<groupId>org.springframework</groupId>
+		<artifactId>spring-beans</artifactId>
+		<version>${spring.version}</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>org.springframework</groupId>
+		<artifactId>spring-web</artifactId>
+		<version>${spring.version}</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>org.springframework</groupId>
+		<artifactId>spring-webmvc</artifactId>
+		<version>${spring.version}</version>
+	</dependency>
+	<!-- spring-->
+  </dependencies>
+  <build>
+    <finalName>openapi-server-2</finalName>
+  </build>
+</project>

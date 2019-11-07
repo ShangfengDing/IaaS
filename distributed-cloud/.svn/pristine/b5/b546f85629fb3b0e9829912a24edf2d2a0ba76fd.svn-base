@@ -1,0 +1,19 @@
+package com.distributed.common.response.data;
+
+import lombok.Data;
+
+/**
+ * Created by Idan on 2018/1/22.
+ */
+@Data
+public class User {
+    private Integer userId;
+    private String userEmail;
+
+    public User() {}
+
+    public User(Integer userId, String userEmail) {
+        this.userId = userId;
+        this.userEmail = userEmail;
+    }
+}

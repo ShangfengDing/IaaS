@@ -1,0 +1,49 @@
+package appcloud.distributed.header;
+
+import appcloud.netty.remoting.common.ConsumerHeader;
+
+/**
+ * Created by lizhenhao on 2018/1/5.
+ */
+public class ReadyToTransHeader extends ConsumerHeader {
+
+    private String filePath;
+
+    private String destAddress;
+
+    private boolean needToClean;
+
+    public ReadyToTransHeader(String filePath, String destAddress, boolean needToClean) {
+        this.filePath = filePath;
+        this.destAddress = destAddress;
+        this.needToClean = needToClean;
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
+
+    public String getDestAddress() {
+        return destAddress;
+    }
+
+    public void setDestAddress(String destAddress) {
+        this.destAddress = destAddress;
+    }
+
+    public boolean isNeedToClean() {
+        return needToClean;
+    }
+
+    public void setNeedToClean(boolean needToClean) {
+        this.needToClean = needToClean;
+    }
+
+    public void checkFileds() {
+
+    }
+}

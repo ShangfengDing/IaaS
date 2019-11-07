@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+          "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"       
+          "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+    <!-- 运行管理 -->
+    <package name="runtime" namespace="/runtime" extends="default">
+    	<!-- 日志管理 -->
+        <action name="alert" class="appcloud.admin.action.runtime.AlertMsgAction">
+            <result name="success">/runtime/alert.jsp</result>
+        </action>
+		<action name="mailconf" class="appcloud.admin.action.runtime.MailConfAction">
+            <result name="success">/runtime/manage.jsp</result>
+        </action>
+		<action name="setmailconf" class="appcloud.admin.action.runtime.SetMailConfAction">
+            <result type="json"></result>
+        </action>
+		<action name="searchlog" class="appcloud.admin.action.runtime.SearchLogAction">
+            <result type="json"></result>
+        </action>
+        <action name="searchInstanceLog" class="appcloud.admin.action.runtime.SearchLogAction" method="searchInstanceLog">
+            <result type="json"></result>
+        </action>
+        <action name="searchOperateLog" class="appcloud.admin.action.runtime.SearchLogAction" method="searchOperateLog">
+            <result type="json"></result>
+        </action>
+        
+        <!-- 管理员管理 -->
+        <action name="preChangeProfiles" class="appcloud.admin.action.runtime.preChangeProfileAction">
+            <result name="success">/runtime/preChangeProfile.jsp</result>
+            <result name="error">/error/500.jsp</result>
+        </action>
+        <action name="changeProfiles" class="appcloud.admin.action.runtime.ChangeProfileAction">
+            <result type="redirect">/monitor/home</result>
+        </action>
+        <action name="preAddAdmin" class="appcloud.admin.action.runtime.PreAddAdminAction">
+        	<result name="success">/runtime/addAdmin.jsp</result>
+            <result name="error">/error/500.jsp</result>
+        </action>
+        <action name="addadmin" class="appcloud.admin.action.runtime.AddAdminAction">
+        	<result type="json"></result>
+        </action>
+        <action name="adminmanage" class="appcloud.admin.action.runtime.AdminManageAction">
+        	<!--<result type="json"></result>-->
+            <result name="success">/template/admin/_adminManage.jsp</result>
+        </action>
+        <action name="preChangePassword" class="appcloud.admin.action.runtime.PreChangePasswordAction">
+        	<result name="success">/runtime/changePassword.jsp</result>
+        	<result name="error">/error/500.jsp</result>
+        </action>
+        <action name="preChangePasswordNew" class="appcloud.admin.action.runtime.PreChangePasswordAction">
+            <result name="success">/runtime/changePasswordNew.jsp</result>
+            <result name="error">/error/500.jsp</result>
+        </action>
+
+        <action name="changePasswordNew" class="appcloud.admin.action.runtime.ChangePasswordAction"
+                method="change">
+            <result type="redirect">/monitor/home</result>
+        </action>
+        <action name="changePassword" class="appcloud.admin.action.runtime.ChangePasswordAction">
+        	<result type="json"></result>
+        </action>
+        <action name="deleteAdmin" class="appcloud.admin.action.runtime.DeleteAdminAction">
+        	<result type="json"></result>
+        </action>
+        <action name="preModRole" class="appcloud.admin.action.runtime.PreAddAdminAction">
+        	<result name="success">/runtime/modAdminRole.jsp</result>
+        	<result name="error">/error/500.jsp</result>
+        </action>
+        <action name="modAdminRoleAction" class="appcloud.admin.action.runtime.ModAdminRoleAction">
+        	<result type="json"></result>
+        </action>
+        <action name="preModAdmin" class="appcloud.admin.action.runtime.PreModAdminAction">
+        	<result name="success">/runtime/modAdmin.jsp</result>
+        </action>
+        <action name="modAdmin" class="appcloud.admin.action.runtime.ModAdminAction">
+        	<result type="json"></result>
+        </action>
+        
+        <!-- 管理员组管理 -->
+        <action name="preAddRole" class="appcloud.admin.action.runtime.PreAddRoleAction">
+        	<result name="success">/runtime/addRole.jsp</result>
+        	<result name="error">/error/500.jsp</result>
+        </action>
+        <action name="addRole" class="appcloud.admin.action.runtime.AddRoleAction">
+        	<result type="json"></result>
+        </action>
+        <action name="rolemanage" class="appcloud.admin.action.runtime.RoleManageAction">
+        	<result name="success">/template/admin/_adminRoles.jsp</result>
+        </action>
+        <action name="deleteAdminRole" class="appcloud.admin.action.runtime.DeleteAdminRoleAction">
+        	<result type="json"></result>
+        </action>
+        <action name="showRole" class="appcloud.admin.action.runtime.ShowRoleAction">
+        	<result name="success">/runtime/showRole.jsp</result>
+        </action>
+        <action name="modResource" class="appcloud.admin.action.runtime.PreShowResourceAction">
+        	<result name="success">/runtime/modResource.jsp</result>
+        	<result name="error">/error/500.jsp</result>
+        </action>
+         <action name="getRole" class="appcloud.admin.action.runtime.ShowRoleAction">
+        	<result type="json"></result>
+        </action>
+        <action name="modRole" class="appcloud.admin.action.runtime.ModRoleAction">
+        	<result type="json"></result>
+        </action>
+        
+        <!-- 操作日志 -->
+        <action name="searchAdminLog" class="appcloud.admin.action.runtime.SearchAdminLogAction">
+        	<result type="json"></result>
+        </action>
+    </package>
+</struts>

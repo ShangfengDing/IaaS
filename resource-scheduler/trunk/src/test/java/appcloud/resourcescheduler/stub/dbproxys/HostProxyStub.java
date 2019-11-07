@@ -1,0 +1,59 @@
+// Update time: 2013-05-08 13:24:49
+package appcloud.resourcescheduler.stub.dbproxys;
+
+import java.util.ArrayList;
+import appcloud.common.proxy.HostProxy;
+import appcloud.common.util.query.QueryObject;
+import java.util.List;
+import java.lang.Exception;
+import appcloud.common.model.Host;
+import java.lang.Integer;
+import java.lang.String;
+;
+
+public class HostProxyStub implements HostProxy{
+	
+	@Override
+	public void save(Host arg0) throws Exception{
+	}
+	@Override
+	public Host update(Host arg0) throws Exception{
+		return new Host();
+	}
+	@Override
+	public List findAll(boolean arg0, boolean arg1, boolean arg2, Integer arg3, Integer arg4) throws Exception{
+		return new ArrayList();
+	}
+	@Override
+	public List findAll(boolean arg0, boolean arg1, boolean arg2) throws Exception{
+		return new ArrayList();
+	}
+	@Override
+	public long countAll() throws Exception{
+		return 0;
+	}
+	@Override
+	public List searchAll(QueryObject arg0, boolean arg1, boolean arg2, boolean arg3, Integer arg4, Integer arg5) throws Exception{
+		return new ArrayList();
+	}
+	@Override
+	public List searchAll(QueryObject arg0, boolean arg1, boolean arg2, boolean arg3) throws Exception{
+		return new ArrayList();
+	}
+	@Override
+	public long countSearch(QueryObject arg0) throws Exception{
+		return 0;
+	}
+	@Override
+	public Host getByUuid(String arg0, boolean arg1, boolean arg2, boolean arg3) throws Exception{
+		return new Host();
+	}
+	@Override
+	public void deleteByUuid(String arg0) throws Exception{
+	}
+	@Override
+	public List findByType(String type){
+		return new ArrayList();
+	}
+
+}

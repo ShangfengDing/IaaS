@@ -1,0 +1,280 @@
+package appcloud.common.service;
+
+import java.util.List;
+
+import appcloud.common.model.Host;
+import appcloud.common.model.RpcExtra;
+import appcloud.common.model.VmInstance;
+import appcloud.common.model.VmInstanceMetadata;
+import appcloud.common.model.VmSecurityGroup;
+import appcloud.common.model.VmSecurityGroupRule;
+import appcloud.common.model.VmVirtualInterface;
+import appcloud.common.model.VmVolume;
+import appcloud.common.model.VmInstance.VmStatusEnum;
+import appcloud.rpc.ampq.annotation.RPCTimeout;
+import appcloud.rpc.tools.RpcException;
+import appcloud.common.errorcode.VMSEC;
+import appcloud.common.exception.IllegalRpcArgumentException;
+
+public interface VMSchedulerService {
+	
+	/* ======================================================================== */
+	/* =============================== 返回值与异常约定 ============================== */
+	/* ======================================================================== */
+	/*  
+	 *  VM Scheduler对Resource Scheduler提供的接口：
+	 *  1. checkParam异常：throws IllegalRpcArgumentException
+	 *  2. process异常：throws RpcException
+	 *  3. delSecurityGroup：返回VMSEC，允许删除——DELSG_PERMISSION，不允许删除——DELSG_PERMISSION_DENIED
+	 */
+	
+	
+	/* ======================================================================== */
+	/* ========================== Scheduler Operations ======================== */
+	/* ======================================================================== */
+	
+	/**
+	 * 选择计算节点
+	 * @param instanceUUID
+	 * @param instanceTypeID
+	 * @param availabilityZoneID
+	 * @throws RpcException
+	 * 
+	 * 参数范围限制：
+	 * 1. 参数不为null：instanceUUID，instanceTypeID，availabilityZoneID
+	 * 2. instanceUUID不能指向不存在的instance实例，即DB中必须有instanceUUID实例
+	 */
+	public List<Host> selectHost(String instanceUUID, Integer instanceTypeID,
+								 Integer availabilityZoneID, Integer clusterID, RpcExtra rpcExtra) throws RpcException;
+
+	public List<Host> selectSpecificHost(String hostUuid, RpcExtra rpcExtra) throws RpcException;
+	
+	/* ======================================================================== */
+	/* ============================ VM Operations ============================= */
+	/* ======================================================================== */
+	
+	/**
+	 * 创建虚拟机
+	 * @param instanceUUID
+	 * 			实例uuid，name与uuid相同
+	 * @param instanceType
+	 * 			实例硬件配置，包括vcpus、memory、local_Gb
+	 * @param volume
+	 * 			volume provider相关参数，挂载到虚拟机的系统盘、数据盘
+	 * @param securityGroupRules
+	 * 			防火墙策略
+	 * @param vifs
+	 * 			网卡（尚未定义）
+	 * @throws RpcException
+	 * 
+	 * 参数范围限制：
+	 * 1. 以下参数不为null：instanceUUID，instanceTypeID，volume，vifs
+	 * 2. instanceMetadata可以为null， securityGroup可以为null
+	 * 3. instanceUUID不能指向不存在的instance实例，即DB中必须有instanceUUID实例
+	 * 4. 获取的instance实例的hostUUID != null
+	 * 5. volumes中：各个volume的provider location != null
+	 */
+	@RPCTimeout(timeout = 20)
+	public void createVM(String instanceUUID, 
+						  String instanceTypeID, 
+						  List<VmInstanceMetadata> instanceMetadata,
+						  List<VmVolume> volume, 
+						  VmSecurityGroup securityGroup,	
+						  List<VmVirtualInterface> vifs, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException;
+	
+	/**
+	 * 启动虚拟机
+	 * @param instanceUUID
+	 * @param instanceType
+	 * @param volume
+	 * @param securityGroupRules
+	 * @param vifs
+	 * @throws RpcException
+	 * 
+	 * 参数范围限制：
+	 * 1. 参数不为空：instance
+	 * 2. 获取的instance实例的hostUUID != null
+	 * 3. 启动虚拟机，使用全配置，需要保证：
+	 * (1) 当instance的security group ID != null: DB中的securityGroup != null
+	 * (2) 各个volume的provider location != null
+	 * (3) 以下参数不为null：instanceTypeID，volume，vifs
+	 */
+	public void startVM(VmInstance instance, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException;
+		
+	/**
+	 * 删除虚拟机
+	 * @param instanceUUID
+	 * @throws RpcException
+	 * 
+	 * 参数范围限制：
+	 * 1. 参数不为空：instanceUUID
+	 * 2. 获取的instance实例的hostUUID != null
+	 */
+	public void deleteVM(String instanceUUID, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException;
+
+	
+	/**
+	 * 停止虚拟机（软关机）
+	 * @param instanceUUID
+	 * @throws RpcException
+	 */
+	public void stopVM(String instanceUUID, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException;
+
+	/**
+	 * 强制停止虚拟机（硬关机）
+	 * @param instanceUUID
+	 * @throws RpcException
+	 */
+	public void forceStopVM(String instanceUUID, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException;
+	
+	/**
+	 * 重启虚拟机
+	 * @param instanceUUID
+	 * @throws RpcException
+	 */
+	public void rebootVM(String instanceUUID, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException;
+		
+	/**
+	 * 挂起虚拟机
+	 * @param instanceUUID
+	 * @throws RpcException
+	 */
+	public void suspendVM(String instanceUUID, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException;
+	
+	/**
+	 * 恢复虚拟机
+	 * @param instanceUUID
+	 * @throws RpcException
+	 */
+	public void resumeVM(String instanceUUID, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException;
+	
+	/**
+	 * 重置虚拟机配置
+	 * @param instanceUUID
+	 * @param instanceTypeID
+	 * @throws RpcException
+	 */
+	@RPCTimeout(timeout = 20)
+	public void resizeVM(String instanceUUID, 
+						  String instanceTypeID, 
+						  List<VmInstanceMetadata> instanceMetadata, RpcExtra rpcExtra) 
+				 throws IllegalRpcArgumentException, RpcException;
+	
+	/**
+	 * 获取虚拟机的状态
+	 * @param instanceUUID
+	 * @return VmStatusEnum
+	 * @throws RpcException
+	 */
+	public VmStatusEnum getVMState(String instanceUUID, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException;
+	
+	/* ======================================================================== */
+	/* ========================== Volume Operations =========================== */
+	/* ======================================================================== */
+	
+	/**
+	 * 挂载卷：系统盘、数据盘、ISO
+	 * @param instanceUUID
+	 * @param volume
+	 * @return
+	 * 
+	 * 参数范围：
+     * 1. 参数不为null: instanceUUID，volume
+     * 2. volume内的provider location != null
+     * 3. instance内的host uuid != null
+	 */
+	public void attachVolume(String instanceUUID, VmVolume volume, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException;
+	
+	/**
+	 * 卸载卷：系统盘、数据盘、ISO
+	 * @param instanceUUID
+	 * @param volume
+	 * @return
+	 * 
+	 * 参数范围：
+     * 1. 参数不为null: instanceUUID，volume
+     * 2. volume内的provider location != null
+     * 3. instance内的host uuid != null
+     * 4. volume内的instanceUUID == instanceUUID 
+	 */
+	public void detachVolume(String instanceUUID, VmVolume volume, RpcExtra rpcExtra) throws IllegalRpcArgumentException, RpcException;	
+
+	/* ======================================================================== */
+	/* ====================== Security Group Operations ======================= */
+	/* ======================================================================== */
+	
+	/** 
+     * 简化设计：
+     * 定义 防火墙策略组，调用该接口，传入已经定义的策略组信息及已有的规则
+     * 场景：
+     * 1）新增防火墙规则：传入修改后的rules
+     * 2）删除防火墙规则：传入修改后的rules
+     * @param securityGroup
+     *            防火墙组策略，使用的是其name
+     * @param securityGroupRules
+     *            具体的防火墙规则列表
+     *            
+     * @throws RPCException: 异常机器列表，正确返回VMSEC的success
+     * 
+     * 参数范围限制：
+	 * 1. 参数不为空：securityGroup, securityGroupRules
+	 * 2. securityGroupRules: 长度不为0
+     */
+	@RPCTimeout(timeout = 80)
+    public void defineSecurityGroup(VmSecurityGroup securityGroup, 
+    			  					List<VmSecurityGroupRule> securityGroupRules, RpcExtra rpcExtra)
+    			 throws IllegalRpcArgumentException, RpcException;
+    
+    /**
+     * 绑定防火墙组策略至给定虚拟机
+     * @param instanceUUID
+     * @param securityGroup
+     *              需要绑定防火墙组策略
+     * @return 
+     * 
+     * 参数范围限制：
+	 * 1. 参数不为空：instanceUUID, securityGroup
+	 * 2. instance中的hostUUID != null
+     */
+	@RPCTimeout(timeout = 20)
+    public void attachSecurityGroup(String instanceUUID, VmSecurityGroup securityGroup, RpcExtra rpcExtra)
+    		     throws IllegalRpcArgumentException, RpcException;   
+
+    /**
+     * 删除防火墙策略组
+     * @param securityGroup
+     *            防火墙规则组
+     * @return 是否允许删除该组策略，
+     * 		          简单处理：
+     * 		          如果允许（true），resource scheduler删除即可；如果不允许（false），resource scheduler不能删除该策略
+     * @throws Exception
+     * 
+     * 参数范围限制：
+	 * 1. 参数不为空：securityGroup
+     */
+    public VMSEC delSecurityGroup(VmSecurityGroup securityGroup, RpcExtra rpcExtra) throws RpcException;
+    
+    /**
+     * 离线迁移
+     * @param instanceUUID
+     * @param anotherHostUUID
+     * @param rpcExtra
+     * @throws RpcException
+     */
+    @RPCTimeout(timeout = 30)
+    public void offlineMigrate(String instanceUUID, String anotherHostUUID, RpcExtra rpcExtra) throws RpcException;
+    
+    /**
+     * 在线迁移
+     * @param instanceUUID
+     * @param anotherHostUUID
+     * @param rpcExtra
+     * @throws RpcException
+     */
+    @RPCTimeout(timeout = 300)
+    public void onlineMigrate(String instanceUUID, String anotherHostUUID,
+			RpcExtra rpcExtra) throws RpcException;
+    
+    @RPCTimeout(timeout = 5)
+    public String KeepAlive() throws Exception ;
+}

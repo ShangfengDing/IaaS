@@ -1,0 +1,927 @@
+package appcloud.common.util;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import appcloud.common.proxy.*;
+import org.apache.log4j.Logger;
+
+import tip.client.ClientFactory;
+import tip.util.log.Log;
+import appcloud.common.constant.ConnectionConfigs;
+import appcloud.common.constant.RoutingKeys;
+import appcloud.common.service.AppRouterService;
+import appcloud.common.service.LogService;
+import appcloud.common.service.NetworkProviderService;
+import appcloud.common.service.NginxControllerService;
+import appcloud.common.service.NodeAgentService;
+import appcloud.common.service.NodeMonitorService;
+import appcloud.common.service.ResourceSchedulerService;
+import appcloud.common.service.VMControllerService;
+import appcloud.common.service.VMSchedulerService;
+import appcloud.common.service.VolumeSchedulerService;
+import appcloud.rpc.ampq.BasicRPCClient;
+import appcloud.rpc.tip.TipRPCClient;
+
+public class ConnectionFactory {
+	private static Logger log = Logger.getLogger(ConnectionFactory.class);
+	
+	private static volatile TipRPCClient tipClientNRSP;
+	private static volatile ResourceStrategyProxy resourceStrategyProxy;
+	private static volatile TipRPCClient tipClientRSP;
+	private static volatile ResrcStrategyProxy resrcStrategyProxy;
+	private static volatile TipRPCClient tipClientRP;
+	private static volatile HostProxy hostProxy;
+	private static volatile TipRPCClient tipClientCP;
+	private static volatile ClusterProxy clusterProxy;
+	private static volatile TipRPCClient tipClientLP;
+	private static volatile LoadProxy loadProxy;
+	private static volatile TipRPCClient tipClientDVP;
+	private static volatile DeveloperProxy developerProxy;
+	private static volatile TipRPCClient tipClientDMP;
+	private static volatile DomainProxy domianProxy;
+	private static volatile TipRPCClient tipClientIP;
+	private static volatile InstanceProxy instanceProxy;
+	private static volatile TipRPCClient tipClientVAP;
+	private static volatile VMAppProxy vmAppProxy;
+	private static volatile ServiceProxy serviceProxy;
+	private static volatile TipRPCClient tipClientJAP;
+	private static volatile J2EEAppProxy j2EEAppProxy;
+	private static volatile TipRPCClient tipClientJIP;
+	private static volatile J2EEInfoProxy j2EEInfoProxy;
+	private static volatile TipRPCClient tipClientNLP;
+	private static volatile NetworkLoadProxy networkLoadProxy;
+	private static volatile TipRPCClient tipClientNPP;
+	private static volatile NginxProxy nginxProxy;
+	private static volatile TipRPCClient tipClientREP;
+	private static volatile RoutingEntryProxy routingEntryProxy;
+	private static volatile TipRPCClient tipClientTSP;
+	private static volatile TaskStrategyProxy taskStrategyProxy;
+	private static volatile TipRPCClient tipClientDSP;
+	private static volatile DomainSuffixProxy domainSuffixProxy;
+	private static volatile TipRPCClient tipClientALP;
+	private static volatile AdminLogProxy adminLogProxy;
+	private static volatile TipRPCClient tipClientAP;
+	private static volatile AdminProxy adminProxy;
+	private static volatile TipRPCClient tipClientAMP;
+	private static volatile AlertMsgProxy alertMsgProxy;
+	private static volatile TipRPCClient tipClientASP;
+	private static volatile AlertSettingProxy alertSettingProxy;
+
+
+	/**
+	 * yunhai 3.5 增加的部分
+	 */
+	private static volatile VmInstanceProxy vmInstanceProxy;
+	private static volatile TipRPCClient tipClientVIP;
+	private static volatile VmInstanceMetadataProxy vmInstanceMetadataProxy;
+	private static volatile TipRPCClient tipClientVIMP;
+	private static volatile VmInstanceTypeProxy vmInstanceTypeProxy;
+	private static volatile TipRPCClient tipClientVITP;
+
+	private static volatile HostLoadProxy hostLoadProxy;
+	private static volatile TipRPCClient tipClientHLP;
+	private static volatile VmLoadProxy vmLoadProxy;
+	private static volatile TipRPCClient tipClientVLP;
+	private static volatile DailyLoadProxy dailyLoadProxy;
+	private static volatile TipRPCClient tipClientVDLP;
+	private static volatile MonthLoadProxy monthLoadProxy;
+	private static volatile TipRPCClient tipClientVMLP;
+	private static volatile VmUsedIpProxy vmUsedIpProxy;
+	private static volatile TipRPCClient tipClientUSEDIP;
+	private static volatile VmIpSegMentProxy vmIpSegMentProxy;
+	private static volatile TipRPCClient tipClientIPSEG;
+	private static volatile TipRPCClient tipClientCluster2DHCP;
+
+	private static volatile BasicRPCClient mClientNAS;
+	private static volatile NodeAgentService nodeagent;
+	private static volatile BasicRPCClient mClientNMS;
+	private static volatile NodeMonitorService nodeMonitor;
+	private static volatile BasicRPCClient mClientRSS;
+	private static volatile ResourceSchedulerService resouceScheduler;
+	private static volatile BasicRPCClient mClientARS;
+	private static volatile AppRouterService approuter;
+	private static volatile BasicRPCClient mClientNCS;
+	private static volatile NginxControllerService nginxcontroller;
+	private static volatile BasicRPCClient mClientLS;
+	private static volatile LogService logger;
+	private static volatile BasicRPCClient mClientVMCS;
+	private static volatile VMControllerService vmcontroller;
+	private static volatile BasicRPCClient mClientVMSS;
+	private static volatile VMSchedulerService vmScheduler;
+	private static volatile BasicRPCClient mClientVSS;
+	private static volatile VolumeSchedulerService volumeScheduler;
+	private static volatile BasicRPCClient mClientNPS;
+	private static volatile NetworkProviderService networkProvider;
+
+//	private static volatile TipRPCClient mClientVMSUM;
+	private static volatile VmSummaryProxy vmSummaryProxy;
+
+	private static volatile TipRPCClient tipClientVUP;
+	private static volatile VmUserProxy vmUserProxy;
+	private static volatile TipRPCClient tipClientVZ;
+	private static volatile VmZoneProxy vmZoneProxy;
+	private static volatile TipRPCClient tipClientVV;
+	private static volatile VmVolumeProxy vmVolumeProxy;
+
+	public static VmVolumeProxy getVmVolumeProxy(){
+		if (vmVolumeProxy == null){
+			synchronized (ConnectionFactory.class){
+				if (vmVolumeProxy == null){
+					tipClientVV = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					vmVolumeProxy = (VmVolumeProxy) tipClientVV
+							.createProxy(VmVolumeProxy.class);
+				}
+			}
+		}
+		return vmVolumeProxy;
+
+	}
+
+	public static VmZoneProxy getVmZoneProxy(){
+		if (vmZoneProxy == null){
+			synchronized (ConnectionFactory.class){
+				if (vmZoneProxy == null){
+					tipClientVZ = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					vmZoneProxy = (VmZoneProxy) tipClientVZ
+							.createProxy(VmZoneProxy.class);
+				}
+			}
+		}
+		return vmZoneProxy;
+	}
+
+	/* TIP db-proxy Connections */
+
+	public static VmUserProxy getVmUserProxy(){
+		if (vmUserProxy == null){
+			synchronized (ConnectionFactory.class){
+				if (vmUserProxy == null){
+					tipClientVUP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					vmUserProxy = (VmUserProxy) tipClientVUP
+							.createProxy(VmUserProxy.class);
+				}
+			}
+		}
+		return vmUserProxy;
+	}
+
+	public static VmSummaryProxy getVmSummaryProxy(){
+		if (vmSummaryProxy == null){
+			synchronized (ConnectionFactory.class){
+				if (vmSummaryProxy == null){
+					tipClientAP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					vmSummaryProxy = (VmSummaryProxy) tipClientAP
+							.createProxy(VmSummaryProxy.class);
+				}
+			}
+		}
+		return vmSummaryProxy;
+	}
+
+	public static DomainSuffixProxy getDomainSuffixProxy() {
+		if (domainSuffixProxy == null) {
+			synchronized (ConnectionFactory.class) {
+				if (domainSuffixProxy == null) {
+					tipClientDSP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					domainSuffixProxy = (DomainSuffixProxy) tipClientDSP
+							.createProxy(DomainSuffixProxy.class);
+				}
+			}
+		}
+		return domainSuffixProxy;
+	}
+
+	public static AdminProxy getAdminProxy() {
+		if (adminProxy == null) {
+			synchronized (ConnectionFactory.class) {
+				if (adminProxy == null) {
+					tipClientAP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					adminProxy = (AdminProxy) tipClientAP
+							.createProxy(AdminProxy.class);
+				}
+			}
+		}
+		return adminProxy;
+	}
+
+	public static AdminLogProxy getAdminLogProxy() {
+		if (adminLogProxy == null) {
+			synchronized (ConnectionFactory.class) {
+				if (adminLogProxy == null) {
+					tipClientALP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					adminLogProxy = (AdminLogProxy) tipClientALP
+							.createProxy(AdminLogProxy.class);
+				}
+			}
+		}
+		return adminLogProxy;
+	}
+
+	public static AlertMsgProxy getAlertMsgProxy() {
+		if (alertMsgProxy == null) {
+			synchronized (ConnectionFactory.class) {
+				if (alertMsgProxy == null) {
+					tipClientAMP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					alertMsgProxy = (AlertMsgProxy) tipClientAMP
+							.createProxy(AlertMsgProxy.class);
+				}
+			}
+		}
+		return alertMsgProxy;
+	}
+
+	public static AlertSettingProxy getAlertSettingProxy() {
+		if (alertSettingProxy == null) {
+			synchronized (ConnectionFactory.class) {
+				if (alertSettingProxy == null) {
+					tipClientASP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					alertSettingProxy = (AlertSettingProxy) tipClientASP
+							.createProxy(AlertSettingProxy.class);
+				}
+			}
+		}
+		return alertSettingProxy;
+	}
+
+	public static J2EEAppProxy getJ2EEAppProxy() {
+		if (j2EEAppProxy == null) {
+			synchronized (ConnectionFactory.class) {
+				if (j2EEAppProxy == null) {
+					tipClientJAP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					j2EEAppProxy = (J2EEAppProxy) tipClientJAP
+							.createProxy(J2EEAppProxy.class);
+				}
+			}
+		}
+		return j2EEAppProxy;
+	}
+
+	public static J2EEInfoProxy getJ2EEInfoProxy() {
+		if (j2EEInfoProxy == null) {
+			synchronized (ConnectionFactory.class) {
+				if (j2EEInfoProxy == null) {
+					tipClientJIP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					j2EEInfoProxy = (J2EEInfoProxy) tipClientJIP
+							.createProxy(J2EEInfoProxy.class);
+				}
+			}
+		}
+		return j2EEInfoProxy;
+	}
+
+	public static NetworkLoadProxy getNetworkLoadProxy() {
+		if (networkLoadProxy == null) {
+			synchronized (ConnectionFactory.class) {
+				if (networkLoadProxy == null) {
+					tipClientNLP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					networkLoadProxy = (NetworkLoadProxy) tipClientNLP
+							.createProxy(NetworkLoadProxy.class);
+				}
+			}
+		}
+		return networkLoadProxy;
+	}
+
+	public static NginxProxy getNginxProxy() {
+		if (nginxProxy == null) {
+			synchronized (ConnectionFactory.class) {
+				if (nginxProxy == null) {
+					tipClientNPP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					nginxProxy = (NginxProxy) tipClientNPP
+							.createProxy(NginxProxy.class);
+				}
+			}
+		}
+		return nginxProxy;
+	}
+
+	public static RoutingEntryProxy getRoutingEntryProxy() {
+		if (routingEntryProxy == null) {
+			synchronized (ConnectionFactory.class) {
+				if (routingEntryProxy == null) {
+					tipClientREP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					routingEntryProxy = (RoutingEntryProxy) tipClientREP
+							.createProxy(RoutingEntryProxy.class);
+				}
+			}
+		}
+		return routingEntryProxy;
+	}
+
+	public static TaskStrategyProxy getTaskStrategyProxy() {
+		if (taskStrategyProxy == null) {
+			synchronized (ConnectionFactory.class) {
+				if (taskStrategyProxy == null) {
+					tipClientTSP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					taskStrategyProxy = (TaskStrategyProxy) tipClientTSP
+							.createProxy(TaskStrategyProxy.class);
+				}
+			}
+		}
+		return taskStrategyProxy;
+	}
+
+	public static InstanceProxy getInstanceProxy() {
+		if (instanceProxy == null) {
+			synchronized (ConnectionFactory.class) {
+				if (instanceProxy == null) {
+					tipClientIP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					instanceProxy = (InstanceProxy) tipClientIP
+							.createProxy(InstanceProxy.class);
+				}
+			}
+		}
+		return instanceProxy;
+	}
+
+	public static VMAppProxy getVMAppProxy() {
+		if (vmAppProxy == null) {
+			synchronized (ConnectionFactory.class) {
+				if (vmAppProxy == null) {
+					tipClientVAP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					vmAppProxy = (VMAppProxy) tipClientVAP
+							.createProxy(VMAppProxy.class);
+				}
+			}
+		}
+		return vmAppProxy;
+	}
+
+	public static DomainProxy getDomainProxy() {
+		if (domianProxy == null) {
+			synchronized (ConnectionFactory.class) {
+				if (domianProxy == null) {
+					tipClientDMP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					domianProxy = (DomainProxy) tipClientDMP
+							.createProxy(DomainProxy.class);
+				}
+			}
+		}
+		return domianProxy;
+	}
+
+	public static DeveloperProxy getDeveloperProxy() {
+		if (developerProxy == null) {
+			synchronized (ConnectionFactory.class) {
+				if (developerProxy == null) {
+					tipClientDVP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					developerProxy = (DeveloperProxy) tipClientDVP
+							.createProxy(DeveloperProxy.class);
+				}
+			}
+		}
+		return developerProxy;
+	}
+
+	public static LoadProxy getLoadProxy() {
+		if (loadProxy == null) {
+			synchronized (ConnectionFactory.class) {
+				if (loadProxy == null) {
+					tipClientLP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					loadProxy = (LoadProxy) tipClientLP
+							.createProxy(LoadProxy.class);
+				}
+			}
+		}
+		return loadProxy;
+	}
+
+	public static ResrcStrategyProxy getResrcStrategyProxy() {
+		if (resrcStrategyProxy == null) {
+			synchronized (ConnectionFactory.class) {
+				if (resrcStrategyProxy == null) {
+					tipClientRSP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					resrcStrategyProxy = (ResrcStrategyProxy) tipClientRSP
+							.createProxy(ResrcStrategyProxy.class);
+				}
+			}
+		}
+		return resrcStrategyProxy;
+	}
+	public static ResourceStrategyProxy getResourceStrategyProxy() {
+		if (resourceStrategyProxy == null) {
+			synchronized (ConnectionFactory.class) {
+				if (resourceStrategyProxy == null) {
+					tipClientNRSP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					resourceStrategyProxy = (ResourceStrategyProxy) tipClientNRSP
+							.createProxy(ResourceStrategyProxy.class);
+				}
+			}
+		}
+		return resourceStrategyProxy;
+	}
+
+	public static ClusterProxy getClusterProxy() {
+		if (clusterProxy == null) {
+			synchronized (ConnectionFactory.class) {
+				if (clusterProxy == null) {
+					tipClientCP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					clusterProxy = (ClusterProxy) tipClientCP
+							.createProxy(ClusterProxy.class);
+				}
+			}
+		}
+		return clusterProxy;
+	}
+
+	public static ServiceProxy getServiceProxy() {
+		if (serviceProxy == null) {
+			synchronized (ConnectionFactory.class) {
+				if (serviceProxy == null) {
+					tipClientRSP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					serviceProxy = (ServiceProxy) tipClientRSP
+							.createProxy(ServiceProxy.class);
+				}
+			}
+		}
+		return serviceProxy;
+	}
+
+	public static HostProxy getHostProxy() {
+		if (hostProxy == null) {
+			synchronized (ConnectionFactory.class) {
+				if (hostProxy == null) {
+					tipClientRP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					hostProxy = (HostProxy) tipClientRP
+							.createProxy(HostProxy.class);
+				}
+			}
+		}
+		return hostProxy;
+	}
+
+	public static VmInstanceProxy getVmInstanceProxy() {
+		if (vmInstanceProxy == null) {
+			synchronized (VmInstanceProxy.class) {
+				if (vmInstanceProxy == null) {
+					tipClientVIP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					vmInstanceProxy = (VmInstanceProxy) tipClientVIP
+							.createProxy(VmInstanceProxy.class);
+				}
+			}
+		}
+		return vmInstanceProxy;
+	}
+
+	public static VmInstanceMetadataProxy getVmInstanceMetadataProxy() {
+		if (vmInstanceMetadataProxy == null) {
+			synchronized (VmInstanceMetadataProxy.class) {
+				if (vmInstanceMetadataProxy == null) {
+					tipClientVIMP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					vmInstanceMetadataProxy = (VmInstanceMetadataProxy) tipClientVIMP
+							.createProxy(VmInstanceMetadataProxy.class);
+				}
+			}
+		}
+		return vmInstanceMetadataProxy;
+	}
+
+	public static VmInstanceTypeProxy getVmInstanceTypeProxy() {
+		if (vmInstanceTypeProxy == null) {
+			synchronized (VmInstanceTypeProxy.class) {
+				if (vmInstanceTypeProxy == null) {
+					tipClientVITP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					vmInstanceTypeProxy = (VmInstanceTypeProxy) tipClientVITP
+							.createProxy(VmInstanceTypeProxy.class);
+				}
+			}
+		}
+		return vmInstanceTypeProxy;
+	}
+
+	public static HostLoadProxy getHostLoadProxy() {
+		if (hostLoadProxy == null) {
+			synchronized (HostLoadProxy.class) {
+				if (hostLoadProxy == null) {
+					tipClientHLP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					hostLoadProxy = (HostLoadProxy) tipClientHLP
+							.createProxy(HostLoadProxy.class);
+				}
+			}
+		}
+		return hostLoadProxy;
+	}
+
+	public static VmLoadProxy getVmLoadProxy() {
+		if (vmLoadProxy == null) {
+			synchronized (VmLoadProxy.class) {
+				if (vmLoadProxy == null) {
+					tipClientVLP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					vmLoadProxy = (VmLoadProxy) tipClientVLP
+							.createProxy(VmLoadProxy.class);
+				}
+			}
+		}
+		return vmLoadProxy;
+	}
+
+	public static VmUsedIpProxy getVmUsedIpProxy() {
+		if (vmUsedIpProxy == null) {
+			synchronized (VmUsedIpProxy.class) {
+				if (vmUsedIpProxy == null) {
+					tipClientUSEDIP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					vmUsedIpProxy = (VmUsedIpProxy) tipClientUSEDIP
+							.createProxy(VmUsedIpProxy.class);
+				}
+			}
+		}
+		return vmUsedIpProxy;
+	}
+
+	public static VmIpSegMentProxy getVmIpSegMentProxy() {
+		if (vmIpSegMentProxy == null) {
+			synchronized (VmIpSegMentProxy.class) {
+				if (vmIpSegMentProxy == null) {
+					tipClientIPSEG = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					vmIpSegMentProxy = (VmIpSegMentProxy) tipClientIPSEG
+							.createProxy(VmIpSegMentProxy.class);
+				}
+			}
+		}
+		return vmIpSegMentProxy;
+	}
+
+	public static DailyLoadProxy getDailyLoadProxy() {
+		if (dailyLoadProxy == null) {
+			synchronized (DailyLoadProxy.class) {
+				if (dailyLoadProxy == null) {
+					tipClientVDLP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					dailyLoadProxy = (DailyLoadProxy) tipClientVDLP
+							.createProxy(DailyLoadProxy.class);
+				}
+			}
+		}
+		return dailyLoadProxy;
+	}
+
+	public static MonthLoadProxy getMonthLoadProxy() {
+		if (monthLoadProxy == null) {
+			synchronized (MonthLoadProxy.class) {
+				if (monthLoadProxy == null) {
+					tipClientVMLP = new TipRPCClient(
+							ConnectionConfigs.DB_PROXY_ADDRESS,
+							ConnectionConfigs.TIME_OUT);
+					monthLoadProxy = (MonthLoadProxy) tipClientVMLP
+							.createProxy(MonthLoadProxy.class);
+				}
+			}
+		}
+		return monthLoadProxy;
+	}
+
+	/* AMPQ Connections */
+
+	public static NodeAgentService getNodeAgent() {
+		if (nodeagent == null) {
+			synchronized (ConnectionFactory.class) {
+				if (nodeagent == null) {
+					try {
+						mClientNAS = new BasicRPCClient(
+								ConnectionConfigs.AMPQ_SERVER_ADDRESS, "",
+								RoutingKeys.NODE_AGENT_PRE,
+								ConnectionConfigs.TIME_OUT);
+					} catch (IOException e) {
+						Log.warn("cannot connect to ampq server: " + e);
+						throw new RuntimeException(
+								"cannot connect to ampq server");
+					}
+					nodeagent = (NodeAgentService) mClientNAS
+							.createProxy(NodeAgentService.class);
+				}
+			}
+		}
+		return nodeagent;
+	}
+	
+	public static NodeMonitorService getNodeMonitor() {
+		if (nodeMonitor == null) {
+			synchronized (ConnectionFactory.class) {
+				if (nodeMonitor == null) {
+					try {
+						mClientNMS = new BasicRPCClient(
+								ConnectionConfigs.AMPQ_SERVER_ADDRESS, "",
+								RoutingKeys.NODE_MONITOR_PRE,
+								ConnectionConfigs.TIME_OUT);
+					} catch (IOException e) {
+						Log.warn("cannot connect to ampq server: " + e);
+						throw new RuntimeException(
+								"cannot connect to ampq server");
+					}
+					nodeMonitor = (NodeMonitorService) mClientNMS
+							.createProxy(NodeMonitorService.class);
+				}
+			}
+		}
+		return nodeMonitor;
+	}
+
+	public static ResourceSchedulerService getResourceScheduler() {
+		if (resouceScheduler == null) {
+			synchronized (ConnectionFactory.class) {
+				if (resouceScheduler == null) {
+					try {
+						mClientRSS = new BasicRPCClient(
+								ConnectionConfigs.AMPQ_SERVER_ADDRESS, "",
+								RoutingKeys.RESOUCE_SCHEDULER,
+								ConnectionConfigs.TIME_OUT);
+					} catch (IOException e) {
+						Log.warn("cannot connect to ampq server: " + e);
+						throw new RuntimeException(
+								"cannot connect to ampq server");
+					}
+					resouceScheduler = (ResourceSchedulerService) mClientRSS
+							.createProxy(ResourceSchedulerService.class);
+				}
+			}
+		}
+		return resouceScheduler;
+	}
+
+	public static AppRouterService getAppRouter() {
+		if (approuter == null) {
+			synchronized (ConnectionFactory.class) {
+				if (approuter == null) {
+					try {
+						mClientARS = new BasicRPCClient(
+								ConnectionConfigs.AMPQ_SERVER_ADDRESS, "",
+								RoutingKeys.APP_ROUTER,
+								ConnectionConfigs.TIME_OUT);
+					} catch (IOException e) {
+						Log.warn("cannot connect to ampq server: " + e);
+						throw new RuntimeException(
+								"cannot connect to ampq server");
+					}
+					approuter = (AppRouterService) mClientARS
+							.createProxy(AppRouterService.class);
+				}
+			}
+		}
+		return approuter;
+	}
+
+	public static NginxControllerService getNginxController() {
+		if (nginxcontroller == null) {
+			synchronized (ConnectionFactory.class) {
+				if (nginxcontroller == null) {
+					try {
+						mClientNCS = new BasicRPCClient(
+								ConnectionConfigs.AMPQ_SERVER_ADDRESS, "",
+								RoutingKeys.NGINX_CONTROLLER_PRE,
+								ConnectionConfigs.TIME_OUT);
+					} catch (IOException e) {
+						Log.warn("cannot connect to ampq server: " + e);
+						throw new RuntimeException(
+								"cannot connect to ampq server");
+					}
+					nginxcontroller = (NginxControllerService) mClientNCS
+							.createProxy(NginxControllerService.class);
+				}
+			}
+		}
+		return nginxcontroller;
+	}
+
+	public static LogService getLogger() {
+		if (logger == null) {
+			synchronized (ConnectionFactory.class) {
+				if (logger == null) {
+					try {
+						mClientLS = new BasicRPCClient(
+								ConnectionConfigs.AMPQ_SERVER_ADDRESS, "",
+								RoutingKeys.LOGGER, ConnectionConfigs.TIME_OUT);
+					} catch (IOException e) {
+						Log.warn("cannot connect to ampq server: " + e);
+						throw new RuntimeException(
+								"cannot connect to ampq server");
+					}
+					logger = (LogService) mClientLS
+							.createProxy(LogService.class);
+				}
+			}
+		}
+		return logger;
+	}
+
+	public static VMControllerService getVMController() {
+		if (vmcontroller == null) {
+			synchronized (ConnectionFactory.class) {
+				if (vmcontroller == null) {
+					try {
+						mClientVMCS = new BasicRPCClient(
+								ConnectionConfigs.AMPQ_SERVER_ADDRESS, "",
+								RoutingKeys.VM_CONTROLLER_PRE,
+								ConnectionConfigs.TIME_OUT);
+					} catch (IOException e) {
+						Log.warn("cannot connect to ampq server: " + e);
+						throw new RuntimeException(
+								"cannot connect to ampq server");
+					}
+					vmcontroller = (VMControllerService) mClientVMCS
+							.createProxy(VMControllerService.class);
+				}
+			}
+		}
+		return vmcontroller;
+	}
+
+	public static VMSchedulerService getVMScheduler() {
+		if (vmScheduler == null) {
+			synchronized (ConnectionFactory.class) {
+				if (vmScheduler == null) {
+					try {
+						mClientVMSS = new BasicRPCClient(
+								ConnectionConfigs.AMPQ_SERVER_ADDRESS, "",
+								RoutingKeys.VM_SCHEDULER,
+								ConnectionConfigs.TIME_OUT);
+					} catch (IOException e) {
+						Log.warn("cannot connect to ampq server: " + e);
+						throw new RuntimeException(
+								"cannot connect to ampq server");
+					}
+					vmScheduler = (VMSchedulerService) mClientVMSS
+							.createProxy(VMSchedulerService.class);
+				}
+			}
+		}
+		return vmScheduler;
+	}
+
+	public static VolumeSchedulerService getVolumeScheduler() {
+		if (volumeScheduler == null) {
+			synchronized (ConnectionFactory.class) {
+				if (volumeScheduler == null) {
+					try {
+						mClientVSS = new BasicRPCClient(
+								ConnectionConfigs.AMPQ_SERVER_ADDRESS, "",
+								RoutingKeys.VOLUME_SCHEDULER,
+								ConnectionConfigs.TIME_OUT);
+					} catch (IOException e) {
+						Log.warn("cannot connect to ampq server: " + e);
+						throw new RuntimeException(
+								"cannot connect to ampq server");
+					}
+					volumeScheduler = (VolumeSchedulerService) mClientVSS
+							.createProxy(VolumeSchedulerService.class);
+				}
+			}
+		}
+		return volumeScheduler;
+	}
+
+	public static NetworkProviderService getNetworkProvider() {
+		if (networkProvider == null) {
+			synchronized (ConnectionFactory.class) {
+				if (networkProvider == null) {
+					try {
+						mClientNPS = new BasicRPCClient(
+								ConnectionConfigs.AMPQ_SERVER_ADDRESS, "",
+								RoutingKeys.NETWORK_SCHEDULER,
+								ConnectionConfigs.TIME_OUT);
+					} catch (IOException e) {
+						Log.warn("cannot connect to ampq server: " + e);
+						throw new RuntimeException(
+								"cannot connect to ampq server");
+					}
+					networkProvider = (NetworkProviderService) mClientNPS
+							.createProxy(NetworkProviderService.class);
+				}
+			}
+		}
+		return networkProvider;
+	}
+
+	// added by: wangchao
+	private static TipRPCClient getDBProxyClient() {
+		TipRPCClient dbproxyClient = new TipRPCClient(
+				ConnectionConfigs.DB_PROXY_ADDRESS, ConnectionConfigs.TIME_OUT);
+		return dbproxyClient;
+	}
+
+	public static Object getDBProxy(Class<?> clazz) {
+		synchronized (ConnectionFactory.class) {
+			return getDBProxyClient().createProxy(clazz);
+		}
+	}
+
+	private static BasicRPCClient getBasicRPCClient(String routingKeyPrefix) {
+		BasicRPCClient client;
+		try {
+			client = new BasicRPCClient(ConnectionConfigs.AMPQ_SERVER_ADDRESS,
+					"", routingKeyPrefix, ConnectionConfigs.TIME_OUT);
+		} catch (IOException e) {
+			Log.warn("cannot connect to ampq server: " + e);
+			throw new RuntimeException("cannot connect to ampq server");
+		}
+		return client;
+	}
+
+	private static Map<String, BasicRPCClient> __amqpClientMap = new HashMap<String, BasicRPCClient>();
+
+	public static Object getAMQPService(Class<?> clazz,String routingKeyPrefix) {
+		synchronized(ConnectionFactory.class) {
+			if (__amqpClientMap.containsKey(routingKeyPrefix)){
+				return __amqpClientMap.get(routingKeyPrefix).getProxyInstance();
+			}
+			else{
+				BasicRPCClient client = getBasicRPCClient(routingKeyPrefix);
+				__amqpClientMap.put(routingKeyPrefix, client);
+				return client.createProxy(clazz);
+			}
+		}
+	}
+
+	public static TipRPCClient getTipClient(String address) {
+		TipRPCClient client = new TipRPCClient(address,
+				ConnectionConfigs.TIME_OUT);
+		return client;
+	}
+
+	public static Object getTipProxy(Class<?> clazz, String address) {
+		synchronized (ConnectionFactory.class) {
+			return getTipClient(address).createProxy(clazz);
+		}
+	}
+
+	public static void close() {
+		log.info("closing ClientFactory" );
+		for (String key : __amqpClientMap.keySet()){
+			try {
+				__amqpClientMap.get(key).close();
+			} catch (Exception e) {
+				continue;
+			}
+		}
+		log.info("closed amqpClinet");
+		//ClientFactory.getInstance().close();
+		log.info("closed ClientFactory" );
+	}
+
+}

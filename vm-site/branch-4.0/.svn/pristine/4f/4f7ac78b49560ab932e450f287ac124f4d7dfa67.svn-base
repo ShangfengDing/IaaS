@@ -1,0 +1,48 @@
+#used in vm-site
+CLIENT_SECRET_KEY=newiaasSecret
+CLIENT_ID=newiaas
+DEFAULT_GROUP=2
+DEFAULT_CHECKTIMESLOT=1000
+DEFAULT_HD_CHECKTIME=10000
+DEFAULT_CHECKTIME=10000
+URL_ACCOUNT=http://account.free4lab.com/
+HTTPS_ACCOUNT=http://account.free4lab.com/
+FRONT_URL=http://front.free4lab.com
+FREEHELP_URL=http://freehelp.free4lab.com/
+VNC_HOST=202.85.221.152
+VNC_PORT=6080
+LOG_COUNT=10
+#webVNC not use any more, to be delete
+WEBVNC_URL=http://webvnc58.free4lab.com/vnc/  
+
+#used in admin
+DB_PROXY_ADDRESS=tcp://192.168.10.7:9001
+CSS_JS_SERVER=freefront/
+USERS_SERVER=http://account.free4lab.com/users/
+
+
+#common properties
+MAX_ATTEMPTS = 10
+ACCOUNT_SERVER=http://account.free4lab.com/api/billing/
+BILLING_SERVER=http://192.168.33.24:8084/billingrate/
+API_SERVER=http://192.168.10.6:8086/api
+
+#charge ID
+ADMIN_TENANT_ID=10
+
+DOMAIN=http://newiaas.free4lab.com
+
+COMMON_URI=http://dc.free4lab.com
+#URL_NEWFRONT=http://192.168.1.62:8383
+URL_NEWFRONT=http://newfront.free4lab.com
+LOL_COMMON_URI=http://dc.free4lab.com/
+
+#newiaas log
+lolAppName=newiaas
+lolAppkey=12911f831e864e40a96f16368893288f
+lolSecretKey=iWc0Pd0ziFZ4LLJY8BTgDcbMBUQ7T2pb
+lolEnable=true
+
+
+#¸¶Ç®Ä£¿é
+EXPENSE_BILLING = http://expense.free4lab.com/

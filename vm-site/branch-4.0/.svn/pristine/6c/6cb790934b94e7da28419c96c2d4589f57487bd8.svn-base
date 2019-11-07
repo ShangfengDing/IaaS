@@ -1,0 +1,196 @@
+package com.appcloud.vm.action.distributed_cloud;
+
+import appcloud.openapi.client.ControllerClient;
+import appcloud.openapi.client.VolumeClient;
+import appcloud.openapi.datatype.DiskDetailItem;
+import appcloud.openapi.response.BackUpVmResponse;
+import appcloud.openapi.response.CreateDiskImageBackResponse;
+import appcloud.openapi.response.DisksDetailReponse;
+import com.appcloud.vm.action.BaseAction;
+import com.appcloud.vm.common.Constants;
+import com.appcloud.vm.common.Log;
+import com.appcloud.vm.fe.manager.AppkeyManager;
+import com.appcloud.vm.fe.model.Appkey;
+import com.appcloud.vm.fe.util.OpenClientFactory;
+import org.apache.log4j.Logger;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class BackUpAction extends BaseAction {
+
+    private static final long serialVersionUID = 1L;
+    private Logger logger = Logger.getLogger(BackUpAction.class);
+    private ControllerClient controllerClient = OpenClientFactory.getControllerClient();
+    private VolumeClient volumeClient = OpenClientFactory.getVolumeClient();
+
+    private AppkeyManager appkeyManager = new AppkeyManager();
+    private Integer userId = this.getSessionUserID();
+    private Appkey appkey;
+    private String providerEn = "yunhai";
+
+    private String appName;
+    private String regionId = Constants.DEFAULT_REGIONID;
+    private String instanceId;
+    private String diskId;
+    private String userEmail;
+    private Boolean judge;
+    private String zoneId = Constants.DEFAULT_ZONEID;
+
+    public String execute() {
+        appkey = appkeyManager.getAppkeyByUserIdAndAppName(userId, appName);
+        zoneId = appkey.getZone();
+        switch (providerEn.trim()) {
+            case com.appcloud.vm.fe.common.Constants.YUN_HAI:
+                BackUpYunhai(appkey);
+                break;
+            default:
+                break;
+        }
+
+        Map<String, String> mapLog = new HashMap<>();
+        mapLog.put("userId", userId.toString());
+        mapLog.put("device", "backup");
+        mapLog.put("deviceId", diskId);
+        mapLog.put("appkeyId", appkey.getAppkeyId());
+        mapLog.put("provider", appkey.getProvider());
+        mapLog.put("operateType", "create a shot");
+        mapLog.put("result", String.valueOf(judge));
+        if (judge) {
+            Log.INFO(mapLog, appkey, regionId, zoneId);
+        } else {
+            Log.ERROR(mapLog, appkey, regionId, zoneId);
+        }
+        return SUCCESS;
+    }
+
+    public void BackUpYunhai(Appkey appkey) {
+        // TODO
+        DisksDetailReponse disksDetailReponse = volumeClient.DescribeDisks(regionId.trim(), zoneId, "[" + diskId.trim() + "]",
+                null, null, null, null, null, null, null, null, null, null, null, appkey.getAppkeyId(), appkey.getAppkeySecret(), null);
+        if (disksDetailReponse.getMessage()!=null) {
+            judge = false;
+            logger.info("备份时，创建外部镜像失败");
+            return;
+        }
+        DiskDetailItem detailItem = disksDetailReponse.getDisks().get(0);
+        logger.info("开始创建外部镜像，disk:"+detailItem.getDiskId());
+        CreateDiskImageBackResponse createDiskImageBackResponse = volumeClient.CreateDiskImageBack(regionId, zoneId, diskId, null, null, appkey.getAppkeyId(), appkey.getAppkeySecret(), null);
+        if (createDiskImageBackResponse == null) {
+            judge = false;
+            return;
+        }
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        instanceId = createDiskImageBackResponse.getDiskId();
+        diskId = detailItem.getDiskId();
+        boolean needToClean = true;
+        String accoutName = appkey.getUserEmail();
+        logger.info("开始传输备份到其他平台……");
+        BackUpVmResponse response = controllerClient.backUpVm(zoneId, instanceId, diskId, needToClean, appkey.getAppkeyId(), appkey.getAppkeySecret(), appkey.getUserEmail(), accoutName);
+        judge = response.isBackUpResult();
+    }
+
+    public static long getSerialVersionUID() {
+        return serialVersionUID;
+    }
+
+    public Logger getLogger() {
+        return logger;
+    }
+
+    public void setLogger(Logger logger) {
+        this.logger = logger;
+    }
+
+    public AppkeyManager getAppkeyManager() {
+        return appkeyManager;
+    }
+
+    public void setAppkeyManager(AppkeyManager appkeyManager) {
+        this.appkeyManager = appkeyManager;
+    }
+
+    public Integer getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Integer userId) {
+        this.userId = userId;
+    }
+
+    public Appkey getAppkey() {
+        return appkey;
+    }
+
+    public void setAppkey(Appkey appkey) {
+        this.appkey = appkey;
+    }
+
+    public String getProviderEn() {
+        return providerEn;
+    }
+
+    public void setProviderEn(String providerEn) {
+        this.providerEn = providerEn;
+    }
+
+    public String getAppName() {
+        return appName;
+    }
+
+    public void setAppName(String appName) {
+        this.appName = appName;
+    }
+
+    public String getInstanceId() {
+        return instanceId;
+    }
+
+    public void setInstanceId(String instanceId) {
+        this.instanceId = instanceId;
+    }
+
+    public String getDiskId() {
+        return diskId;
+    }
+
+    public void setDiskId(String diskId) {
+        this.diskId = diskId;
+    }
+
+    public String getUserEmail() {
+        return userEmail;
+    }
+
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
+    }
+
+    public Boolean getJudge() {
+        return judge;
+    }
+
+    public void setJudge(Boolean judge) {
+        this.judge = judge;
+    }
+
+    public String getRegionId() {
+        return regionId;
+    }
+
+    public void setRegionId(String regionId) {
+        this.regionId = regionId;
+    }
+
+    public String getZoneId() {
+        return zoneId;
+    }
+
+    public void setZoneId(String zoneId) {
+        this.zoneId = zoneId;
+    }
+}

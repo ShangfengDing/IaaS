@@ -1,0 +1,40 @@
+#plusHome{
+	height:156px;
+	text-align:center;
+}
+
+#plusHome>span{
+	font-size:30px;
+	color:#e7e7e7;
+	top:50px;
+}
+
+.front-toolbar {
+	position: relative;
+	margin-left: -5px;
+	padding-bottom: 10px;
+}
+
+.form-group{
+	padding: 0;
+	margin-bottom: 10px;
+}
+
+/*搜索panel最后的form-group的margin-bottom为0*/
+.last-form-group{
+	margin-bottom: 0px;
+}
+
+a {
+	cursor:pointer;
+}
+
+.float-right {
+	float: right;
+}
+
+.right-left {
+	position: absolute;
+	right:0;
+	bottom:0;
+}

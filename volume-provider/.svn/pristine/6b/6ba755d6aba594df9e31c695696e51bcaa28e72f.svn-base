@@ -1,0 +1,302 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>appcloud</groupId>
+    <artifactId>volumeprovider</artifactId>
+    <version>3.5.0-SNAPSHOT</version>
+    <packaging>bundle</packaging>
+    <name>volumeprovider</name>
+    <description>volume Provider</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.libvirt</groupId>
+            <artifactId>libvirt</artifactId>
+            <version>0.4.9</version>
+        </dependency>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>3.2.7</version>
+        </dependency>
+        <dependency>
+            <groupId>appcloud</groupId>
+            <artifactId>common</artifactId>
+            <version>3.5.0-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>commons-logging</artifactId>
+                    <groupId>commons-logging</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>commons-io</artifactId>
+                    <groupId>commons-io</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        
+
+        <!-- Testing frameworks and related dependencies -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.8.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>1.1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.16</version>
+        </dependency>
+    </dependencies>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
+        <finalName>${project.artifactId}</finalName>
+        <plugins>
+            <plugin><!-- enforce dev environment -->
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>1.0</version>
+                <executions>
+                    <execution>
+                        <id>enforce-versions</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>2.2.1</version>
+                                </requireMavenVersion>
+                                <requireJavaVersion>
+                                    <version>1.5</version>
+                                </requireJavaVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.4.3</version>
+                <configuration>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+                <executions>
+                </executions>
+            </plugin>
+            <!-- compiler -->
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <encoding>UTF-8</encoding>
+                    <source>1.5</source>
+                    <target>1.5</target>
+                    <debug>true</debug>
+                    <optimize>true</optimize>
+                    <showDeprecations>true</showDeprecations>
+                </configuration>
+            </plugin>
+
+            <!-- test plugin -->
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.7.2</version>
+                <configuration>
+                    <skip>true</skip>
+                    <forkMode>never</forkMode>
+                    <skip>true</skip>
+                    <excludes>
+                        <exclude>**/Abstract*</exclude>
+                        <exclude>**/TestUtil*</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin><!-- bundle change Meta-inf -->
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>2.3.4</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-SymbolicName>${project.groupId}</Bundle-SymbolicName>
+                        <Bundle-DocURL>${project.url}</Bundle-DocURL>
+                        <Export-Package>
+                            !${project.groupId}.example.*,
+                            !${project.groupId}.util.internal.*,
+                            ${project.groupId}.*;version=${project.version}
+                        </Export-Package>
+                        <Private-Package>
+                            ${project.groupId}.example.*,
+                            ${project.groupId}.util.internal.*,
+                        </Private-Package>
+                        <Import-Package>
+                            *;resolution:=optional
+                        </Import-Package>
+                        <Eclipse-BuddyPolicy>registered</Eclipse-BuddyPolicy>
+                        <Bundle-BuddyPolicy>registered</Bundle-BuddyPolicy>
+                        <Main-Class>${project.groupId}.util.Version</Main-Class>
+                    </instructions>
+                </configuration>
+            </plugin>
+            <plugin><!-- build the ***-sources.jar -->
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.1.2</version>
+                <executions>
+                    <execution>
+                        <id>attach-source</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <attach>true</attach>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-assembly-plugin</artifactId>
+			<version>2.2-beta-4</version>
+            <configuration>        
+				<descriptors>
+					<descriptor>src/main/assembly/src.xml</descriptor>
+				</descriptors>
+            </configuration>
+        </plugin>
+            <!-- javadoc -->
+        <!--
+      <plugin>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.7</version>
+        <executions>
+          <execution>
+            <id>generate-javadoc</id>
+            <phase>package</phase>
+            <goals>
+              <goal>javadoc</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <doclet>org.jboss.apiviz.APIviz</doclet>
+          <docletArtifact>
+            <groupId>org.jboss.apiviz</groupId>
+            <artifactId>apiviz</artifactId>
+            <version>1.3.1.GA</version>
+          </docletArtifact>
+          <attach>false</attach>
+          <stylesheetfile>${basedir}/src/javadoc/stylesheet.css</stylesheetfile>
+          <javadocDirectory>${basedir}/src/javadoc</javadocDirectory>
+          <docfilessubdirs>true</docfilessubdirs>
+          <useStandardDocletOptions>true</useStandardDocletOptions>
+          <outputDirectory>${project.build.directory}/api</outputDirectory>
+          <reportOutputDirectory>${project.build.directory}/api</reportOutputDirectory>
+          <destDir>api</destDir>
+          <charset>UTF-8</charset>
+          <docencoding>UTF-8</docencoding>
+          <breakiterator>true</breakiterator>
+          <version>true</version>
+          <author>true</author>
+          <keywords>true</keywords>
+          <overview>${basedir}/src/javadoc/overview.html</overview>
+          <doctitle>${project.name} API Reference (${project.version})</doctitle>
+          <windowtitle>${project.name} API Reference (${project.version})</windowtitle>
+          <additionalparam>
+            -link http://java.sun.com/javase/6/docs/api/
+            -link http://code.google.com/apis/protocolbuffers/docs/reference/java/
+            -link http://www.slf4j.org/apidocs/
+            -link http://logging.apache.org/log4j/1.2/apidocs/
+
+            -group "Server bootstrapping utilities" ${project.groupId}.bootstrap*
+            -group "Server component packages" ${project.groupId}.server*
+            -group "The Client interface" ${project.groupId}.client*
+            -group "The protocol definition" ${project.groupId}.protocol*
+            -group "Miscellaneous" ${project.groupId}.xml*:${project.groupId}.util*
+
+
+            -sourceclasspath ${project.build.outputDirectory}
+            -nopackagediagram
+          </additionalparam>
+          <encoding>UTF-8</encoding>
+          <locale>en_US</locale>
+          <excludePackageNames>${project.groupId}.example*</excludePackageNames>
+        </configuration>
+      </plugin>
+      -->
+        </plugins>
+
+
+    </build>
+
+
+    <repositories>
+        <repository>
+            <id>artifactory</id>
+            <name>free4lab</name>
+            <url>http://maven.free4lab.com/artifactory/repo</url>
+        </repository>
+        <repository>
+            <url>http://download.java.net/maven/2/</url>
+            <id>hibernate-persistence</id>
+            <layout>default</layout>
+            <name>Repository for library Library[hibernate-persistence]</name>
+        </repository>
+        
+        <repository>
+            <url>http://www.libvirt.org/maven2/</url>
+            <id>libvirt</id>
+            <layout>default</layout>
+            <name>Repository for library Library[libvirt]</name>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>artifactory</id>
+            <name>qingya artifactory</name>
+            <url>http://maven.free4lab.com/artifactory/plugins-releases</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
+    
+    <distributionManagement>
+       <repository>
+           <id>free4lab</id>
+           <name>Free4lab Repository</name>
+           <url>http://maven.free4lab.com/artifactory/libs-snapshot-local</url>
+       </repository>
+    </distributionManagement>
+<!--
+    add these to your maven settings.xml  
+<server>
+    <id>free4lab</id>
+    <username>admin</username>
+    <password>password</password>
+    </server>
+   -->
+</project>
+
+

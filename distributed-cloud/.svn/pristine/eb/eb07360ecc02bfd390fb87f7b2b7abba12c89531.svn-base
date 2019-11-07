@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+    <Properties>
+        <MasterInfo>
+            <Ip>127.0.0.1</Ip>
+            <Port>8118</Port>
+            <DataCenter>云平台master</DataCenter>
+            <Domain></Domain>
+        </MasterInfo>
+
+        <LocalInfo>
+            <Ip>127.0.0.1</Ip>
+            <Port>8118</Port>
+            <DataCenter>云平台slave1</DataCenter>
+            <Domain></Domain>
+        </LocalInfo>
+
+    </Properties>

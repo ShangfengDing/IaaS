@@ -1,0 +1,22 @@
+package com.distributed.common.response;
+
+import lombok.Data;
+
+/**
+ * Created by rain on 2017/1/24.
+ */
+@Data
+public class BaseResponse {
+
+    private String RequestId;
+    private String ErrorCode;
+    private String Message;
+
+    public BaseResponse() {}
+
+    public BaseResponse(String requestId, String errorCode, String message) {
+        RequestId = requestId;
+        ErrorCode = errorCode;
+        Message = message;
+    }
+}

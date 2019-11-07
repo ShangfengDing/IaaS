@@ -1,0 +1,60 @@
+package appcloud.distributed.header;
+
+import appcloud.netty.remoting.common.ConsumerHeader;
+
+/**
+ * Created by lizhenhao on 2017/12/16.
+ */
+public class TransportFileHeader extends ConsumerHeader{
+    /**
+     * 传输文件路径
+     */
+    private String filePath;
+
+    /**
+     * 是否传输结束
+     */
+    private boolean transportEnd;
+
+    /**
+     * 这一次的写入位置
+     */
+    private long position;
+
+    public TransportFileHeader() {
+    }
+
+    public TransportFileHeader(String filePath, boolean transportEnd,long position) {
+        this.filePath = filePath;
+        this.transportEnd = transportEnd;
+        this.position = position;
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
+
+    public boolean isTransportEnd() {
+        return transportEnd;
+    }
+
+    public void setTransportEnd(boolean transportEnd) {
+        this.transportEnd = transportEnd;
+    }
+
+    public long getPosition() {
+        return position;
+    }
+
+    public void setPosition(long position) {
+        this.position = position;
+    }
+
+    public void checkFileds() {
+
+    }
+}

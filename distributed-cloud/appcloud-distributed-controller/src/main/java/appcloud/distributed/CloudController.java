@@ -1,0 +1,445 @@
+package appcloud.distributed;
+
+import appcloud.distributed.common.Constants;
+import appcloud.distributed.configmanager.RouteInfo;
+import appcloud.distributed.configmanager.RouteInfoManager;
+import appcloud.distributed.configmanager.VersionInfo;
+import appcloud.distributed.configmanager.VersionInfoManager;
+import appcloud.distributed.nativeConfig.DnsContentConfig;
+import appcloud.distributed.process.*;
+import appcloud.distributed.strategy.LocalLostStrategy;
+import appcloud.distributed.strategy.LostStrategy;
+import appcloud.distributed.strategy.OtherLostStrategy;
+import appcloud.distributed.zookeeper.NodeMonitor;
+import appcloud.netty.remoting.RemoteServer;
+import appcloud.netty.remoting.common.RequestCode;
+import appcloud.netty.remoting.common.ResponseCode;
+import appcloud.netty.remoting.protocol.RemoteCommand;
+import appcloud.netty.remoting.remote.NettyRequestProcessor;
+import com.distributed.common.rpc.RPCServiceServer;
+import com.distributed.common.utils.UuidUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.concurrent.*;
+
+/**
+ * Created by lizhenhao on 2017/11/22.
+ */
+public class CloudController extends RPCServiceServer {
+
+    protected final static Logger LOGGER = LoggerFactory.getLogger(CloudController.class);
+    /**
+     * 管理的信息类
+     */
+    public RouteInfoManager routeInfoManager;
+    /**
+     * DNS控制类
+     */
+    public DnsContentConfig dnsContentConfig;
+
+    /**
+     * 请求处理类
+     */
+    public NettyRequestProcessor registerRequestProcess;
+    public NettyRequestProcessor heartRequestProcess;
+    public ChkConnectionProcess chkConnectionProcess;
+    public BrokerDownProcess deadProcess;
+    public AccountRequestProcess accountRequestProcess;
+    public VersionRequestProcess versionRequestProcess;
+    public ReadyTransProcess readyTransProcess;
+    public TransportRequestProcess transportRequestProcess;
+    /**
+     * netty 客户端和服务端
+     */
+    public CloudControllerClientWapper clientWapper = CloudControllerClientWapper.getInstance();
+    public VersionInfoManager versionInfoManager = VersionInfoManager.getInstance();
+
+    /**
+     * 请求处理类线程池
+     */
+    public ExecutorService registerRequestExecutor;
+    public ExecutorService deadRequestExecutor;
+    public ExecutorService transportRequestExecutor;
+    public ExecutorService accountRequestExecutor; // 账户操作请求处理的线程
+    public ExecutorService versionRequestExecutor; // 同步请求处理的线程
+    public ExecutorService chkConnectionExecutor;
+
+    /**
+     * 定时任务线程池
+     */
+    public ScheduledExecutorService disPatchRegisterExecutor;
+    public ScheduledExecutorService heartBeatExecutor;
+    public ScheduledExecutorService syncAccountExecutor;
+    public ScheduledExecutorService registerBrokerExecutor;
+    /**
+     * Zookeeper实现对整个平台物理服务器的管理
+     */
+    NodeMonitor nodeMonitor;
+    /**
+     * 异常处理策略
+     */
+    LostStrategy otherLostStrategy;
+    LostStrategy localLostStrategy;
+
+    /**
+     * 重试次数
+     */
+    public int retryTimes = 0;
+
+    /**
+     * master标志
+     */
+    public boolean isMaster = false;
+
+
+    public CloudController(final RouteInfoManager routeInfoManager, final DnsContentConfig dnsContentConfig, final RemoteServer remoteServer, boolean isMaster, Class<?>[] classes) {
+        super(remoteServer, 0, classes);
+        //this.nodeMonitor = new NodeMonitor();
+        this.isMaster = isMaster;
+        this.routeInfoManager = routeInfoManager;
+        this.dnsContentConfig = dnsContentConfig;
+        this.registerRequestExecutor = Executors.newFixedThreadPool(Constants.REQUEST_WORKER_THREAD_NUMBER, new ThreadFactory() {
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "RegisterRequestThread working");
+            }
+        });
+        this.deadRequestExecutor = Executors.newSingleThreadExecutor(new ThreadFactory() {
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "DeadRequestThread working");
+            }
+        });
+        this.accountRequestExecutor = Executors.newSingleThreadExecutor(new ThreadFactory() {
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "accountRequestThread working");
+            }
+        });
+        this.versionRequestExecutor = Executors.newFixedThreadPool(Constants.REQUEST_WORKER_THREAD_NUMBER,new ThreadFactory() {
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "versionRequestThread working");
+            }
+        });
+        this.transportRequestExecutor = Executors.newFixedThreadPool(Constants.REQUEST_WORKER_THREAD_NUMBER,new ThreadFactory() {
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "TransportRequestExecutor working");
+            }
+        });
+
+        this.disPatchRegisterExecutor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "DisPatchRegisterThread working");
+            }
+        });
+        this.registerBrokerExecutor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "registerBrokerThread working");
+            }
+        });
+
+        this.heartBeatExecutor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "heartBeatThread working");
+            }
+        });
+
+        this.syncAccountExecutor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "syncAccountThread working");
+            }
+        });
+
+        this.chkConnectionExecutor = Executors.newSingleThreadExecutor(new ThreadFactory() {
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "chkConnectionExecutor working");
+            }
+        });
+
+        this.otherLostStrategy = new OtherLostStrategy(this);
+        this.localLostStrategy = new LocalLostStrategy(this);
+        this.registerRequestProcess = new RegisterRequestProcess(this);
+        this.heartRequestProcess = new HeartRequestProcess(this);
+        this.chkConnectionProcess = new ChkConnectionProcess(this);
+        this.deadProcess = new BrokerDownProcess(this);
+        this.accountRequestProcess = new AccountRequestProcess();
+        this.versionRequestProcess = new VersionRequestProcess();
+        this.readyTransProcess = new ReadyTransProcess();
+        this.transportRequestProcess = new TransportRequestProcess();
+    }
+
+    public boolean initialize() {
+        remoteServer.registerProcessor(RequestCode.REGISTER_BROKER, this.registerRequestProcess, registerRequestExecutor);
+        remoteServer.registerProcessor(RequestCode.DISPATCH_REGISTER_MESSAGE, this.registerRequestProcess, registerRequestExecutor);
+        remoteServer.registerProcessor(RequestCode.HEART_BEAT, this.heartRequestProcess, registerRequestExecutor);
+        remoteServer.registerProcessor(RequestCode.BROKER_DOWN, this.deadProcess, deadRequestExecutor);
+        remoteServer.registerProcessor(RequestCode.USER_CREATE, this.accountRequestProcess, accountRequestExecutor);
+        remoteServer.registerProcessor(RequestCode.VERSION_DISPATCH, this.versionRequestProcess, versionRequestExecutor);
+        remoteServer.registerProcessor(RequestCode.VERSION_SYN, this.versionRequestProcess, versionRequestExecutor);
+        remoteServer.registerProcessor(RequestCode.VERSION_REFRESH, this.versionRequestProcess, versionRequestExecutor);
+        remoteServer.registerProcessor(RequestCode.READY_IMAGE_BACK, this.readyTransProcess, transportRequestExecutor);
+        remoteServer.registerProcessor(RequestCode.CHECK_BACKUP_DEST, this.transportRequestProcess, transportRequestExecutor);
+        remoteServer.registerProcessor(RequestCode.SEND_IMAGE_BACK, this.transportRequestProcess, transportRequestExecutor);
+        remoteServer.registerProcessor(RequestCode.CHECK_CONNECTION, this.chkConnectionProcess, chkConnectionExecutor);
+        return true;
+    }
+
+    /**
+     * 开启controller服务
+     */
+    public void start() {
+        initialize();
+        clientWapper.start();
+        remoteServer.start();
+//        dnsContentConfig.startSshExector();
+        startMasterTask();
+        startNonMasterTask();
+        startCommonTask();
+        startSynAccountTask();
+        routeInfoManager.initZone();
+    }
+
+    /**
+     * 关闭controller服务
+     */
+    public void shutdown() {
+        if (clientWapper != null) clientWapper.shutdown();
+        if (remoteServer != null) remoteServer.shutdown();
+//        dnsContentConfig.stopSshExector();
+        shutdownMasterTask();
+        shutdownNonMasterTask();
+        shutdownCommonTask();
+    }
+
+    /**
+     * 暂停controller服务
+     */
+    public void stop() {
+        shutdownNonMasterTask();
+        shutdownCommonTask();
+        shutdownMasterTask();
+
+    }
+
+    /**
+     * 重启controller服务
+     */
+    public void restart() {
+        restartNonMasterTask();
+        restartCommonTask();
+        restartMasterTask();
+
+    }
+
+    /**
+     * 开启和关闭master专属任务（分发注册表）
+     */
+    public void startMasterTask() {
+        if (isMaster) {
+            disPatchRegisterExecutor.scheduleAtFixedRate(new Runnable() {
+                public void run() {
+                    CloudController.this.dispatchRegister();
+                }
+            }, 1, 20, TimeUnit.SECONDS);
+        }
+    }
+
+    public void shutdownMasterTask() {
+        if (isMaster) {
+            disPatchRegisterExecutor.shutdown();
+            isMaster = false;
+        }
+    }
+
+    public void restartMasterTask() {
+        if (isMaster) {
+            disPatchRegisterExecutor.shutdown();
+            this.disPatchRegisterExecutor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+                public Thread newThread(Runnable r) {
+                    return new Thread(r, "DisPatchRegisterThread working");
+                }
+            });
+            disPatchRegisterExecutor.scheduleAtFixedRate(new Runnable() {
+                public void run() {
+                    CloudController.this.dispatchRegister();
+                }
+            }, 1, 20, TimeUnit.SECONDS);
+        }
+    }
+
+    /**
+     * 开启和关闭非master节点需要启动的定时任务
+     */
+    public void startNonMasterTask() {
+        if (!isMaster) {
+            registerBrokerExecutor.scheduleAtFixedRate(new Runnable() {
+                public void run() {
+                    CloudController.this.register();
+                }
+            }, 1, 20, TimeUnit.SECONDS);
+        }
+    }
+
+    public void shutdownNonMasterTask() {
+        if (!isMaster) {
+            registerBrokerExecutor.shutdown();
+        }
+    }
+
+    public void restartNonMasterTask() {
+        if (!isMaster) {
+            registerBrokerExecutor.shutdown();
+            this.registerBrokerExecutor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+                public Thread newThread(Runnable r) {
+                    return new Thread(r, "registerBrokerThread working");
+                }
+            });
+            registerBrokerExecutor.scheduleAtFixedRate(new Runnable() {
+                public void run() {
+                    CloudController.this.register();
+                }
+            }, 1, 20, TimeUnit.SECONDS);
+        }
+    }
+
+    /**
+     * 开启公共定时任务
+     */
+    public void startCommonTask() {
+        heartBeatExecutor.scheduleAtFixedRate(new Runnable() {
+            public void run() {
+                    CloudController.this.heartBeatMonitor();
+            }
+        }, 1, 20, TimeUnit.SECONDS);
+    }
+
+    public void shutdownCommonTask() {
+        heartBeatExecutor.shutdown();
+    }
+
+    public void restartCommonTask() {
+        heartBeatExecutor.shutdown();
+        this.heartBeatExecutor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "heartBeatThread working");
+            }
+        });
+        heartBeatExecutor.scheduleAtFixedRate(new Runnable() {
+            public void run() {
+                CloudController.this.heartBeatMonitor();
+            }
+        }, 1, 20, TimeUnit.SECONDS);
+    }
+
+    /**
+     * 开启同步信息
+     */
+    public void startSynAccountTask() {
+        syncAccountExecutor.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                CloudController.this.syncAccountMonitor();
+            }
+        }, 1, 20, TimeUnit.SECONDS);
+    }
+
+    /**
+     * 向master注册
+     */
+    public void register() {
+        LOGGER.info("向master注册 "+this.routeInfoManager.getMasterAddr());
+        this.clientWapper.sendRegisterRequest(this.routeInfoManager.getOwnRouteInfo(), this.routeInfoManager.getMasterAddr());
+    }
+
+    /**
+     * 分发注册表
+     */
+    public void dispatchRegister() {
+        LOGGER.info("开始分发注册表");
+        List<RouteInfo> routeInfoList = routeInfoManager.getAllRouteInfo();
+        for (RouteInfo routeInfo : routeInfoList) {
+            if (!routeInfo.getAddr().equals(routeInfoManager.getMasterAddr())) {
+                LOGGER.info("分发注册表的目的地址：" + routeInfo.getAddr());
+                this.clientWapper.sendDispatchRegisterRequest(routeInfoList, routeInfoManager.getMasterRouteInfo(), routeInfo.getAddr());
+            }
+        }
+        LOGGER.info("分发注册表结束");
+    }
+
+    /**
+     * 主动的心跳检测（我们不考虑同时两台机器成为一个分区，或者两台机器同时损坏的情况）
+     */
+    public void heartBeatMonitor() {
+        LOGGER.warn("开始发送心跳检测信息");
+        RouteInfo monitor = routeInfoManager.produceMonitorRouteInfo();
+        if (monitor != null) {
+            LOGGER.info("监控对象地址" + monitor.getAddr());
+            RemoteCommand response = null;
+            try {
+                 response = clientWapper.sendHeartBeatMonitorRequest(monitor.getAddr());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            LOGGER.info("心跳检测：接收到response");
+            if (response == null || !response.getRemark().equals(ResponseCode.SUCCESSED)) {
+                LOGGER.info("心跳检测：失去连接ing");
+                retryTimes++;
+            }
+            if (retryTimes > Constants.HEART_BEAT_TIMES_LIMIT) {
+                resetRetryTimes();
+                /*if (isLostConnection()) {
+                    LOGGER.warn("本中心与其他中心失去联系，开始localLostStrategy异常处理");
+                    localLostStrategy.handlerLostConnection(monitor);
+                } else {*/
+                    LOGGER.warn("监控对象失去联系，开始otherLostStrategy异常处理");
+                    otherLostStrategy.handlerLostConnection(monitor);
+                //}
+            }
+            LOGGER.info("心跳检测：接收到response");
+            LOGGER.warn("重试次数达到 " + retryTimes + " 次");
+        } else {
+            LOGGER.warn("注册表还没有信息，无法产生监控对象");
+        }
+    }
+
+    public void syncAccountMonitor() {
+        VersionInfo latestVersion = versionInfoManager.getLatest();
+        Long versionNum = null;
+        if (latestVersion != null) {
+            versionNum = latestVersion.getVersionNum();
+        }
+        String addr = routeInfoManager.getMasterAddr();
+        String requestId = UuidUtil.getRandomUuid();
+        LOGGER.info("requestId:" + requestId + ",addr:" + addr + ",latest version:" + latestVersion);
+        clientWapper.sendVersionRequest(requestId, versionNum, addr);
+    }
+
+    private void resetRetryTimes() {
+        retryTimes = 0;
+    }
+
+    /**
+     * 判断个人失联还是对方失联
+     *
+     * @return
+     */
+    public boolean isLostConnection() {
+        boolean isLost = true;
+        List<RouteInfo> routeInfos = routeInfoManager.getAllRouteInfo();
+        for (RouteInfo routeInfo : routeInfos) {
+            if (!routeInfo.getIpAddress().equals(this.routeInfoManager.getOwnIp())) {
+                try {
+                    RemoteCommand response = this.clientWapper.sendHeartBeatMonitorRequest(routeInfo.getAddr());
+                    if (response != null && response.getRemark().equals(ResponseCode.SUCCESSED)) {
+                        isLost = false;
+                        break;
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Heart beat fail", e);
+                }
+            }
+        }
+        return isLost;
+    }
+
+
+}
