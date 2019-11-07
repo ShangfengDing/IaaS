@@ -4,4 +4,4 @@
 
 ## 总体架构
 
-![架构图]https://github.com/ShangfengDing/IaaS/frame.jpg
+![架构图]https://github.com/ShangfengDing/IaaS/blob/master/frame.jpg
