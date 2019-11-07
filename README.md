@@ -4,7 +4,7 @@
 
 ## 总体架构
 
-![架构图](https://github.com/ShangfengDing/IaaS/blob/master/frame.jpg)
+<div align=center>![架构图](https://github.com/ShangfengDing/IaaS/blob/master/frame.jpg)
 
 在上图中，使用了三种不同颜色的连线，代表了模块间通信的不同方式。为了使上图更加简洁，忽略了Resource-Scheduler、Vm-Scheduler、Volume-Scheduler、Network-Provider、Image-Server模块与DB-Proxy模块的连线，实际上，这五个模块都涉及数据库读写。同样出于简洁的考虑，简略了LOL（日志）模块与其他模块的连线，在IaaS系统中，所有的模块都需要将日志通过RPC接口写到LOL。
 
@@ -38,12 +38,12 @@ API Server负责接收来自IaaS Front和IaaS Admin的所有请求，对外提�
     - API Common：通过将Common中的Model的基础上，对Model中的成员添加注解，注解源于javax.xml.bind.annotation包；通过这步操作，可以在Front、Admin与API Server交互的过程中，将数据模型对象转换为XML格式；
     - API Client：Front、Admin通过调用API Client中的接口，生成请求的URL地址，并向API Server发起请求。
     
-4.Resource-Scheduler
+4. Resource-Scheduler
 Resource Scheduler接收API Server发来请求，对请求的资源进行调度，并在取得调度结果的情况下，将请求进步发给Vm-Scheduler或Volume-Scheduler。
 在IaaS中，资源分为计算资源（CPU和内存）、存储资源（硬盘）、网络资源（带宽），一台云主机的计算资源和存储资源可以分布在不同的物理服务器上，网络资源属于逻辑上的集群，由Network Provider通过DHCP方式获取IP，具体计算资源的调度由VM Scheduler实现，具体存储资源的调度由Volume Scheduler实现。Resource Scheduler负责在上层调度VM Scheduler、Volume Scheduler和Network Provider。
 在IaaS的代码实现中，用到了事务处理，比如创建云主机的时候，对计算资源、存储资源和网络资源的申请应该看成一个事务，要么全部获取到，则创建虚拟机完成；如果其中有一种资源获取失败，则创建虚拟机失败，已经获取的资源需要归还给IaaS平台，即回滚操作。
 
-5.Vm Scheduler
+5. Vm Scheduler
 Vm-Scheduler对上接受Resource-Schedule的调用；根据具体的调度策略，向下调度具体的某个Vm-Controller。主要负责VM资源的调度，主要包括CPU、内存和防火墙规则等等；包括虚拟机的操作等。其功能主要如下：
     - 资源调度，为了使资源更加合理的利用，在Vm-Scheduler设有对CPU和内存的调度。当然可以根据不同的调度策略实现不同的调度机制。
     - 对虚拟机的操作，包括创建、关机、重启、删除等操作。由于在Vm-Controller没有操作数据库的权限，所以在Vm_Scheduler这层需要为虚拟机的操作准备参数，比如创建虚拟机的时CPU核数和内存大小等等；当然也包括硬盘的挂载和卸载。
